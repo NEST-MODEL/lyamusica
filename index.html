@@ -639,99 +639,321 @@
 //  Чтобы добавить треки — просто добавь объекты в массивы ниже!
 // ===================================================
 const TRACKS = {
-  games: [
-    {
-      src: "audio/games/zelda_theme.mp3",
-      answer: "The Legend of Zelda",
-      options: ["The Legend of Zelda", "Dark Souls", "Final Fantasy VII", "Chrono Trigger"],
-      hint: "🗡️"
-    },
-    {
-      src: "audio/games/mario_theme.mp3",
-      answer: "Super Mario Bros",
-      options: ["Super Mario Bros", "Donkey Kong", "Kirby", "Sonic the Hedgehog"],
-      hint: "🍄"
-    },
-    {
-      src: "audio/games/tetris_theme.mp3",
-      answer: "Tetris",
-      options: ["Tetris", "Pac-Man", "Space Invaders", "Pong"],
-      hint: "🟦"
-    },
-    {
-      src: "audio/games/minecraft_theme.mp3",
-      answer: "Minecraft",
-      options: ["Minecraft", "Terraria", "Stardew Valley", "Roblox"],
-      hint: "⛏️"
-    },
-    {
-      src: "audio/games/undertale_theme.mp3",
-      answer: "Undertale",
-      options: ["Undertale", "Deltarune", "Hollow Knight", "Celeste"],
-      hint: "💛"
-    },
-  ],
-  music: [
-    {
-      src: "audio/music/track1.mp3",
-      answer: "Bohemian Rhapsody",
-      options: ["Bohemian Rhapsody", "Stairway to Heaven", "Hotel California", "Comfortably Numb"],
-      hint: "🎸"
-    },
-    {
-      src: "audio/music/track2.mp3",
-      answer: "Smells Like Teen Spirit",
-      options: ["Smells Like Teen Spirit", "Come As You Are", "Heart-Shaped Box", "In Bloom"],
-      hint: "🎤"
-    },
-    {
-      src: "audio/music/track3.mp3",
-      answer: "Lose Yourself",
-      options: ["Lose Yourself", "Without Me", "Slim Shady", "Rap God"],
-      hint: "🎵"
-    },
-  ],
-  movies: [
-    {
-      src: "audio/movies/imperial_march.mp3",
-      answer: "Star Wars",
-      options: ["Star Wars", "Indiana Jones", "Jurassic Park", "E.T."],
-      hint: "🌌"
-    },
-    {
-      src: "audio/movies/godfather.mp3",
-      answer: "The Godfather",
-      options: ["The Godfather", "Scarface", "Goodfellas", "Casino"],
-      hint: "🎻"
-    },
-    {
-      src: "audio/movies/pirates.mp3",
-      answer: "Pirates of the Caribbean",
-      options: ["Pirates of the Caribbean", "Master and Commander", "Waterworld", "Hook"],
-      hint: "⚓"
-    },
-  ],
-  cartoons: [
-    {
-      src: "audio/cartoons/lion_king.mp3",
-      answer: "Король Лев",
-      options: ["Король Лев", "Тарзан", "Мулан", "Покахонтас"],
-      hint: "🦁"
-    },
-    {
-      src: "audio/cartoons/simpsons.mp3",
-      answer: "Симпсоны",
-      options: ["Симпсоны", "Гриффины", "Американский папаша", "Разгильдяи"],
-      hint: "🍩"
-    },
-    {
-      src: "audio/cartoons/spongebob.mp3",
-      answer: "Губка Боб",
-      options: ["Губка Боб", "Патрик", "Сэнди", "Осьминог"],
-      hint: "🧽"
-    },
-  ]
+// === НАСТРОЙКИ СТИЛЯ SONGLASS (Шаги времени в секундах) ===
+const TIMESTEPS = [1, 2, 3, 5, 10, 20]; // 6 попыток, с каждым шагом доступно больше трека
+
+// === STATE ===
+let state = {
+  player: '',
+  category: null,
+  queue: [],
+  current: 0,
+  score: 0,
+  correct: 0,
+  playing: false,
+  // Новые переменные для механики Songless:
+  currentStep: 0,      // Номер текущей попытки (0 из 5)
+  trackGuessed: false, // Угадал ли на текущем треке
+  playTimeout: null    // Таймер для остановки аудио
 };
+
+const audio = document.getElementById('audio-player');
+
+// Обновление таймера остановки трека
+audio.addEventListener('timeupdate', () => {
+  const maxPlayTime = TIMESTEPS[state.currentStep];
+  if (audio.currentTime >= maxPlayTime) {
+    stopTrack();
+  }
+});
+
+// === WAVEFORM ===
+function buildWaveform() {
+  const wf = document.getElementById('waveform');
+  wf.innerHTML = '';
+  const count = 40;
+  for (let i = 0; i < count; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    const hMin = 6 + Math.random() * 10;
+    const hMax = 20 + Math.random() * 55;
+    bar.style.setProperty('--h-min', hMin + 'px');
+    bar.style.setProperty('--h-max', hMax + 'px');
+    bar.style.height = hMin + 'px';
+    bar.style.animationDelay = (Math.random() * 1.2) + 's';
+    bar.style.animationDuration = (0.5 + Math.random() * 0.8) + 's';
+    wf.appendChild(bar);
+  }
+}
+
+function setPlayIcon(playing) {
+  const icon = document.getElementById('play-icon');
+  if (playing) {
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+  } else {
+    icon.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+  }
+}
+
+function togglePlay() {
+  if (state.playing) {
+    stopTrack();
+  } else {
+    if (audio.src) {
+      audio.currentTime = 0; // Всегда запускаем сначала
+      audio.play().catch(() => {});
+      state.playing = true;
+      setPlayIcon(true);
+      document.querySelectorAll('.wave-bar').forEach(b => b.classList.add('playing'));
+    }
+  }
+}
+
+function stopTrack() {
+  audio.pause();
+  state.playing = false;
+  setPlayIcon(false);
+  document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
+}
+
+// === CATEGORY SELECT ===
+document.getElementById('cat-grid').addEventListener('click', e => {
+  const card = e.target.closest('.cat-card');
+  if (!card) return;
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  state.category = card.dataset.cat;
+  checkStartReady();
+});
+
+document.getElementById('player-name').addEventListener('input', checkStartReady);
+
+function checkStartReady() {
+  const name = document.getElementById('player-name').value.trim();
+  document.getElementById('btn-start').disabled = !(name && state.category);
+}
+
+document.getElementById('btn-start').addEventListener('click', startGame);
+
+// === GAME LOGIC ===
+function startGame() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name || !state.category) return;
+
+  state.player = name;
+  const allTracks = [...TRACKS[state.category]];
+
+  // Перемешиваем треки
+  for (let i = allTracks.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allTracks[i], allTracks[j]] = [allTracks[j], allTracks[i]];
+  }
+  state.queue = allTracks.slice(0, Math.min(10, allTracks.length));
+  state.current = 0;
+  state.score = 0;
+  state.correct = 0;
+
+  // Прячем стандартный таймер (в Songless время завязано на шаги, а не на тикающие секунды)
+  document.querySelector('.timer-wrap').style.display = 'none';
+
+  showScreen('screen-game');
+  loadTrack();
+}
+
+function loadTrack() {
+  const track = state.queue[state.current];
+  const total = state.queue.length;
+
+  state.currentStep = 0;
+  state.trackGuessed = false;
+
+  document.getElementById('g-player').textContent = state.player.toUpperCase();
+  document.getElementById('g-score').textContent = state.score + ' pts';
+  document.getElementById('track-num').textContent = `ТРЕК ${state.current + 1} / ${total}`;
+  document.getElementById('progress-fill').style.width = ((state.current / total) * 100) + '%';
+
+  audio.pause();
+  audio.src = track.src;
+  state.playing = false;
+  setPlayIcon(false);
+  
+  buildWaveform();
+  updateSonglessUI();
+}
+
+// Обновление интерфейса под текущий шаг (инпут ввода и кнопка пропуска)
+function updateSonglessUI() {
+  const maxTime = TIMESTEPS[state.currentStep];
+  document.getElementById('play-hint').textContent = `Доступно: ${maxTime} сек. (Попытка ${state.currentStep + 1} из ${TIMESTEPS.length})`;
+
+  const grid = document.getElementById('answers-grid');
+  // Перестраиваем сетку под текстовое поле ввода в стиле Songless
+  grid.removeAttribute('style'); 
+  grid.style.display = 'flex';
+  grid.style.flexDirection = 'column';
+  grid.style.gap = '10px';
+
+  grid.innerHTML = `
+    <input type="text" id="guess-input" class="name-input" style="width: 100%; max-width: 500px;" placeholder="Введите название трека..." autocomplete="off">
+    <div style="display: flex; gap: 10px; width: 100%; max-width: 500px;">
+      <button class="btn-outline" id="btn-skip" style="flex: 1;">Пропустить (+сек)</button>
+      <button class="btn-start" id="btn-submit" style="padding: 0.8rem 2rem; font-size: 0.85rem;">Ответить</button>
+    </div>
+  `;
+
+  document.getElementById('btn-skip').addEventListener('click', () => handleGuess(false));
+  document.getElementById('btn-submit').addEventListener('click', () => {
+    const val = document.getElementById('guess-input').value.trim();
+    if(val) handleGuess(val);
+  });
+}
+
+function handleGuess(userAnswer) {
+  const track = state.queue[state.current];
+  stopTrack();
+
+  // Если игрок ввёл ответ (не пропустил)
+  if (userAnswer !== false) {
+    // Сравниваем текст (без учёта регистра и лишних пробелов)
+    if (userAnswer.toLowerCase() === track.answer.toLowerCase()) {
+      state.trackGuessed = true;
+    }
+  }
+
+  if (state.trackGuessed) {
+    // Рассчитываем очки: чем раньше угадал, тем больше бонус
+    const pts = 500 - (state.currentStep * 70);
+    state.score += pts;
+    state.correct++;
+    showFeedback('ПРАВИЛЬНО! +' + pts, true);
+    document.getElementById('g-score').textContent = state.score + ' pts';
+    setTimeout(nextTrack, 2000);
+  } else {
+    // Если не угадал или пропустил
+    state.currentStep++;
+    
+    // Если попытки закончились
+    if (state.currentStep >= TIMESTEPS.length) {
+      showFeedback('НЕ УГАДАЛ! Это: ' + track.answer, false);
+      setTimeout(nextTrack, 3000);
+    } else {
+      // Переходим к следующему шагу времени
+      showFeedback('НЕПРАВИЛЬНО! Время увеличено', false);
+      updateSonglessUI();
+    }
+  }
+}
+
+function nextTrack() {
+  state.current++;
+  if (state.current >= state.queue.length) {
+    endGame();
+  } else {
+    loadTrack();
+  }
+}
+
+function showFeedback(text, correct) {
+  const overlay = document.getElementById('feedback-overlay');
+  const el = document.getElementById('feedback-text');
+  el.textContent = text;
+  el.style.fontSize = 'clamp(1.5rem, 5vw, 3.5rem)'; // Уменьшил шрифт, чтобы длинные названия влезали
+  el.className = 'feedback-text ' + (correct ? 'correct' : 'wrong');
+  overlay.classList.add('show');
+  setTimeout(() => overlay.classList.remove('show'), 1500);
+}
+
+// === END GAME ===
+function endGame() {
+  stopTrack();
+  document.getElementById('progress-fill').style.width = '100%';
+
+  const total = state.queue.length;
+  document.getElementById('r-score').textContent = state.score;
+  document.getElementById('r-correct').textContent = `${state.correct}/${total}`;
+  
+  // Упрощаем блок результатов под Songless
+  document.getElementById('r-streak').parentElement.style.display = 'none';
+  document.getElementById('r-time').parentElement.style.display = 'none';
+  document.getElementById('r-verdict').textContent = state.correct > (total / 2) ? "Отличный слух!" : "Надо потренироваться...";
+
+  saveScore();
+  showScreen('screen-result');
+}
+
+// === LEADERBOARD (localStorage) ===
+function saveScore() {
+  const key = 'earworm_scores';
+  const scores = JSON.parse(localStorage.getItem(key) || '[]');
+  scores.push({
+    name: state.player,
+    score: state.score,
+    correct: state.correct,
+    total: state.queue.length,
+    category: state.category,
+    date: Date.now()
+  });
+  scores.sort((a,b) => b.score - a.score);
+  localStorage.setItem(key, JSON.stringify(scores.slice(0, 50)));
+}
+
+function showBoard() {
+  const key = 'earworm_scores';
+  const scores = JSON.parse(localStorage.getItem(key) || '[]');
+  const list = document.getElementById('board-list');
+  const catIcons = { games:'🎮', music:'🎵', movies:'🎬', cartoons:'🎨' };
+
+  if (!scores.length) {
+    list.innerHTML = '<div class="board-empty">Пока нет результатов.<br>Стань первым!</div>';
+  } else {
+    list.innerHTML = scores.slice(0,15).map((s, i) => `
+      <div class="board-row">
+        <div class="board-rank">${i === 0 ? '👑' : i+1}</div>
+        <div>
+          <div class="board-name">${escHtml(s.name)}</div>
+          <div class="board-cat">${catIcons[s.category]||''} ${s.category} · ${s.correct}/${s.total} угадано</div>
+        </div>
+        <div class="board-pts">${s.score}</div>
+      </div>
+    `).join('');
+  }
+  showScreen('screen-board');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// === NAVIGATION ===
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  stopTrack();
+  showScreen('screen-home');
+}
+
+function playAgain() {
+  startGame();
+}
+
+// === CONFETTI FIX ===
+function spawnConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  ctx.fillStyle = '#c8ff00';
+  for(let i=0; i<100; i++) {
+    ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 5, 5);
+  }
+  setTimeout(() => ctx.clearRect(0,0,canvas.width,canvas.height), 3000);
+}
+</script>
+</body>
+</html>
 
 const VERDICTS = [
   [0, 30, "ну...хоть попробовал 😅"],
