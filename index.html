@@ -3,1956 +3,1365 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CyberBunker Terminal v7.0</title>
+<title>CyberBunker Terminal v6.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <style>
-:root {
-  --bg: #0d0f0e;
-  --bg2: #111412;
-  --panel: #161a17;
-  --panel2: #1c2119;
-  --border: #2a3328;
-  --border-lit: #3d5238;
-  --accent: #5aff6e;
-  --accent2: #9dffaa;
-  --accent-dim: #2a5c30;
-  --warn: #ffc641;
-  --danger: #ff4040;
-  --danger-dim: #5c1a1a;
-  --text: #c8d5c0;
-  --text-dim: #5a6b55;
-  --text-bright: #e8f0e0;
-  --ink: #8fa885;
-  --amber: #e8a840;
-  --amber-dim: #4a3510;
-}
+  :root {
+    --bg: #050508;
+    --card: rgba(18, 18, 24, 0.85);
+    --card-inner: #111116;
+    --neon: #ff5500;
+    --neon-muted: #993300;
+    --neon-green: #00cc66;
+    --neon-green-glow: #00fa9a;
+    --text: #e2e2e9;
+    --text-dark: #646473;
+    --border: rgba(255, 85, 0, 0.2);
+    --glass: rgba(10, 10, 14, 0.88);
+  }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Share Tech Mono', monospace;
-  min-height: 100vh;
-  overflow-x: hidden;
-  position: relative;
-}
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    41% { opacity: 0.95; }
+    42% { opacity: 0.2; }
+    43% { opacity: 0.95; }
+    60% { opacity: 0.9; }
+    61% { opacity: 0.3; }
+    62% { opacity: 0.9; }
+  }
+  @keyframes pulse-warn {
+    0%, 100% { border-color: rgba(255, 85, 0, 0.2); }
+    50% { border-color: #ff3333; box-shadow: 0 0 15px rgba(255,51,51,0.3); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pipe-flow {
+    0% { stroke-dashoffset: 200; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes sector-pulse {
+    0%, 100% { opacity: 0.12; }
+    50% { opacity: 0.25; }
+  }
+  @keyframes radar-sweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes blink-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes threat-in {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes threat-out {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-20px); opacity: 0; }
+  }
+  @keyframes danger-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-/* ── ФОНОВЫЙ ПАТТЕРН ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(90,255,110,0.025) 39px, rgba(90,255,110,0.025) 40px),
-    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(90,255,110,0.015) 39px, rgba(90,255,110,0.015) 40px);
-  pointer-events: none;
-  z-index: 0;
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    overflow-x: hidden;
+    position: relative;
+  }
 
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(90,255,110,0.04) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
+  /* ── ЖИВОЙ ФОН БУНКЕРА ── */
+  #bunker-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
 
-/* ── АНИМАЦИИ ── */
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-@keyframes blink { 50% { opacity: 0; } }
-@keyframes pulse-green { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
-@keyframes warn-flash { 0%,100% { border-color:var(--danger); } 50% { border-color:transparent; } }
-@keyframes slide-in { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-@keyframes bar-fill { from { width: 0; } }
-@keyframes rotate { to { transform: rotate(360deg); } }
-@keyframes threat-drop { from { opacity:0; transform:translateX(-50%) translateY(-20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
-@keyframes expedition-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(232,168,64,0.3); } 50% { box-shadow: 0 0 0 8px rgba(232,168,64,0); } }
+  #bunker-bg svg {
+    width: 100%;
+    height: 100%;
+  }
 
-/* ── СКАН-ЛИНИЯ ПОВЕРХ ── */
-.scanline-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 60px;
-  background: linear-gradient(transparent, rgba(90,255,110,0.03), transparent);
-  animation: scanline 8s linear infinite;
-  pointer-events: none;
-  z-index: 1000;
-}
+  .bg-sector {
+    animation: sector-pulse 4s ease-in-out infinite;
+  }
+  .bg-sector:nth-child(2) { animation-delay: 1.2s; }
+  .bg-sector:nth-child(3) { animation-delay: 2.5s; }
+  .bg-sector:nth-child(4) { animation-delay: 0.7s; }
 
-/* ── THREAT ALERT ── */
-#threat-alert {
-  position: fixed;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  background: #0a0a08;
-  border: 1px solid var(--danger);
-  border-radius: 2px;
-  padding: 8px 20px;
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--danger);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  display: none;
-  white-space: nowrap;
-  box-shadow: 0 0 30px rgba(255,64,64,0.15), inset 0 0 20px rgba(255,64,64,0.03);
-}
-#threat-alert::before {
-  content: '! ';
-  color: var(--danger);
-}
-#threat-alert.show {
-  display: block;
-  animation: threat-drop 0.25s ease;
-}
+  .pipe-anim {
+    stroke-dasharray: 12 6;
+    animation: pipe-flow 2.5s linear infinite;
+  }
+  .pipe-anim-slow {
+    stroke-dasharray: 8 10;
+    animation: pipe-flow 5s linear infinite;
+  }
+  .pipe-anim-rev {
+    stroke-dasharray: 12 6;
+    animation: pipe-flow 3s linear infinite reverse;
+  }
 
-/* ── ОСНОВНОЙ ЛЕЙАУТ ── */
-.app-wrapper {
-  position: relative;
-  z-index: 1;
-  max-width: 1440px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+  .radar-group {
+    transform-origin: 88% 18%;
+    animation: radar-sweep 5s linear infinite;
+  }
 
-/* ── ХЕДЕР ── */
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 28px;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
-  flex-shrink: 0;
-}
-.header-logo {
-  font-family: 'Oswald', sans-serif;
-  font-weight: 700;
-  font-size: 1.2rem;
-  letter-spacing: 4px;
-  color: var(--accent);
-  text-transform: uppercase;
-}
-.header-logo span { color: var(--text-dim); font-weight: 300; }
-.header-meta {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-}
-.header-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: pulse-green 2s infinite;
-  display: inline-block;
-}
-.header-dot.offline { background: var(--text-dim); animation: none; }
+  /* ── THREAT ALERT ── */
+  #threat-alert {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    background: rgba(5, 0, 0, 0.97);
+    border: 1px solid #ff2200;
+    border-radius: 8px;
+    padding: 0.6rem 1.4rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    color: #ff4422;
+    letter-spacing: 1.5px;
+    display: none;
+    text-align: center;
+    min-width: 320px;
+    box-shadow: 0 0 20px rgba(255,34,0,0.3);
+  }
+  #threat-alert.show {
+    display: block;
+    animation: threat-in 0.3s ease;
+  }
+  #threat-alert.hiding {
+    animation: threat-out 0.3s ease forwards;
+  }
+  #threat-alert .threat-icon { font-size: 1rem; margin-right: 6px; }
 
-/* ── ОСНОВНАЯ СЕТКА ── */
-.game-grid {
-  display: grid;
-  grid-template-columns: 260px 1fr 280px;
-  flex: 1;
-  gap: 0;
-}
+  /* ── ДЕТЕКТОР ЛЖИ ── */
+  #lie-detector-panel {
+    display: none;
+    background: #07020e;
+    border: 1px solid #8800ff;
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+  #lie-detector-panel.active { display: block; }
+  .lie-title { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: #aa44ff; letter-spacing: 2px; margin-bottom: 0.5rem; }
+  .lie-target-select { width: 100%; padding: 0.4rem; background: #100820; border: 1px solid #4400aa; color: #fff; border-radius: 6px; font-family: inherit; margin-bottom: 0.5rem; text-align: center; }
+  .btn-lie { background: transparent; border: 1px solid #8800ff; color: #cc88ff; padding: 0.4rem 0.8rem; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; cursor: pointer; transition: all 0.2s; }
+  .btn-lie:hover { background: #8800ff; color: #fff; }
+  #lie-result { font-size: 0.75rem; margin-top: 0.5rem; min-height: 1rem; font-weight: bold; }
 
-/* ── ЛЕВАЯ ПАНЕЛЬ (Статус систем) ── */
-.sidebar-left {
-  border-right: 1px solid var(--border);
-  background: var(--panel);
-  display: flex;
-  flex-direction: column;
-}
+  /* ── SABOTEUR SYSTEM ── */
+  #saboteur-panel {
+    display: none;
+    background: #0a0005;
+    border: 1px solid #ff0066;
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+  }
+  #saboteur-panel.active { display: block; }
+  .saboteur-title { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: #ff0066; letter-spacing: 2px; margin-bottom: 0.4rem; text-align: center; }
+  .saboteur-desc { font-size: 0.68rem; color: #aa4466; margin-bottom: 0.5rem; text-align: center; line-height: 1.3; }
+  .btn-sab { background: transparent; border: 1px solid #ff0066; color: #ff4488; padding: 0.35rem; width: 100%; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.62rem; cursor: pointer; transition: all 0.2s; margin-top: 0.3rem; }
+  .btn-sab:hover:not(:disabled) { background: #ff0066; color: #fff; }
+  .btn-sab:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.sidebar-right {
-  border-left: 1px solid var(--border);
-  background: var(--panel);
-  display: flex;
-  flex-direction: column;
-}
+  /* ── ОСТАЛЬНОЙ ДИЗАЙН БЕЗ ИЗМЕНЕНИЙ ── */
+  .main-container {
+    display: grid;
+    grid-template-columns: 280px 1fr 310px;
+    gap: 20px;
+    width: 100%;
+    max-width: 1350px;
+    z-index: 10;
+    position: relative;
+  }
+  .status-panel {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+    height: fit-content;
+  }
+  .panel-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    color: var(--neon);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    text-align: center;
+    font-weight: 900;
+  }
+  .sys-metric { display: flex; flex-direction: column; gap: 0.5rem; }
+  .metric-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+  .metric-label { display: flex; align-items: center; gap: 5px; color: var(--text-dark); }
+  .metric-val { color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; transition: color 0.5s; }
+  .flask-wrap {
+    position: relative; height: 28px; border-radius: 20px; background: #08080c;
+    border: 1px solid rgba(255,255,255,0.05); overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.7);
+  }
+  .flask-wrap::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(255,255,255,0.03) calc(10% - 1px), rgba(255,255,255,0.03) 10%);
+    pointer-events: none; z-index: 2;
+  }
+  .flask-fill {
+    position: absolute; top: 0; left: 0; height: 100%; width: 0%; border-radius: 20px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.8s ease; background: #1c1c22;
+  }
+  .flask-fill::after {
+    content: ''; position: absolute; top: 2px; left: 8px; right: 8px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px;
+  }
+  .flask-label {
+    position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.25);
+    letter-spacing: 1px; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: color 0.5s;
+  }
+  .flask-fill.good    { background: linear-gradient(90deg, #00994d, var(--neon-green)); }
+  .flask-fill.warn    { background: linear-gradient(90deg, #b35300, var(--neon)); }
+  .flask-fill.danger  { background: linear-gradient(90deg, #990000, #ff2222); animation: danger-pulse 1s infinite; }
+  .flask-fill.cold    { background: linear-gradient(90deg, #0055ab, #00aaff); }
+  .flask-fill.hot     { background: linear-gradient(90deg, #b32d00, #ff4400); }
+  .flask-fill.idle    { background: #15151a; }
+  .map-panel {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+    height: fit-content;
+  }
+  .map-blueprint {
+    background: #040406; border: 1px dashed var(--border); border-radius: 8px; padding: 0.8rem;
+    font-size: 0.75rem; color: var(--neon-green); min-height: 320px; display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto;
+  }
+  .map-bunker-graphic { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
+  .bunker-floor-block {
+    background: rgba(0, 204, 102, 0.02); border: 1px solid rgba(0, 204, 102, 0.15); border-radius: 6px; padding: 10px; position: relative; display: flex; flex-direction: column; gap: 4px;
+    transition: all 0.3s ease;
+  }
+  .bunker-floor-block::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--neon-green); border-radius: 3px 0 0 3px; }
+  .bunker-floor-block.sealed { background: rgba(255, 51, 51, 0.02); border-color: rgba(255, 51, 51, 0.2); opacity: 0.5; }
+  .bunker-floor-block.sealed::before { background: #ff3333; }
+  .floor-header { display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 900; }
+  .floor-title { color: #fff; font-size: 0.75rem; font-family: 'Space Mono', monospace; font-weight: bold; }
+  .floor-status-text { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; }
+  .window {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 1.8rem;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+  }
+  .low-energy-flicker { animation: flicker 3.5s infinite; }
+  .critical-alert { animation: pulse-warn 1.2s infinite !important; }
+  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; margin-bottom: 1.2rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 10px rgba(255,102,0,0.2); text-align: center; }
+  h2 { font-family: 'Orbitron', sans-serif; color: var(--neon); text-align: center; }
+  .btn {
+    background: transparent; border: 2px solid var(--neon); color: #fff; padding: 0.8rem; width: 100%; border-radius: 8px;
+    font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 12px var(--neon); }
+  .btn:disabled { border-color: #242428 !important; color: #4e4e54 !important; cursor: not-allowed; background: #121215 !important; box-shadow: none !important; }
+  .btn-blue { border-color: #d1d1d6; }
+  .btn-blue:hover:not(:disabled) { background: #fff; color: #000; box-shadow: 0 0 12px #fff; }
+  .btn-red { border-color: #ff3333; }
+  .btn-red:hover:not(:disabled) { background: #ff3333; color: #000; box-shadow: 0 0 12px #ff3333; }
+  .input-field, .select-field {
+    width: 100%; padding: 0.8rem; background: var(--card-inner); border: 1px solid var(--border);
+    color: #fff; border-radius: 8px; font-family: inherit; text-align: center; font-size: 0.95rem; margin-bottom: 0.8rem; outline: none;
+  }
+  .input-field:focus { border-color: var(--neon); }
+  .select-field { text-align-last: center; appearance: none; cursor: pointer; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .bunker-info { background: #070709; padding: 0.9rem; border-radius: 8px; text-align: left; font-size: 0.8rem; border-left: 4px solid var(--neon); margin-bottom: 1rem; border: 1px solid rgba(255,102,0,0.05); }
+  .dossier-grid { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+  .char-row { display: flex; justify-content: space-between; padding: 0.55rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.01); border-radius: 6px; text-align: left; align-items: center; }
+  .char-label { color: var(--text-dark); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .char-val { font-weight: bold; color: #fff; text-align: right; max-width: 65%; font-size: 0.8rem; }
+  .char-status { font-size: 0.65rem; padding: 2px 5px; border-radius: 4px; background: #032112; color: var(--neon-green); margin-right: 6px; border: 1px solid rgba(0,204,102,0.2); }
+  .action-card-box { background: linear-gradient(135deg, #16161a 0%, #0d0d0f 100%); border: 1px solid var(--border); padding: 0.9rem; border-radius: 8px; margin-bottom: 1rem; text-align: left; }
+  .game-log { background: #000; color: #ff5500; font-size: 0.7rem; padding: 0.5rem; border-radius: 6px; max-height: 80px; overflow-y: auto; text-align: left; margin-bottom: 0.8rem; border: 1px solid #1a0b00; }
+  .vote-box { background: #1c0e0e; border: 1px solid #ff3333; border-radius: 8px; padding: 0.9rem; margin-bottom: 1rem; text-align: left; }
+  .vote-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.6rem; }
+  .btn-vote-user { background: #100808; border: 1px solid #3d1111; color: #fff; padding: 0.4rem; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 0.75rem; }
+  .btn-vote-user:hover:not(:disabled) { background: #ff3333; color: #000; }
+  .conn-status { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; margin-bottom: 1rem; padding: 0.5rem 0.8rem; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); justify-content: center; }
+  .conn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #444; }
+  .conn-dot.connecting { background: #ffaa00; animation: blink-dot 1s infinite; }
+  .conn-dot.online { background: var(--neon-green); }
+  .conn-dot.error { background: #ff3333; }
+  .id-copy-box { display: flex; align-items: center; gap: 8px; background: #0a0a0c; border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; margin-bottom: 0.8rem; cursor: pointer; transition: border-color 0.2s; }
+  .id-copy-box:hover { border-color: var(--neon); }
+  .id-copy-box span { color: var(--neon); font-size: 1.1rem; font-family: 'Orbitron', sans-serif; flex: 1; text-align: center; letter-spacing: 3px; }
+  .id-copy-box small { color: var(--text-dark); font-size: 0.6rem; white-space: nowrap; }
+  .copy-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--neon); color: #000; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; padding: 0.5rem 1.2rem; border-radius: 20px; font-weight: bold; transition: transform 0.3s ease; z-index: 999; }
+  .copy-toast.show { transform: translateX(-50%) translateY(0); }
+  .player-pill { display: flex; align-items: center; gap: 8px; padding: 0.45rem 0.7rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.85rem; }
+  .player-pill .pill-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); }
+  .player-pill .pill-dot.host-dot { background: var(--neon); }
+  .spinner { width: 18px; height: 18px; border: 2px solid #222; border-top-color: var(--neon); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
 
-/* ── СЕКЦИИ БОКОВЫХ ПАНЕЛЕЙ ── */
-.side-section {
-  border-bottom: 1px solid var(--border);
-  padding: 16px;
-}
-.side-section:last-child { border-bottom: none; flex: 1; }
-
-.section-label {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-/* ── МЕТРИКИ ── */
-.metric-row {
-  margin-bottom: 14px;
-}
-.metric-row:last-child { margin-bottom: 0; }
-
-.metric-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 5px;
-}
-.metric-name {
-  font-size: 0.62rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-.metric-value {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-bright);
-  transition: color 0.5s;
-}
-.metric-value.danger { color: var(--danger); }
-.metric-value.warn { color: var(--warn); }
-.metric-value.good { color: var(--accent); }
-
-.bar-track {
-  height: 4px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 0;
-  overflow: hidden;
-  position: relative;
-}
-.bar-fill {
-  height: 100%;
-  transition: width 1.2s cubic-bezier(0.4,0,0.2,1), background 0.8s;
-  background: var(--accent);
-  animation: bar-fill 1.2s ease;
-}
-.bar-fill.warn { background: var(--warn); }
-.bar-fill.danger { background: var(--danger); }
-.bar-fill.idle { background: #2a2a2a; }
-
-.bar-sublabel {
-  font-size: 0.55rem;
-  color: var(--text-dim);
-  margin-top: 3px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-/* ── ЭТАЖИ БУНКЕРА (правая панель) ── */
-.floor-item {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  margin-bottom: 6px;
-  position: relative;
-  transition: border-color 0.3s;
-}
-.floor-item.sealed {
-  border-color: rgba(255,64,64,0.2);
-  opacity: 0.5;
-}
-.floor-item::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--accent);
-}
-.floor-item.sealed::before { background: var(--danger); }
-
-.floor-num {
-  font-size: 0.55rem;
-  color: var(--text-dim);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-.floor-name {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-bright);
-  margin-top: 1px;
-}
-.floor-status {
-  font-size: 0.55rem;
-  margin-top: 3px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
-.floor-status.ok { color: var(--accent-dim); }
-.floor-status.err { color: var(--danger); }
-
-/* ── ЦЕНТР ── */
-.center-panel {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg2);
-}
-
-/* ── ЭКРАНЫ ── */
-.screen { display: none; flex-direction: column; flex: 1; padding: 32px 40px; }
-.screen.active { display: flex; }
-
-/* ── ЭКРАН ПОДКЛЮЧЕНИЯ ── */
-.connect-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 2.4rem;
-  font-weight: 700;
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  color: var(--accent);
-  text-align: center;
-  margin-bottom: 4px;
-}
-.connect-subtitle {
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  text-align: center;
-  letter-spacing: 3px;
-  margin-bottom: 40px;
-}
-
-.conn-indicator {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  margin-bottom: 28px;
-  font-size: 0.68rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-}
-.conn-light {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--text-dim);
-  flex-shrink: 0;
-}
-.conn-light.connecting { background: var(--warn); animation: blink 1s infinite; }
-.conn-light.online { background: var(--accent); }
-.conn-light.error { background: var(--danger); }
-
-.form-group {
-  margin-bottom: 18px;
-}
-.form-label {
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  display: block;
-}
-.form-input, .form-select {
-  width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--text-bright);
-  padding: 11px 14px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.2s;
-  border-radius: 0;
-  appearance: none;
-}
-.form-input:focus, .form-select:focus { border-color: var(--accent-dim); }
-.form-input::placeholder { color: var(--text-dim); }
-.form-select { cursor: pointer; }
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin: 20px 0;
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  letter-spacing: 2px;
-}
-.divider::before, .divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-/* ── КНОПКИ ── */
-.btn {
-  width: 100%;
-  padding: 12px 20px;
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  border: 1px solid var(--accent-dim);
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-bottom: 10px;
-  display: block;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.2s;
-  z-index: 0;
-}
-.btn:hover:not(:disabled)::before { transform: scaleX(1); }
-.btn:hover:not(:disabled) { color: #000; }
-.btn span { position: relative; z-index: 1; }
-.btn:disabled {
-  border-color: var(--border);
-  color: var(--text-dim);
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  border-color: var(--border-lit);
-  color: var(--text);
-}
-.btn-secondary::before { background: var(--border-lit); }
-.btn-secondary:hover:not(:disabled) { color: var(--text-bright); }
-
-.btn-danger {
-  border-color: #5c2222;
-  color: var(--danger);
-}
-.btn-danger::before { background: var(--danger); }
-.btn-danger:hover:not(:disabled) { color: #000; }
-
-.btn-amber {
-  border-color: var(--amber-dim);
-  color: var(--amber);
-}
-.btn-amber::before { background: var(--amber); }
-.btn-amber:hover:not(:disabled) { color: #000; }
-
-.btn-sm {
-  padding: 7px 14px;
-  font-size: 0.72rem;
-  letter-spacing: 2px;
-  margin-bottom: 6px;
-}
-
-/* ── ЛОББИ ── */
-.id-box {
-  background: var(--panel);
-  border: 1px solid var(--accent-dim);
-  padding: 14px 18px;
-  cursor: pointer;
-  margin-bottom: 20px;
-  transition: border-color 0.2s;
-  text-align: center;
-}
-.id-box:hover { border-color: var(--accent); }
-.id-code {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.6rem;
-  letter-spacing: 6px;
-  color: var(--accent);
-  font-weight: 700;
-}
-.id-hint { font-size: 0.58rem; color: var(--text-dim); letter-spacing: 1.5px; margin-top: 4px; }
-
-.player-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  margin-bottom: 5px;
-  font-size: 0.78rem;
-}
-.player-pip {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-}
-.player-pip.host { background: var(--amber); }
-.player-tag {
-  font-size: 0.55rem;
-  color: var(--amber);
-  border: 1px solid var(--amber-dim);
-  padding: 1px 5px;
-  letter-spacing: 1px;
-}
-
-/* ── ИГРОВОЙ ЭКРАН ── */
-.disaster-block {
-  background: var(--panel);
-  border-left: 3px solid var(--danger);
-  padding: 14px 18px;
-  margin-bottom: 24px;
-}
-.disaster-type {
-  font-size: 0.58rem;
-  color: var(--danger);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.disaster-name {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-bright);
-  margin-bottom: 6px;
-}
-.disaster-desc { font-size: 0.72rem; color: var(--ink); line-height: 1.5; }
-
-/* ── ДОСЬЕ ── */
-.dossier-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 20px;
-}
-.dossier-cell {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  padding: 10px 12px;
-}
-.cell-key {
-  font-size: 0.55rem;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 4px;
-}
-.cell-val {
-  font-size: 0.8rem;
-  color: var(--text-bright);
-  line-height: 1.3;
-}
-.cell-badge {
-  display: inline-block;
-  font-size: 0.5rem;
-  padding: 1px 5px;
-  background: rgba(90,255,110,0.08);
-  color: var(--accent-dim);
-  border: 1px solid var(--accent-dim);
-  letter-spacing: 1px;
-  margin-bottom: 3px;
-  text-transform: uppercase;
-}
-
-/* ── КАРТА ДЕЙСТВИЯ ── */
-.action-card {
-  background: var(--panel);
-  border: 1px solid var(--border-lit);
-  padding: 14px 16px;
-  margin-bottom: 16px;
-  position: relative;
-}
-.action-card::before {
-  content: 'СПЕЦКАРТА';
-  position: absolute;
-  top: -8px;
-  left: 14px;
-  font-size: 0.55rem;
-  letter-spacing: 2px;
-  color: var(--amber);
-  background: var(--bg2);
-  padding: 0 6px;
-}
-.action-card-name {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--amber);
-  margin-bottom: 5px;
-}
-.action-card-desc { font-size: 0.7rem; color: var(--ink); line-height: 1.4; }
-
-/* ── ЛОГ ── */
-.game-log {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 10px 12px;
-  max-height: 90px;
-  overflow-y: auto;
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  line-height: 1.6;
-  margin-bottom: 16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-.log-entry { animation: slide-in 0.2s ease; }
-.log-entry.sys { color: var(--accent-dim); }
-.log-entry.warn { color: var(--warn); }
-.log-entry.danger { color: var(--danger); }
-.log-entry.exp { color: var(--amber); }
-
-/* ── ГОЛОСОВАНИЕ ── */
-.vote-panel {
-  background: var(--panel);
-  border: 1px solid #5c2222;
-  padding: 16px;
-  margin-bottom: 16px;
-  display: none;
-}
-.vote-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: var(--danger);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.vote-subtitle { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 14px; }
-.vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.vote-btn {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px;
-  cursor: pointer;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.75rem;
-  transition: all 0.15s;
-  text-align: center;
-}
-.vote-btn:hover:not(:disabled) { background: var(--danger); color: #fff; border-color: var(--danger); }
-.vote-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-/* ── ЭКСПЕДИЦИЯ ── */
-.expedition-panel {
-  background: var(--panel);
-  border: 1px solid var(--amber-dim);
-  padding: 16px;
-  margin-bottom: 16px;
-  display: none;
-  animation: expedition-pulse 2s ease infinite;
-}
-.expedition-panel.active { display: block; }
-
-.exp-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: var(--amber);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.exp-desc {
-  font-size: 0.68rem;
-  color: var(--ink);
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-.exp-risks {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.risk-chip {
-  border: 1px solid var(--border);
-  padding: 7px 6px;
-  text-align: center;
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  letter-spacing: 0.5px;
-  line-height: 1.3;
-}
-.risk-chip .rval { font-family:'Oswald',sans-serif; font-size:1rem; display:block; color:var(--text-bright); }
-.risk-chip.green .rval { color: var(--accent); }
-.risk-chip.yellow .rval { color: var(--warn); }
-.risk-chip.red .rval { color: var(--danger); }
-
-.exp-target-select {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text-bright);
-  padding: 9px 12px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.8rem;
-  margin-bottom: 10px;
-  appearance: none;
-  outline: none;
-}
-
-/* ── ЭКСПЕДИЦИОННЫЙ РЕЗУЛЬТАТ ── */
-.exp-result-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 9990;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-.exp-result-modal.show { display: flex; }
-.exp-result-box {
-  background: var(--panel);
-  border: 1px solid var(--amber);
-  max-width: 480px;
-  width: 90%;
-  padding: 32px;
-  text-align: center;
-  animation: slide-in 0.3s ease;
-}
-.exp-result-icon { font-size: 3rem; margin-bottom: 12px; }
-.exp-result-type {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 4px;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-}
-.exp-result-text {
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text);
-  margin-bottom: 20px;
-}
-
-/* ── КНОПКА КОПИРОВАНИЯ ── */
-.copy-toast {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(60px);
-  background: var(--accent);
-  color: #000;
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  padding: 8px 20px;
-  transition: transform 0.2s;
-  z-index: 9999;
-}
-.copy-toast.show { transform: translateX(-50%) translateY(0); }
-
-/* ── СПИННЕР ── */
-.spinner {
-  width: 14px; height: 14px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: rotate 0.7s linear infinite;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 6px;
-}
-
-/* ── ТАБЛИЧКА ШАПКИ ── */
-.round-header {
-  padding: 10px 40px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--panel);
-  flex-shrink: 0;
-}
-.round-label { font-size: 0.62rem; color: var(--text-dim); letter-spacing: 2px; }
-.round-val { font-family: 'Oswald', sans-serif; font-size: 0.85rem; color: var(--text-bright); font-weight: 600; letter-spacing: 1px; }
-
-/* ── МЕДИЦИНСКИЙ БЕЙДЖ СОСТОЯНИЯ ЗДОРОВЬЯ ── */
-.health-impact {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-  padding: 5px 0;
-}
-.health-impact .impact-bar {
-  flex: 1;
-  height: 2px;
-  background: var(--border);
-  position: relative;
-}
-.health-impact .impact-fill {
-  position: absolute;
-  top: 0; left: 0; height: 100%;
-  background: var(--danger);
-  transition: width 1s;
-}
-
-/* ── БЛОК ИГРОКОВ НА ПОВЕРХНОСТИ ── */
-.expedition-status {
-  margin-top: 8px;
-  padding: 8px 10px;
-  background: rgba(232,168,64,0.05);
-  border: 1px solid var(--amber-dim);
-  font-size: 0.65rem;
-  color: var(--amber);
-  letter-spacing: 1px;
-}
-
-/* ── ФИНАЛЬНЫЙ ЭКРАН ── */
-.game-over {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 40px;
-}
-.game-over-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 6px;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
-.game-over-msg {
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  line-height: 1.7;
-  max-width: 440px;
-  margin-bottom: 30px;
-}
-
-/* ── НЕЙРО-ПРОФИЛЬ (замена детектора лжи) ── */
-.neuro-panel {
-  background: var(--panel);
-  border: 1px solid #1a2a3a;
-  padding: 14px;
-  margin-bottom: 16px;
-  display: none;
-}
-.neuro-panel.active { display: block; }
-.neuro-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 3px;
-  color: #4a9eff;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-.neuro-desc { font-size: 0.62rem; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4; }
-.neuro-target-select {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid #1a2a3a;
-  color: var(--text-bright);
-  padding: 8px 12px;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  margin-bottom: 8px;
-  appearance: none;
-  outline: none;
-}
-.btn-neuro {
-  width: 100%;
-  padding: 8px;
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  border: 1px solid #1a3a5a;
-  background: transparent;
-  color: #4a9eff;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.btn-neuro:hover:not(:disabled) { background: #4a9eff; color: #000; }
-.btn-neuro:disabled { opacity: 0.3; cursor: not-allowed; }
-.neuro-result {
-  margin-top: 8px;
-  font-size: 0.68rem;
-  line-height: 1.5;
-  min-height: 1rem;
-}
-.neuro-bars { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
-.neuro-bar-row { display: flex; align-items: center; gap: 8px; }
-.neuro-bar-label { font-size: 0.55rem; color: var(--text-dim); width: 70px; text-transform: uppercase; letter-spacing: 1px; }
-.neuro-bar-track { flex: 1; height: 3px; background: var(--border); position: relative; }
-.neuro-bar-fill { position: absolute; top: 0; left: 0; height: 100%; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
-
-@media(max-width:1024px) {
-  .game-grid { grid-template-columns: 1fr; }
-  .sidebar-left, .sidebar-right { display: none; }
-  .screen { padding: 20px; }
-}
+  @media(max-width: 1024px) {
+    .main-container { grid-template-columns: 1fr; gap: 15px; }
+    .status-panel { flex-direction: row; justify-content: space-between; padding: 0.8rem; gap: 0.5rem; }
+    .sys-metric { flex: 1; }
+    .map-panel { order: 3; }
+    .panel-title { display: none; }
+  }
 </style>
 </head>
 <body>
-<div class="scanline-overlay"></div>
 
-<div id="threat-alert" role="alert"></div>
-<div class="copy-toast" id="copy-toast">ID скопирован</div>
+<!-- ── ЖИВОЙ ФОН БУНКЕРА ── -->
+<div id="bunker-bg">
+  <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Тонкий сканлайн -->
+      <pattern id="scanlines" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
+        <rect x="0" y="0" width="1" height="1" fill="rgba(255,85,0,0.015)"/>
+      </pattern>
+      <!-- Решётка -->
+      <pattern id="grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+        <path d="M60 0H0V60" fill="none" stroke="rgba(255,85,0,0.04)" stroke-width="0.5"/>
+      </pattern>
+    </defs>
 
-<!-- Модальное окно результата экспедиции -->
-<div class="exp-result-modal" id="exp-modal">
-  <div class="exp-result-box">
-    <div class="exp-result-icon" id="exp-modal-icon">📦</div>
-    <div class="exp-result-type" id="exp-modal-type">РЕЗУЛЬТАТ ЭКСПЕДИЦИИ</div>
-    <div class="exp-result-text" id="exp-modal-text">...</div>
-    <button class="btn btn-sm" onclick="closeExpModal()"><span>Закрыть рапорт</span></button>
-  </div>
+    <!-- Базовый фон -->
+    <rect width="1400" height="900" fill="#050508"/>
+    <!-- Решётка -->
+    <rect width="1400" height="900" fill="url(#grid)"/>
+    <!-- Сканлайны -->
+    <rect width="1400" height="900" fill="url(#scanlines)"/>
+
+    <!-- ── СХЕМА БУНКЕРА (ЛЕВАЯ СТОРОНА) ── -->
+    <!-- Внешний контур бункера -->
+    <rect x="60" y="80" width="440" height="760" rx="4" fill="none" stroke="rgba(255,85,0,0.08)" stroke-width="1.5"/>
+    <!-- Этажи -->
+    <line x1="60" y1="270" x2="500" y2="270" stroke="rgba(255,85,0,0.06)" stroke-width="1"/>
+    <line x1="60" y1="460" x2="500" y2="460" stroke="rgba(255,85,0,0.06)" stroke-width="1"/>
+    <line x1="60" y1="650" x2="500" y2="650" stroke="rgba(255,85,0,0.06)" stroke-width="1"/>
+
+    <!-- Секторы бункера с пульсацией -->
+    <rect class="bg-sector" x="70" y="90" width="420" height="170" rx="2" fill="rgba(0,204,102,0.04)" stroke="rgba(0,204,102,0.07)" stroke-width="0.5"/>
+    <rect class="bg-sector" x="70" y="280" width="420" height="170" rx="2" fill="rgba(255,85,0,0.03)" stroke="rgba(255,85,0,0.06)" stroke-width="0.5"/>
+    <rect class="bg-sector" x="70" y="470" width="420" height="170" rx="2" fill="rgba(0,100,255,0.03)" stroke="rgba(0,100,255,0.07)" stroke-width="0.5"/>
+    <rect class="bg-sector" x="70" y="660" width="420" height="170" rx="2" fill="rgba(180,0,255,0.03)" stroke="rgba(180,0,255,0.06)" stroke-width="0.5"/>
+
+    <!-- Подписи секторов -->
+    <text x="85" y="112" fill="rgba(0,204,102,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">КОМАНДНЫЙ ПУНКТ</text>
+    <text x="85" y="302" fill="rgba(255,85,0,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">РЕАКТОРНАЯ</text>
+    <text x="85" y="492" fill="rgba(0,120,255,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">ЖИЛОЙ БЛОК</text>
+    <text x="85" y="682" fill="rgba(180,0,255,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">ЛАБОРАТОРИЯ</text>
+
+    <!-- Комнаты внутри этажей -->
+    <rect x="85" y="125" width="120" height="110" rx="2" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
+    <rect x="220" y="125" width="90" height="110" rx="2" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
+    <rect x="325" y="125" width="150" height="110" rx="2" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
+
+    <rect x="85" y="315" width="180" height="110" rx="2" fill="none" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
+    <rect x="280" y="315" width="195" height="110" rx="2" fill="none" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
+
+    <rect x="85" y="505" width="140" height="110" rx="2" fill="none" stroke="rgba(0,120,255,0.1)" stroke-width="0.8"/>
+    <rect x="240" y="505" width="100" height="110" rx="2" fill="none" stroke="rgba(0,120,255,0.1)" stroke-width="0.8"/>
+    <rect x="355" y="505" width="120" height="110" rx="2" fill="none" stroke="rgba(0,120,255,0.1)" stroke-width="0.8"/>
+
+    <rect x="85" y="695" width="165" height="110" rx="2" fill="none" stroke="rgba(180,0,255,0.1)" stroke-width="0.8"/>
+    <rect x="265" y="695" width="210" height="110" rx="2" fill="none" stroke="rgba(180,0,255,0.1)" stroke-width="0.8"/>
+
+    <!-- ── ТРУБОПРОВОДЫ (анимированные) ── -->
+    <!-- Вертикальные магистрали -->
+    <line x1="52" y1="80" x2="52" y2="840" stroke="rgba(0,204,102,0.15)" stroke-width="2"/>
+    <line x1="508" y1="80" x2="508" y2="840" stroke="rgba(255,85,0,0.1)" stroke-width="1.5"/>
+
+    <!-- Анимированные потоки по трубам -->
+    <line class="pipe-anim" x1="52" y1="0" x2="52" y2="900" stroke="rgba(0,204,102,0.3)" stroke-width="1.5"/>
+    <line class="pipe-anim-rev" x1="508" y1="0" x2="508" y2="900" stroke="rgba(255,85,0,0.25)" stroke-width="1.5"/>
+
+    <!-- Горизонтальные отводы -->
+    <line x1="52" y1="175" x2="85" y2="175" stroke="rgba(0,204,102,0.15)" stroke-width="1.5"/>
+    <line x1="52" y1="365" x2="85" y2="365" stroke="rgba(255,85,0,0.15)" stroke-width="1.5"/>
+    <line x1="52" y1="555" x2="85" y2="555" stroke="rgba(0,100,255,0.15)" stroke-width="1.5"/>
+    <line x1="52" y1="745" x2="85" y2="745" stroke="rgba(180,0,255,0.15)" stroke-width="1.5"/>
+
+    <!-- Дополнительные горизонтальные трубы -->
+    <line class="pipe-anim-slow" x1="60" y1="175" x2="508" y2="175" stroke="rgba(0,204,102,0.15)" stroke-width="1"/>
+    <line class="pipe-anim-slow" x1="60" y1="555" x2="508" y2="555" stroke="rgba(0,100,255,0.12)" stroke-width="1"/>
+
+    <!-- Вентиляционные узлы -->
+    <circle cx="52" cy="175" r="5" fill="none" stroke="rgba(0,204,102,0.3)" stroke-width="1"/>
+    <circle cx="52" cy="175" r="2" fill="rgba(0,204,102,0.5)"/>
+    <circle cx="52" cy="365" r="5" fill="none" stroke="rgba(255,85,0,0.3)" stroke-width="1"/>
+    <circle cx="52" cy="365" r="2" fill="rgba(255,85,0,0.5)"/>
+    <circle cx="52" cy="555" r="5" fill="none" stroke="rgba(0,100,255,0.3)" stroke-width="1"/>
+    <circle cx="52" cy="555" r="2" fill="rgba(0,100,255,0.5)"/>
+    <circle cx="52" cy="745" r="5" fill="none" stroke="rgba(180,0,255,0.3)" stroke-width="1"/>
+    <circle cx="52" cy="745" r="2" fill="rgba(180,0,255,0.5)"/>
+
+    <!-- ── ПРАВАЯ СТОРОНА: СХЕМА СИСТЕМ ── -->
+    <!-- Трубы справа -->
+    <line class="pipe-anim" x1="950" y1="0" x2="950" y2="900" stroke="rgba(255,85,0,0.1)" stroke-width="1.5"/>
+    <line class="pipe-anim-rev" x1="1350" y1="0" x2="1350" y2="900" stroke="rgba(0,204,102,0.1)" stroke-width="1.5"/>
+    <line class="pipe-anim-slow" x1="950" y1="300" x2="1350" y2="300" stroke="rgba(255,85,0,0.08)" stroke-width="1"/>
+    <line class="pipe-anim-slow" x1="950" y1="600" x2="1350" y2="600" stroke="rgba(0,204,102,0.08)" stroke-width="1"/>
+
+    <!-- ── РАДАР В ПРАВОМ ВЕРХНЕМ УГЛУ ── -->
+    <!-- Статичные кольца радара -->
+    <circle cx="1230" cy="160" r="120" fill="none" stroke="rgba(0,204,102,0.06)" stroke-width="1"/>
+    <circle cx="1230" cy="160" r="80" fill="none" stroke="rgba(0,204,102,0.08)" stroke-width="0.8"/>
+    <circle cx="1230" cy="160" r="40" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
+    <circle cx="1230" cy="160" r="8" fill="rgba(0,204,102,0.15)"/>
+    <!-- Крестик в центре -->
+    <line x1="1230" y1="30" x2="1230" y2="290" stroke="rgba(0,204,102,0.07)" stroke-width="0.8"/>
+    <line x1="1100" y1="160" x2="1360" y2="160" stroke="rgba(0,204,102,0.07)" stroke-width="0.8"/>
+    <!-- Вращающийся луч -->
+    <g class="radar-group">
+      <line x1="1230" y1="160" x2="1230" y2="42" stroke="rgba(0,204,102,0.4)" stroke-width="1.5"/>
+    </g>
+    <!-- Точки на радаре -->
+    <circle cx="1185" cy="130" r="3" fill="rgba(0,204,102,0.6)"/>
+    <circle cx="1260" cy="100" r="2" fill="rgba(255,85,0,0.7)"/>
+    <circle cx="1200" cy="195" r="2.5" fill="rgba(0,204,102,0.5)"/>
+    <text x="1230" y="296" fill="rgba(0,204,102,0.18)" font-family="'Space Mono',monospace" font-size="7" text-anchor="middle" letter-spacing="2">ПЕРИМЕТР</text>
+
+    <!-- ── НИЖНЯЯ ЦЕНТРАЛЬНАЯ СХЕМА ── -->
+    <!-- Схема цепи -->
+    <rect x="580" y="720" width="220" height="80" rx="3" fill="none" stroke="rgba(255,85,0,0.08)" stroke-width="1"/>
+    <rect x="620" y="740" width="60" height="40" rx="2" fill="rgba(255,85,0,0.03)" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
+    <rect x="700" y="740" width="60" height="40" rx="2" fill="rgba(255,85,0,0.03)" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
+    <line class="pipe-anim-slow" x1="580" y1="760" x2="620" y2="760" stroke="rgba(255,85,0,0.2)" stroke-width="1"/>
+    <line class="pipe-anim-slow" x1="680" y1="760" x2="700" y2="760" stroke="rgba(255,85,0,0.2)" stroke-width="1"/>
+    <line class="pipe-anim-slow" x1="760" y1="760" x2="800" y2="760" stroke="rgba(255,85,0,0.2)" stroke-width="1"/>
+
+    <!-- Текст схемы -->
+    <text x="700" y="715" fill="rgba(255,85,0,0.15)" font-family="'Space Mono',monospace" font-size="7" text-anchor="middle" letter-spacing="2">СИСТЕМА ПИТАНИЯ</text>
+
+    <!-- Декоративные узлы по всему фону -->
+    <circle cx="560" cy="400" r="3" fill="rgba(255,85,0,0.2)"/>
+    <circle cx="560" cy="400" r="8" fill="none" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
+    <circle cx="560" cy="400" r="14" fill="none" stroke="rgba(255,85,0,0.05)" stroke-width="0.8"/>
+
+    <circle cx="840" cy="250" r="3" fill="rgba(0,204,102,0.2)"/>
+    <circle cx="840" cy="250" r="8" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
+    <circle cx="840" cy="250" r="14" fill="none" stroke="rgba(0,204,102,0.05)" stroke-width="0.8"/>
+
+    <!-- Биохазард символ (тонкий) слева внизу -->
+    <text x="280" y="870" fill="rgba(0,204,102,0.06)" font-family="'Orbitron',sans-serif" font-size="40" text-anchor="middle" letter-spacing="0">☣</text>
+    <!-- Ядерный символ справа -->
+    <text x="1150" y="870" fill="rgba(255,85,0,0.05)" font-family="'Orbitron',sans-serif" font-size="40" text-anchor="middle">☢</text>
+
+    <!-- Мигающий статус индикатор -->
+    <circle id="bg-status-dot" cx="1350" cy="30" r="4" fill="rgba(0,204,102,0.6)"/>
+    <text x="1338" y="52" fill="rgba(0,204,102,0.15)" font-family="'Space Mono',monospace" font-size="7" text-anchor="middle">ONLINE</text>
+  </svg>
 </div>
 
-<div class="app-wrapper">
+<!-- Алерт угроз -->
+<div id="threat-alert">
+  <span class="threat-icon" id="threat-icon">⚠️</span>
+  <span id="threat-text">УТЕЧКА КИСЛОРОДА В СЕКТОРЕ B</span>
+</div>
 
-  <!-- ХЕДЕР -->
-  <header class="app-header">
-    <div class="header-logo">CYBER<span>BUNKER</span> <span style="font-size:0.7rem;font-weight:300;letter-spacing:2px;">v7.0</span></div>
-    <div class="header-meta">
-      <span><span class="header-dot offline" id="hdr-dot"></span> <span id="hdr-status">АВТОНОМНО</span></span>
-      <span id="hdr-players">0 / 0</span>
-      <span id="hdr-time">--:--</span>
+<div class="copy-toast" id="copy-toast">ID скопирован!</div>
+
+<div class="main-container" id="terminal-layout">
+
+  <div class="status-panel" id="bunker-status-panel">
+    <div class="panel-title">Системы Жизни</div>
+    <div class="sys-metric">
+      <div class="metric-header">
+        <span class="metric-label">☣️ Кислород</span>
+        <span class="metric-val" id="val-oxygen" style="color:var(--text-dark);">—</span>
+      </div>
+      <div class="flask-wrap">
+        <div class="flask-fill idle" id="bar-oxygen" style="width:0%;"></div>
+        <div class="flask-label" id="lbl-oxygen">БУНКЕР НЕ АКТИВЕН</div>
+      </div>
     </div>
-  </header>
+    <div class="sys-metric">
+      <div class="metric-header">
+        <span class="metric-label">⚡ Энергия</span>
+        <span class="metric-val" id="val-energy" style="color:var(--text-dark);">—</span>
+      </div>
+      <div class="flask-wrap">
+        <div class="flask-fill idle" id="bar-energy" style="width:0%;"></div>
+        <div class="flask-label" id="lbl-energy">БУНКЕР НЕ АКТИВЕН</div>
+      </div>
+    </div>
+    <div class="sys-metric">
+      <div class="metric-header">
+        <span class="metric-label">🌡️ Климат</span>
+        <span class="metric-val" id="val-temp" style="color:var(--text-dark);">—</span>
+      </div>
+      <div class="flask-wrap">
+        <div class="flask-fill idle" id="bar-temp" style="width:0%;"></div>
+        <div class="flask-label" id="lbl-temp">БУНКЕР НЕ АКТИВЕН</div>
+      </div>
+    </div>
+    <div class="sys-metric">
+      <div class="metric-header">
+        <span class="metric-label">☢️ Радиация</span>
+        <span class="metric-val" id="val-rad" style="color:var(--text-dark);">—</span>
+      </div>
+      <div class="flask-wrap">
+        <div class="flask-fill idle" id="bar-rad" style="width:0%;"></div>
+        <div class="flask-label" id="lbl-rad">БУНКЕР НЕ АКТИВЕН</div>
+      </div>
+    </div>
+  </div>
 
-  <div class="game-grid">
+  <div class="window" id="main-window">
 
-    <!-- ЛЕВАЯ ПАНЕЛЬ: СИСТЕМЫ ЖИЗНЕОБЕСПЕЧЕНИЯ -->
-    <aside class="sidebar-left">
-      <div class="side-section">
-        <div class="section-label">Системы бункера</div>
+    <div id="scr-connect" class="screen active">
+      <h1>CyberBunker</h1>
+      <div class="conn-status" id="conn-status-bar">
+        <div class="conn-dot connecting" id="conn-dot"></div>
+        <span id="conn-status-text">Инициализация каналов связи...</span>
+      </div>
+      <input type="text" id="player-name" class="input-field" placeholder="Позывной выжившего..." maxlength="14">
+      <div style="color:var(--text-dark);font-size:0.7rem;margin-bottom:0.3rem;text-align:left;font-weight:bold;">ОБЪЕМ ЖИЛОГО БЛОКА:</div>
+      <select id="max-players-select" class="select-field">
+        <option value="2" selected>2 Игрока</option>
+        <option value="3">3 Игрока</option>
+        <option value="4">4 Игрока</option>
+        <option value="5">5 Игроков</option>
+        <option value="6">6 Игроков</option>
+        <option value="7">7 Игроков</option>
+        <option value="8">8 Игроков</option>
+      </select>
+      <button class="btn" id="btn-create" onclick="createRoom()" disabled>⚡ Создать Узел Связи (Хост)</button>
+      <div style="margin:0.3rem 0;color:#222;text-align:center;font-size:0.8rem;">— ИЛИ —</div>
+      <input type="text" id="room-id" class="input-field" placeholder="Вставить ID хоста сюда...">
+      <button class="btn btn-blue" id="btn-join" onclick="joinRoom()" disabled>📡 Подключить терминал</button>
+    </div>
 
-        <div class="metric-row">
-          <div class="metric-head">
-            <span class="metric-name">O₂ Кислород</span>
-            <span class="metric-value good" id="val-oxygen">—</span>
-          </div>
-          <div class="bar-track"><div class="bar-fill idle" id="bar-oxygen" style="width:0%"></div></div>
-          <div class="bar-sublabel" id="lbl-oxygen">Ожидание активации</div>
-        </div>
-
-        <div class="metric-row">
-          <div class="metric-head">
-            <span class="metric-name">⚡ Энергия</span>
-            <span class="metric-value good" id="val-energy">—</span>
-          </div>
-          <div class="bar-track"><div class="bar-fill idle" id="bar-energy" style="width:0%"></div></div>
-          <div class="bar-sublabel" id="lbl-energy">Ожидание активации</div>
-        </div>
-
-        <div class="metric-row">
-          <div class="metric-head">
-            <span class="metric-name">🌡 Климат</span>
-            <span class="metric-value good" id="val-temp">—</span>
-          </div>
-          <div class="bar-track"><div class="bar-fill idle" id="bar-temp" style="width:0%"></div></div>
-          <div class="bar-sublabel" id="lbl-temp">Ожидание активации</div>
-        </div>
-
-        <div class="metric-row">
-          <div class="metric-head">
-            <span class="metric-name">☢ Радиация</span>
-            <span class="metric-value good" id="val-rad">—</span>
-          </div>
-          <div class="bar-track"><div class="bar-fill idle" id="bar-rad" style="width:0%"></div></div>
-          <div class="bar-sublabel" id="lbl-rad">Ожидание активации</div>
+    <div id="scr-lobby" class="screen">
+      <h1>Шлюзовая Камера</h1>
+      <div id="host-id-section" style="display:none;">
+        <div style="color:var(--text-dark);font-size:0.7rem;margin-bottom:0.4rem;text-align:center;">Отправь этот ID девушке / игрокам:</div>
+        <div class="id-copy-box" onclick="copyRoomId()" title="Нажми чтобы скопировать">
+          <span id="lobby-code">-</span>
+          <small>📋 Копировать</small>
         </div>
       </div>
+      <div class="conn-status" id="lobby-conn-status">
+        <div class="conn-dot online"></div>
+        <span id="lobby-conn-text">Канал открыт, ожидание игроков...</span>
+      </div>
+      <div style="text-align:left;margin-bottom:1.2rem;">
+        <div style="color:var(--text-dark);font-size:0.7rem;margin-bottom:0.5rem;font-weight:bold;">ПОДКЛЮЧЁННЫЕ (<span id="lobby-count">0</span>/<span id="lobby-max">0</span>):</div>
+        <div id="player-list" style="display:flex;flex-direction:column;gap:0.3rem;"></div>
+      </div>
+      <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;" disabled>Проверка систем лобби...</button>
+      <div id="client-wait-msg" style="color:var(--text-dark);font-size:0.75rem;display:none;text-align:center;">
+        <span class="spinner"></span> Ожидайте команды хоста...
+      </div>
+    </div>
 
-      <div class="side-section">
-        <div class="section-label">Влияние здоровья</div>
-        <div id="health-impact-list" style="font-size:0.62rem;color:var(--text-dim);line-height:1.8;">
-          Бункер не активирован
-        </div>
+    <div id="scr-game" class="screen">
+      <h2 id="round-title" style="color:var(--neon-green-glow);font-size:0.9rem;margin-bottom:0.8rem;text-transform:uppercase;letter-spacing:1px;">ИГРОВОЙ СЕАНС АКТИВЕН</h2>
+      <div class="game-log" id="game-log">СБ: Инициализация протоколов завершена.</div>
+
+      <div class="bunker-info">
+        <div style="font-weight:bold;color:var(--neon);margin-bottom:0.1rem;font-size:0.75rem;">ТИП УГРОЗЫ:</div>
+        <div id="bunker-disaster" style="margin-bottom:0.3rem;font-weight:bold;color:#fff;font-size:0.9rem;">...</div>
+        <div id="bunker-desc" style="color:#888;line-height:1.3;font-size:0.75rem;">...</div>
       </div>
 
-      <div class="side-section" style="flex:1;">
-        <div class="section-label">Журнал событий</div>
-        <div class="game-log" id="game-log" style="max-height:none;background:transparent;border:none;padding:0;margin:0;"></div>
-      </div>
-    </aside>
+      <div style="text-align:left;font-weight:bold;font-size:0.75rem;margin-bottom:0.3rem;color:var(--neon);letter-spacing:1px;">ВШИТЫЕ ДАННЫЕ ВАШЕГО ДОСЬЕ (ОТКРЫТЫ ВСЕ):</div>
+      <div class="dossier-grid" id="dossier-box"></div>
 
-    <!-- ЦЕНТРАЛЬНАЯ ПАНЕЛЬ -->
-    <main class="center-panel">
-
-      <!-- ЭКРАН ПОДКЛЮЧЕНИЯ -->
-      <div id="scr-connect" class="screen active">
-        <div class="connect-title">CyberBunker</div>
-        <div class="connect-subtitle">Протокол выживания · Версия 7.0</div>
-
-        <div class="conn-indicator">
-          <div class="conn-light connecting" id="conn-dot"></div>
-          <span id="conn-status-text">Инициализация защищённых каналов...</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Позывной выжившего</label>
-          <input type="text" id="player-name" class="form-input" placeholder="Введите ваш позывной..." maxlength="14">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Вместимость жилого блока</label>
-          <select id="max-players-select" class="form-select">
-            <option value="2" selected>2 выживших</option>
-            <option value="3">3 выживших</option>
-            <option value="4">4 выживших</option>
-            <option value="5">5 выживших</option>
-            <option value="6">6 выживших</option>
-            <option value="7">7 выживших</option>
-            <option value="8">8 выживших</option>
-          </select>
-        </div>
-
-        <button class="btn" id="btn-create" onclick="createRoom()" disabled><span>⚡ Создать узел связи (Хост)</span></button>
-
-        <div class="divider">или подключиться</div>
-
-        <div class="form-group">
-          <label class="form-label">ID хоста</label>
-          <input type="text" id="room-id" class="form-input" placeholder="Вставьте ID хоста...">
-        </div>
-
-        <button class="btn btn-secondary" id="btn-join" onclick="joinRoom()" disabled><span>📡 Подключить терминал</span></button>
+      <!-- ── ДЕТЕКТОР ЛЖИ ── -->
+      <div id="lie-detector-panel">
+        <div class="lie-title">🔬 НЕЙРО-ДЕТЕКТОР ЛЖИ v2.3</div>
+        <div style="font-size:0.68rem;color:#7744aa;margin-bottom:0.5rem;text-align:center;line-height:1.3;">Сканирует биометрические паттерны подозреваемого. Результат: неопровержим.</div>
+        <select class="lie-target-select" id="lie-target-select"></select>
+        <button class="btn-lie" onclick="runLieDetector()">⚡ Запустить сканирование</button>
+        <div id="lie-result"></div>
       </div>
 
-      <!-- ЭКРАН ЛОББИ -->
-      <div id="scr-lobby" class="screen" style="padding:32px 40px;">
-        <div class="connect-title" style="font-size:1.6rem;margin-bottom:4px;">Шлюзовая камера</div>
-        <div class="connect-subtitle">Ожидание выживших · Биометрия проверяется</div>
-
-        <div id="host-id-section" style="display:none;">
-          <div class="form-label" style="text-align:center;margin-bottom:8px;">Передай этот код другим игрокам</div>
-          <div class="id-box" onclick="copyRoomId()">
-            <div class="id-code" id="lobby-code">—</div>
-            <div class="id-hint">нажмите чтобы скопировать</div>
-          </div>
-        </div>
-
-        <div class="conn-indicator" id="lobby-conn-status" style="margin-bottom:24px;">
-          <div class="conn-light online"></div>
-          <span id="lobby-conn-text">Канал открыт · Ожидание игроков (<span id="lobby-count">0</span>/<span id="lobby-max">0</span>)</span>
-        </div>
-
-        <div style="margin-bottom:24px;">
-          <div class="form-label" style="margin-bottom:10px;">Подключённые выжившие</div>
-          <div id="player-list"></div>
-        </div>
-
-        <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;" disabled><span>Запечатать шлюз и начать</span></button>
-        <div id="client-wait-msg" style="color:var(--text-dim);font-size:0.72rem;display:none;text-align:center;letter-spacing:2px;">
-          <span class="spinner"></span> Ожидание команды хоста...
-        </div>
+      <!-- ── СИСТЕМА САБОТАЖА ── -->
+      <div id="saboteur-panel">
+        <div class="saboteur-title">🔴 ПРОТОКОЛ САБОТАЖА</div>
+        <div class="saboteur-desc">Тайно выведи систему из строя. Никто не узнает кто это был.</div>
+        <select class="lie-target-select" id="sabotage-target-select" style="border-color:#550022;background:#100008;"></select>
+        <button class="btn-sab" id="btn-sabotage" onclick="executeSabotage()">Запустить саботаж</button>
+        <div id="sabotage-result" style="font-size:0.7rem;color:#ff4466;margin-top:0.4rem;min-height:0.8rem;"></div>
       </div>
 
-      <!-- ЭКРАН ИГРЫ -->
-      <div id="scr-game" class="screen" style="padding:0;">
-        <div class="round-header">
-          <div>
-            <div class="round-label">Активная угроза</div>
-            <div class="round-val" id="round-disaster-short">—</div>
-          </div>
-          <div style="text-align:right;">
-            <div class="round-label">Выживших в бункере</div>
-            <div class="round-val" id="round-players-count">—</div>
-          </div>
-        </div>
-
-        <div style="flex:1;overflow-y:auto;padding:24px 32px;">
-
-          <div class="disaster-block">
-            <div class="disaster-type">⚠ Угроза</div>
-            <div class="disaster-name" id="bunker-disaster">...</div>
-            <div class="disaster-desc" id="bunker-desc">...</div>
-          </div>
-
-          <div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">Досье выжившего · Все данные открыты</div>
-          <div class="dossier-grid" id="dossier-box"></div>
-
-          <!-- НЕЙРО-ПРОФИЛЬ (замена детектора лжи) -->
-          <div class="neuro-panel" id="neuro-panel">
-            <div class="neuro-title">◈ Нейро-профиль личности</div>
-            <div class="neuro-desc">Анализ психологических паттернов, речевых аномалий и коэффициента доверия выбранного субъекта. Использует поведенческие алгоритмы СБ-класса.</div>
-            <select class="neuro-target-select" id="neuro-target-select"></select>
-            <button class="btn-neuro" id="btn-neuro" onclick="runNeuroProfile()">Запустить профилирование</button>
-            <div class="neuro-bars" id="neuro-bars" style="display:none;">
-              <div class="neuro-bar-row">
-                <span class="neuro-bar-label">Доверие</span>
-                <div class="neuro-bar-track"><div class="neuro-bar-fill" id="nb-trust" style="background:#4a9eff;width:0%"></div></div>
-                <span style="font-size:0.6rem;color:#4a9eff;width:28px;" id="nb-trust-val">—</span>
-              </div>
-              <div class="neuro-bar-row">
-                <span class="neuro-bar-label">Стресс</span>
-                <div class="neuro-bar-track"><div class="neuro-bar-fill" id="nb-stress" style="background:var(--warn);width:0%"></div></div>
-                <span style="font-size:0.6rem;color:var(--warn);width:28px;" id="nb-stress-val">—</span>
-              </div>
-              <div class="neuro-bar-row">
-                <span class="neuro-bar-label">Агрессия</span>
-                <div class="neuro-bar-track"><div class="neuro-bar-fill" id="nb-aggr" style="background:var(--danger);width:0%"></div></div>
-                <span style="font-size:0.6rem;color:var(--danger);width:28px;" id="nb-aggr-val">—</span>
-              </div>
-              <div class="neuro-bar-row">
-                <span class="neuro-bar-label">Лидерство</span>
-                <div class="neuro-bar-track"><div class="neuro-bar-fill" id="nb-lead" style="background:var(--accent);width:0%"></div></div>
-                <span style="font-size:0.6rem;color:var(--accent);width:28px;" id="nb-lead-val">—</span>
-              </div>
-            </div>
-            <div class="neuro-result" id="neuro-result"></div>
-          </div>
-
-          <!-- ЭКСПЕДИЦИЯ НА ПОВЕРХНОСТЬ -->
-          <div class="expedition-panel" id="expedition-panel">
-            <div class="exp-title">↑ Экспедиция на поверхность</div>
-            <div class="exp-desc">Отправить выжившего за пределы бункера за припасами. Высокий риск — высокая награда. Исход непредсказуем.</div>
-            <div class="exp-risks">
-              <div class="risk-chip green">
-                <span class="rval">35%</span>
-                Вернётся с лутом
-              </div>
-              <div class="risk-chip yellow">
-                <span class="rval">40%</span>
-                Заражение / травма
-              </div>
-              <div class="risk-chip red">
-                <span class="rval">25%</span>
-                Не вернётся
-              </div>
-            </div>
-            <div class="form-label">Выбрать выжившего</div>
-            <select class="exp-target-select" id="exp-target-select"></select>
-            <div id="expedition-status-box"></div>
-            <button class="btn btn-amber btn-sm" id="btn-exp" onclick="launchExpedition()"><span>Отправить на поверхность</span></button>
-            <div style="font-size:0.6rem;color:var(--text-dim);margin-top:6px;letter-spacing:1px;">Доступно одна экспедиция за раунд</div>
-          </div>
-
-          <div class="action-card" id="action-card-area">
-            <div class="action-card-name" id="action-card-name">...</div>
-            <div class="action-card-desc" id="action-card-desc">...</div>
-            <button class="btn btn-secondary btn-sm" id="btn-use-card" onclick="useActionCard()" style="margin-top:10px;margin-bottom:0;"><span>Активировать карту</span></button>
-          </div>
-
-          <div class="vote-panel" id="vote-area">
-            <div class="vote-title">⬛ Голосование за изгнание</div>
-            <div class="vote-subtitle" id="vote-instruction">Выбери кандидата на депортацию на поверхность:</div>
-            <div class="vote-grid" id="vote-grid"></div>
-          </div>
-
-          <button class="btn btn-danger" id="btn-action" onclick="startVotingSession()" style="display:none;"><span>🚨 Запустить голосование</span></button>
-        </div>
+      <div class="vote-box" id="vote-area" style="display:none;">
+        <div style="font-weight:bold;color:#ff3333;font-size:0.75rem;text-transform:uppercase;text-align:center;letter-spacing:1px;">🗳️ ГОЛОСОВАНИЕ ЗА ИЗГНАНИЕ 🗳️</div>
+        <div style="color:#aaa;font-size:0.7rem;text-align:center;margin-top:0.1rem;" id="vote-instruction">Выберите объект для депортации на поверхность:</div>
+        <div class="vote-btn-grid" id="vote-grid"></div>
       </div>
 
-    </main>
-
-    <!-- ПРАВАЯ ПАНЕЛЬ: ПЛАН БУНКЕРА -->
-    <aside class="sidebar-right">
-      <div class="side-section">
-        <div class="section-label">Объект</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:1rem;font-weight:600;color:var(--text-bright);margin-bottom:4px;" id="map-bunker-name">Ожидание...</div>
-        <div style="font-size:0.58rem;color:var(--text-dim);letter-spacing:1px;">ПЛАН-СХЕМА АКТИВНА</div>
+      <div class="action-card-box" id="action-card-area">
+        <div style="font-weight:bold;color:var(--neon);font-size:0.7rem;margin-bottom:0.1rem;text-transform:uppercase;">Спецкарта:</div>
+        <div id="action-card-name" style="font-weight:bold;margin-bottom:0.1rem;color:#fff;font-size:0.85rem;">...</div>
+        <div id="action-card-desc" style="color:#aaa;font-size:0.7rem;margin-bottom:0.6rem;line-height:1.25;">...</div>
+        <button class="btn" id="btn-use-card" onclick="useActionCard()" style="padding:0.35rem;font-size:0.7rem;margin:0;">Запустить исполнение карты</button>
       </div>
 
-      <div class="side-section" style="flex:1;overflow-y:auto;">
-        <div class="section-label">Ярусы бункера</div>
-        <div id="map-blueprint-box">
-          <div style="color:var(--text-dim);font-size:0.68rem;text-align:center;padding:40px 0;">Схема заблокирована<br>до старта сессии</div>
-        </div>
-      </div>
-
-      <div class="side-section">
-        <div class="section-label">Игроки в бункере</div>
-        <div id="active-players-list" style="font-size:0.72rem;color:var(--text-dim);">—</div>
-      </div>
-    </aside>
+      <button class="btn btn-red" id="btn-action" onclick="startVotingSession()" style="display:none;">🚨 ЗАПУСТИТЬ ГОЛОСОВАНИЕ</button>
+    </div>
 
   </div>
+
+  <div class="map-panel" id="bunker-map-panel">
+    <div class="panel-title">План-Схема Объекта</div>
+    <div style="font-size:0.75rem;color:var(--text-dark);text-align:center;" id="map-bunker-name">Ожидание генерации...</div>
+    <div class="map-blueprint" id="map-blueprint-box">
+      <div style="color:#333;text-align:center;margin-top:5rem;">Схема заблокирована до старта.</div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-// ─── ДАННЫЕ ───────────────────────────────────────────────────────────────────
+  // ─── ДАННЫЕ ИГРЫ ───────────────────────────────────────────────────────────
+  const DISASTERS = [
+    { name: "Ядерная зима", desc: "Температура на поверхности -70°C. Бункер оснащен реактором, но гидропонный сектор вместит строго ограниченное количество ртов." },
+    { name: "Кибер-Восстание Машин", desc: "Дроны зачищают biological виды. Вентиляционные шахты бункера уязвимы для мелких дронов-разведчиков." },
+    { name: "Грибная Спора Кордицепса", desc: "Заражение фауны. Воздух ядовит. Фильтры бункера требуют постоянной ручной механической чистки." },
+    { name: "Бункер-Инкубатор С-40", desc: "Особая модификация убежища. Встроенные криокамеры искусственного оплодотворения позволяют восстанавливать популяцию ЛЮБЫМ парам выживших." },
+    { name: "Техногенный Потоп", desc: "Грунтовые кипящие воды затапливают нижние ярусы. Требуется постоянный контроль давления насосов." }
+  ];
+  const PROFESSIONS = ["Инженер-электрик","Врач-реаниматолог","Биолог-генетик","Фермер-гидропоник","Слесарь-механик","Физик-ядерщик","Программист систем ИИ","Химик-технолог","Бывший военный тактик","Специалист по вентиляции","Психотерапевт ЧС","Охранник периметра","Профессиональный повар","Инженер очистных сооружений","Шахтер-взрывник","Архивариус"];
+  const HEALTH = ["Абсолютно здоров","Тяжелая хроническая астма","Порок сердца 2 степени","Грибковая инфекция легких","Аллергия на замкнутые пространства","Легкое радиационное облучение","Сахарный диабет (нужен инсулин)","Идеальный иммунитет","Частичная потеря слуха","Хроническая мигрень","Повреждение связок ноги"];
+  const HOBBIES = ["Ботаника и селекция комнатных мхов","Стрельба из лука","Ремонт микросхем на коленке","Самогоноварение и очистка жидкостей","Изучение психоанализа","Спортивный кроссфит","Игра на акустической гитаре","Карточный блеф и фокусы","Любительская радиотехника","Проектирование систем фильтрации"];
+  const BAGGAGE = ["Армейская аптечка с антибиотиками","Набор точных отверток и паяльник","Канистра очищенного бензина 15л","Запас консервированного пайка на месяц","Мощная ультрафиолетовая лампа","Справочник по ремонту систем жизнеобеспечения","Защитный костюм ОЗК","Охотничье ружье (2 патрона)","Портативный дозиметр-анализатор"];
+  const PHOBIAS = ["Никтофобия (Паника в темноте)","Клаустрофобия (Боязнь замкнутого пространства)","Мизофобия (Панический страх микробов)","Киберфобия (Страх перед ИИ и терминалами)","Гемофобия (Страх вида крови)","Охлофобия (Панический страх толпы)"];
+  const HABITS = ["Тяжелая никотиновая зависимость","Привычка громко разговаривать сам с собой","Маниакальная страсть к чистоте","Склонность к мелкому воровству вещей","Алкоголизм в начальной стадии","Постоянно грызет ногти и пластик","Абсолютно нет вредных привычек","Привычка экономить воду до абсурда"];
+  const GENDERS = ["Мужчина, цисгендер","Женщина, цисгендер","Мужчина, бесплоден","Женщина, бесплодна","Андрогин","Интерсекс"];
+  const ACTION_CARDS = [
+    { id:"counter", name:"⛔ Контр-протокол", desc:"Используется мгновенно, когда другой игрок активирует карту действия. Полностью отменяет её эффект." },
+    { id:"hack", name:"📡 Взлом архивов СБ", desc:"Позволяет вам мгновенно увидеть и раскрыть ВСЕ характеристики досье любого выбранного игрока." },
+    { id:"swap_all", name:"🌀 Квантовая рокировка", desc:"Вы меняетесь картой персонажа (досье) с любым выбранным игроком по вашему усмотрению." },
+    { id:"heal_card", name:"💉 Медицинская санация", desc:"Стирает ваше поле здоровья. Новое значение: 'Абсолютно здоров'." },
+    { id:"immunity_card", name:"🛡️ Протокол неприкосновенности", desc:"Дает вам абсолютный иммунитет от изгнания в текущем раунде голосования." }
+  ];
+  const BUNKER_TYPES = ["Военный форпост 'Эгида'","Научный комплекс 'Био-Ген'","Убежище корпорации 'Неон-Тек'","Глубоководный купол 'Атлант'","Шахтерский сектор 'Урал-3'"];
+  const BUNKER_ROOMS = ["Сектор СБ","Медицинский блок","Гидропоника","Жилые капсулы","Реакторная","Серверная ИИ","Оружейный склад","Фильтрационная станция","Кухня-столовая","Лаборатория ДНК"];
 
-const DISASTERS = [
-  { name: "Ядерная зима", desc: "Температура на поверхности -70°C. Реактор бункера работает, но гидропоника вместит строго ограниченное число выживших." },
-  { name: "Кибер-Восстание Машин", desc: "Дроны зачищают биологические виды. Вентиляционные шахты уязвимы для разведчиков-дронов микроформата." },
-  { name: "Споры Кордицепса", desc: "Грибное заражение всей фауны. Воздух ядовит снаружи. Фильтры бункера требуют ежедневной ручной очистки." },
-  { name: "Бункер-Инкубатор С-40", desc: "Особая модификация убежища. Криокамеры искусственного оплодотворения позволяют восстанавливать популяцию ЛЮБЫМИ парами." },
-  { name: "Техногенный Потоп", desc: "Кипящие грунтовые воды затапливают нижние ярусы. Требуется постоянный контроль давления насосов." }
-];
-const PROFESSIONS = ["Инженер-электрик","Врач-реаниматолог","Биолог-генетик","Фермер-гидропоник","Слесарь-механик","Физик-ядерщик","Программист ИИ","Химик-технолог","Военный тактик","Специалист по вентиляции","Психотерапевт ЧС","Охранник периметра","Профессиональный повар","Инженер очистных сооружений","Шахтер-взрывник","Архивариус"];
-const HEALTH_DATA = [
-  { label: "Абсолютно здоров", oxygenPenalty: 0 },
-  { label: "Тяжёлая хроническая астма", oxygenPenalty: 18 },
-  { label: "Порок сердца 2 степени", oxygenPenalty: 14 },
-  { label: "Грибковая инфекция лёгких", oxygenPenalty: 20 },
-  { label: "Аллергия на замкнутые пространства", oxygenPenalty: 10 },
-  { label: "Лёгкое радиационное облучение", oxygenPenalty: 8 },
-  { label: "Сахарный диабет (нужен инсулин)", oxygenPenalty: 6 },
-  { label: "Идеальный иммунитет", oxygenPenalty: -5 },
-  { label: "Частичная потеря слуха", oxygenPenalty: 2 },
-  { label: "Хроническая мигрень", oxygenPenalty: 4 },
-  { label: "Повреждение связок ноги", oxygenPenalty: 3 }
-];
-const HOBBIES = ["Ботаника и селекция мхов","Стрельба из лука","Ремонт микросхем","Самогоноварение","Изучение психоанализа","Спортивный кроссфит","Игра на акустической гитаре","Карточный блеф","Любительская радиотехника","Проектирование фильтрационных систем"];
-const BAGGAGE = ["Армейская аптечка с антибиотиками","Набор отвёрток и паяльник","Канистра бензина 15л","Запас консервов на месяц","УФ-лампа мощная","Справочник систем жизнеобеспечения","Защитный костюм ОЗК","Охотничье ружьё (2 патрона)","Портативный дозиметр"];
-const PHOBIAS = ["Никтофобия — паника в темноте","Клаустрофобия — боязнь замкнутых пространств","Мизофобия — страх микробов","Киберфобия — страх ИИ","Гемофобия — страх крови","Охлофобия — страх толпы"];
-const HABITS = ["Тяжёлая никотиновая зависимость","Привычка громко разговаривать с собой","Маниакальная страсть к чистоте","Склонность к мелкому воровству","Алкоголизм начальной стадии","Постоянно грызёт ногти","Нет вредных привычек","Экономит воду до абсурда"];
-const GENDERS = ["Мужчина, цисгендер","Женщина, цисгендер","Мужчина, бесплоден","Женщина, бесплодна","Андрогин","Интерсекс"];
-const AGES = [18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,42,44,46,48,50,52,55,58,62,65,68,72];
+  // ── УГРОЗЫ (случайные события) ──
+  const RANDOM_THREATS = [
+    { icon:"☣️", text:"КРИТИЧЕСКАЯ УТЕЧКА КИСЛОРОДА В СЕКТОРЕ B-3" },
+    { icon:"⚡", text:"ПЕРЕГРЕВ РЕАКТОРА — ОТКАЗ СИСТЕМЫ ОХЛАЖДЕНИЯ" },
+    { icon:"☢️", text:"РАДИАЦИОННЫЙ ВСПЛЕСК В НИЖНЕМ ЯРУСЕ" },
+    { icon:"🔴", text:"ОБНАРУЖЕН НЕСАНКЦИОНИРОВАННЫЙ ДОСТУП В СЕРВЕРНУЮ" },
+    { icon:"⚠️", text:"ДАВЛЕНИЕ В ВЕНТИЛЯЦИОННОЙ МАГИСТРАЛИ КРИТИЧЕСКОЕ" },
+    { icon:"🌡️", text:"СБОЙ КЛИМАТ-КОНТРОЛЯ — ТЕМПЕРАТУРА РАСТЁТ" },
+    { icon:"💀", text:"ДВИЖЕНИЕ ЗАФИКСИРОВАНО НА ВНЕШНЕМ ПЕРИМЕТРЕ" },
+    { icon:"🔊", text:"ТРЕВОГА: ОТКАЗ ФИЛЬТРОВ ОЧИСТКИ ВОДЫ" },
+    { icon:"⚙️", text:"НЕИСПРАВНОСТЬ ГЕНЕРАТОРА — ПЕРЕХОД НА РЕЗЕРВ" }
+  ];
 
-const ACTION_CARDS = [
-  { id:"counter", name:"⛔ Контр-протокол", desc:"Активируй когда другой игрок использует карту. Полностью отменяет её эффект." },
-  { id:"hack", name:"📡 Взлом архивов СБ", desc:"Мгновенно раскрывает все характеристики досье любого выбранного игрока." },
-  { id:"swap_all", name:"🌀 Квантовая рокировка", desc:"Меняешься досье с любым выбранным игроком." },
-  { id:"heal_card", name:"💉 Медицинская санация", desc:"Сбрасывает твоё состояние здоровья. Новое значение: 'Абсолютно здоров'." },
-  { id:"immunity_card", name:"🛡 Протокол неприкосновенности", desc:"Абсолютный иммунитет от изгнания в текущем раунде голосования." }
-];
+  // ── РЕЗУЛЬТАТЫ ДЕТЕКТОРА ЛЖИ ──
+  const LIE_RESULTS_GUILTY = [
+    "🔴 ЛОЖЬ ОБНАРУЖЕНА: Паттерн сердечного ритма нестабилен. Данный субъект скрывает критическую информацию.",
+    "🔴 АНОМАЛИЯ ЗАФИКСИРОВАНА: Нейронная активность аномальна. Субъект не говорит правды о своём прошлом.",
+    "🔴 ВЫБРОС КОРТИЗОЛА +340%: Физиологические маркеры стресса указывают на преднамеренный обман.",
+    "🔴 СБОЙ ПАТТЕРНА ДЫХАНИЯ: Биометрия не совпадает. Высокая вероятность сокрытия фактов: 94.7%",
+  ];
+  const LIE_RESULTS_CLEAR = [
+    "🟢 ЧИСТ: Биометрика в пределах нормы. Угроза обмана не обнаружена.",
+    "🟢 ВЕРИФИКАЦИЯ ПРОЙДЕНА: Субъект говорит правду. Коэффициент доверия: 91.2%",
+    "🟢 НОРМАЛЬНЫЕ ПОКАЗАТЕЛИ: Стресс-маркеры в допустимых пределах. Ложь не выявлена.",
+  ];
 
-const BUNKER_TYPES = ["Военный форпост «Эгида»","Научный комплекс «Био-Ген»","Убежище корпорации «Неон-Тек»","Глубоководный купол «Атлант»","Шахтёрский сектор «Урал-3»"];
-const BUNKER_ROOMS = ["Сектор СБ","Медицинский блок","Гидропоника","Жилые капсулы","Реакторная","Серверная ИИ","Оружейный склад","Фильтрационная","Кухня-столовая","Лаборатория ДНК"];
+  // ── САБОТАЖ ──
+  const SABOTAGE_EVENTS = [
+    "💧 Система водоснабжения: подача сокращена на 40%",
+    "💡 Освещение сектора C: аварийный режим",
+    "📡 Внешняя антенна: сигнал нарушен",
+    "🌡️ Климат-контроль: настройки сброшены",
+    "🔒 Дверь секции 3: заблокирована",
+    "⚙️ Насос давления: заглушен",
+  ];
 
-const RANDOM_THREATS = [
-  "Утечка O₂ в секторе B-3",
-  "Перегрев реактора — охлаждение отказало",
-  "Радиационный всплеск в нижнем ярусе",
-  "Несанкционированный доступ в серверную",
-  "Давление в вентиляции критическое",
-  "Сбой климат-контроля — температура растёт",
-  "Движение зафиксировано на периметре",
-  "Отказ фильтров очистки воды",
-  "Неисправность генератора — переход на резерв"
-];
+  // ─── СОСТОЯНИЕ ─────────────────────────────────────────────────────────────
+  let peer, conn, myName = "", myRole = "guest";
+  let maxPlayers = 2;
+  let clients = [];
+  let allPlayersNames = [];
+  let myDossier = {}, myActionCard = {};
+  let disasterObj = {};
+  let isCardUsed = false;
+  let serverDossiers = {};
+  let activePlayers = [];
+  let generatedMapData = {};
+  let votesReceived = {};
+  let hasVoted = false;
+  let immunePlayers = [];
+  let myPeerId = "";
+  let gameActive = false;
+  let sabotageUsed = false;
+  let lieDetectorUsed = false;
+  let threatTimer = null;
 
-// Результаты экспедиций
-const EXP_OUTCOMES = [
-  // УСПЕХ (35%)
-  [
-    { icon:"🎒", type:"УСПЕХ", color:"var(--accent)", text:"{name} вернулся. Рюкзак набит медикаментами, консервами и запасными фильтрами. Запасы бункера пополнены. Кислород +5%." },
-    { icon:"🔧", type:"УСПЕХ", color:"var(--accent)", text:"{name} нашёл склад инструментов и запчасти для реактора. Энергосистема улучшена. Энергия +8%." },
-    { icon:"💊", type:"УСПЕХ", color:"var(--accent)", text:"{name} обнаружил аптеку. Антибиотики, инсулин, перевязочные материалы — всё доставлено в медблок." },
-  ],
-  // ЗАРАЖЕНИЕ (40%)
-  [
-    { icon:"☣️", type:"ЗАРАЖЕНИЕ", color:"var(--warn)", text:"{name} вернулся, но на одежде следы неизвестного вещества. Введён в карантин. Уровень радиации в бункере вырос. Кислород -10%." },
-    { icon:"🦠", type:"ЗАРАЖЕНИЕ", color:"var(--warn)", text:"{name} принёс грибковые споры. Фильтрация нарушена. Несколько выживших жалуются на першение в горле. Кислород -8%." },
-    { icon:"🩹", type:"ТРАВМА", color:"var(--warn)", text:"{name} вернулся с переломом ноги — упал в руинах. Нуждается в медицинской помощи, временно выбывает из дежурства." },
-  ],
-  // ГИБЕЛЬ (25%)
-  [
-    { icon:"💀", type:"ПОТЕРЯ", color:"var(--danger)", text:"{name} не вернулся. Последний сигнал маяка зафиксирован в 800м от входа. Сигнал пропал. Группа потеряла ценного выжившего и его навыки." },
-    { icon:"🌪", type:"ПОТЕРЯ", color:"var(--danger)", text:"Связь с {name} оборвалась через 20 минут после выхода. Причина неизвестна. Рекомендуется не открывать шлюз ещё 48 часов." },
-  ]
-];
-
-// ─── СОСТОЯНИЕ ────────────────────────────────────────────────────────────────
-let peer, conn, myName = "", myRole = "guest";
-let maxPlayers = 2;
-let clients = [];
-let allPlayersNames = [];
-let myDossier = {}, myActionCard = {};
-let disasterObj = {};
-let isCardUsed = false;
-let serverDossiers = {};
-let activePlayers = [];
-let generatedMapData = {};
-let votesReceived = {};
-let hasVoted = false;
-let immunePlayers = [];
-let myPeerId = "";
-let gameActive = false;
-let expeditionUsed = false;
-let neuroUsed = false;
-let threatTimer = null;
-let clockInterval = null;
-let sessionStart = null;
-
-const peerConfig = {
-  config: { iceServers: [
+  const peerConfig = { config: { iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "turn:openrelay.metered.ca:80", username: "openrelay", credential: "openrelay" },
     { urls: "turn:openrelay.metered.ca:443", username: "openrelay", credential: "openrelay" }
-  ], iceCandidatePoolSize: 12 }, debug: 0
-};
+  ], iceCandidatePoolSize: 12 }, debug: 0 };
 
-// ─── PEERJS INIT ──────────────────────────────────────────────────────────────
-function initPeer() {
-  setConnStatus("connecting", "Инициализация защищённых каналов...");
-  const shortId = "CB" + Math.floor(100000 + Math.random() * 900000);
-  peer = new Peer(shortId, peerConfig);
-  peer.on('open', id => {
-    myPeerId = id;
-    setConnStatus("online", "Каналы активны — выберите режим");
-    document.getElementById('btn-create').disabled = false;
-    document.getElementById('btn-join').disabled = false;
-    document.getElementById('lobby-code').textContent = id;
-    document.getElementById('hdr-dot').classList.remove('offline');
-    document.getElementById('hdr-status').textContent = "ОНЛАЙН";
-    if(localStorage.getItem('bunker_nick'))
-      document.getElementById('player-name').value = localStorage.getItem('bunker_nick');
-  });
-  peer.on('error', err => {
-    if(err.type === 'unavailable-id') { setTimeout(initPeer, 500); return; }
-    if(err.type === 'peer-unavailable') { setConnStatus("error", "Хост не найден — проверьте ID"); document.getElementById('btn-join').disabled = false; document.getElementById('btn-join').querySelector('span').textContent = "Подключить терминал"; return; }
-    setConnStatus("error", `Сбой: ${err.type}`);
-  });
-  peer.on('disconnected', () => { if(peer && !peer.destroyed) peer.reconnect(); });
-}
-initPeer();
-
-function setConnStatus(state, text) {
-  const dot = document.getElementById('conn-dot');
-  const txt = document.getElementById('conn-status-text');
-  if(dot) dot.className = 'conn-light ' + state;
-  if(txt) txt.textContent = text;
-}
-
-function setScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function logMessage(text, cls='') {
-  const logBox = document.getElementById('game-log');
-  if(!logBox) return;
-  const d = document.createElement('div');
-  d.className = 'log-entry' + (cls ? ' '+cls : '');
-  d.textContent = '› ' + text;
-  logBox.appendChild(d);
-  logBox.scrollTop = logBox.scrollHeight;
-}
-
-function copyRoomId() {
-  const code = document.getElementById('lobby-code').textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    const toast = document.getElementById('copy-toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2000);
-  });
-}
-
-// ─── ТАЙМЕР ──────────────────────────────────────────────────────────────────
-function startClock() {
-  sessionStart = Date.now();
-  clockInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
-    const m = String(Math.floor(elapsed / 60)).padStart(2,'0');
-    const s = String(elapsed % 60).padStart(2,'0');
-    const el = document.getElementById('hdr-time');
-    if(el) el.textContent = m + ':' + s;
-  }, 1000);
-}
-
-// ─── УГРОЗЫ ───────────────────────────────────────────────────────────────────
-function startThreatSystem() {
-  function schedule() {
-    threatTimer = setTimeout(() => {
-      showThreat(RANDOM_THREATS[Math.floor(Math.random() * RANDOM_THREATS.length)]);
-      schedule();
-    }, 35000 + Math.random() * 45000);
-  }
-  schedule();
-}
-function showThreat(text) {
-  const el = document.getElementById('threat-alert');
-  el.textContent = text;
-  el.classList.add('show');
-  logMessage('⚠ СИСТЕМНАЯ ТРЕВОГА: ' + text, 'danger');
-  setTimeout(() => el.classList.remove('show'), 5500);
-}
-
-// ─── СОЗДАТЬ / ПОДКЛЮЧИТЬСЯ ───────────────────────────────────────────────────
-function createRoom() {
-  const n = document.getElementById('player-name').value.trim();
-  if(!n) { alert("Введите позывной!"); return; }
-  myName = n; localStorage.setItem('bunker_nick', myName);
-  myRole = "host";
-  maxPlayers = parseInt(document.getElementById('max-players-select').value);
-  allPlayersNames = [myName]; activePlayers = [myName];
-  document.getElementById('host-id-section').style.display = 'block';
-  document.getElementById('lobby-max').textContent = maxPlayers;
-  document.getElementById('lobby-count').textContent = '1';
-  renderLobbyPlayers(); setScreen('scr-lobby');
-  peer.on('connection', c => {
-    if(clients.length >= maxPlayers - 1) { c.on('open', () => c.send({ type:'lobby-full' })); setTimeout(() => c.close(), 1000); return; }
-    setupHostConnection(c);
-  });
-  checkLobbyReadiness();
-}
-
-function setupHostConnection(c) {
-  c.on('open', () => { clients.push(c); });
-  c.on('data', data => {
-    if(data.type === 'join-request') {
-      c.playerName = data.name;
-      if(allPlayersNames.includes(data.name)) { c.send({ type:'join-error', reason:'Позывной уже занят!' }); return; }
-      allPlayersNames.push(data.name); activePlayers.push(data.name);
-      document.getElementById('lobby-count').textContent = allPlayersNames.length;
-      renderLobbyPlayers(); checkLobbyReadiness();
-      broadcast({ type:'lobby-update', names:allPlayersNames, max:maxPlayers });
-    }
-    if(data.type === 'use-card-click') handleRemoteCardUse(data.sender, data.cardId);
-    if(data.type === 'submit-vote') { votesReceived[data.voter] = data.target; checkVotesProgress(); }
-  });
-  c.on('close', () => {
-    clients = clients.filter(x => x !== c);
-    if(c.playerName) {
-      allPlayersNames = allPlayersNames.filter(n => n !== c.playerName);
-      activePlayers = activePlayers.filter(n => n !== c.playerName);
-      document.getElementById('lobby-count').textContent = allPlayersNames.length;
-      renderLobbyPlayers(); checkLobbyReadiness();
-      broadcast({ type:'lobby-update', names:allPlayersNames, max:maxPlayers });
-      if(gameActive) { updateOxygenAndEnergy(); checkGameOverStatus(); }
-    }
-  });
-}
-
-function joinRoom() {
-  const n = document.getElementById('player-name').value.trim();
-  const rId = document.getElementById('room-id').value.trim();
-  if(!n) { alert("Введите позывной!"); return; }
-  if(!rId) { alert("Введите ID хоста!"); return; }
-  myName = n; localStorage.setItem('bunker_nick', myName);
-  myRole = "guest";
-  document.getElementById('btn-join').disabled = true;
-  document.getElementById('btn-join').querySelector('span').textContent = "Синхронизация...";
-  conn = peer.connect(rId, { reliable: true });
-  setupClientConnection(conn);
-}
-
-function setupClientConnection(c) {
-  c.on('open', () => { c.send({ type:'join-request', name:myName }); });
-  c.on('data', data => {
-    if(data.type === 'join-error') { alert(data.reason); c.close(); window.location.reload(); }
-    if(data.type === 'lobby-full') { alert("Бункер переполнен!"); c.close(); }
-    if(data.type === 'lobby-update') {
-      allPlayersNames = data.names; maxPlayers = data.max;
-      document.getElementById('lobby-count').textContent = allPlayersNames.length;
-      document.getElementById('lobby-max').textContent = maxPlayers;
-      document.getElementById('client-wait-msg').style.display = 'block';
-      setScreen('scr-lobby'); renderLobbyPlayers();
-    }
-    if(data.type === 'game-start') {
-      gameActive = true;
-      disasterObj = data.disaster; myDossier = data.dossiers[myName];
-      myActionCard = data.actionCards[myName]; generatedMapData = data.mapData;
-      activePlayers = data.activePlayers;
-      applyGameStartPayload();
-    }
-    if(data.type === 'sync-dossier-update') { myDossier = data.dossier; renderDossierScreen(); }
-    if(data.type === 'sync-metrics') drawMetricsUI(data.oxygen, data.energy, data.temp, data.rad, data.healthImpact);
-    if(data.type === 'sync-map') { generatedMapData = data.mapData; drawBlueprintMap(); }
-    if(data.type === 'open-voting-panel') showVotingUI(data.targets);
-    if(data.type === 'voting-results') {
-      activePlayers = data.activePlayers;
-      document.getElementById('vote-area').style.display = 'none';
-      logMessage(data.msg, 'danger'); alert(data.msg);
-    }
-    if(data.type === 'game-over-screen') showGameOverScreen(data.winner, data.msg);
-    if(data.type === 'log-relay') logMessage(data.msg, data.cls||'');
-    if(data.type === 'exp-result') showExpModal(data.outcome, data.expName, data.removed);
-  });
-  c.on('close', () => { alert("Связь с хостом потеряна."); window.location.reload(); });
-}
-
-function broadcast(obj) { clients.forEach(c => { if(c.open) c.send(obj); }); }
-
-function checkLobbyReadiness() {
-  if(myRole !== 'host') return;
-  const btn = document.getElementById('btn-start-game');
-  if(allPlayersNames.length === maxPlayers) {
-    btn.disabled = false;
-    btn.querySelector('span').textContent = '🚀 Запечатать шлюз и начать';
-  } else {
-    btn.disabled = true;
-    btn.querySelector('span').textContent = `Ожидание выживших (${allPlayersNames.length}/${maxPlayers})`;
-  }
-}
-
-function renderLobbyPlayers() {
-  const container = document.getElementById('player-list');
-  container.innerHTML = "";
-  allPlayersNames.forEach((p,i) => {
-    const row = document.createElement('div');
-    row.className = 'player-row';
-    row.innerHTML = `<div class="player-pip ${i===0?'host':''}"></div><span>${p}</span>${i===0?'<span class="player-tag">ХОСТ</span>':''}`;
-    container.appendChild(row);
-  });
-}
-
-// ─── ГЕНЕРАЦИЯ ИГРЫ ───────────────────────────────────────────────────────────
-function generateBunkerSession() {
-  if(myRole !== 'host') return;
-  gameActive = true;
-  disasterObj = DISASTERS[Math.floor(Math.random() * DISASTERS.length)];
-
-  allPlayersNames.forEach(p => {
-    const hi = HEALTH_DATA[Math.floor(Math.random() * HEALTH_DATA.length)];
-    serverDossiers[p] = {
-      prof: PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)],
-      health: hi.label,
-      healthPenalty: hi.oxygenPenalty,
-      hobby: HOBBIES[Math.floor(Math.random() * HOBBIES.length)],
-      baggage: BAGGAGE[Math.floor(Math.random() * BAGGAGE.length)],
-      phobia: PHOBIAS[Math.floor(Math.random() * PHOBIAS.length)],
-      habit: HABITS[Math.floor(Math.random() * HABITS.length)],
-      gender: GENDERS[Math.floor(Math.random() * GENDERS.length)],
-      age: AGES[Math.floor(Math.random() * AGES.length)]
-    };
-  });
-
-  let cardsDeck = [...ACTION_CARDS], distributedCards = {};
-  allPlayersNames.forEach(p => {
-    if(!cardsDeck.length) cardsDeck = [...ACTION_CARDS];
-    const idx = Math.floor(Math.random() * cardsDeck.length);
-    distributedCards[p] = cardsDeck.splice(idx,1)[0];
-  });
-
-  const bType = BUNKER_TYPES[Math.floor(Math.random() * BUNKER_TYPES.length)];
-  generatedMapData = { bunkerName: bType, floors: [] };
-  const roomsShuffled = [...BUNKER_ROOMS].sort(() => 0.5 - Math.random());
-  for(let i=0; i<4; i++) {
-    generatedMapData.floors.push({ num:4-i, room:roomsShuffled[i]||"Вспомогательный отсек", sealed:false });
+  function initPeer() {
+    setConnStatus("connecting", "Инициализация каналов связи...");
+    const shortId = "CB" + Math.floor(100000 + Math.random() * 900000).toString();
+    peer = new Peer(shortId, peerConfig);
+    peer.on('open', id => {
+      myPeerId = id;
+      setConnStatus("online", "Каналы связи активны. Выберите режим:");
+      document.getElementById('btn-create').disabled = false;
+      document.getElementById('btn-join').disabled = false;
+      document.getElementById('lobby-code').textContent = id;
+      if(localStorage.getItem('bunker_nick')) {
+        document.getElementById('player-name').value = localStorage.getItem('bunker_nick');
+      }
+      resetMetrics();
+    });
+    peer.on('error', err => {
+      if(err.type === 'unavailable-id') { setTimeout(() => initPeer(), 500); return; }
+      if(err.type === 'peer-unavailable') {
+        setConnStatus("error", "Хост не найден. Проверьте ID узла.");
+        document.getElementById('btn-join').disabled = false;
+        document.getElementById('btn-join').textContent = "📡 Подключить терминал";
+        return;
+      }
+      setConnStatus("error", `Сбой сети: ${err.type}`);
+    });
+    peer.on('disconnected', () => {
+      setConnStatus("connecting", "Соединение потеряно. Переподключение...");
+      if(peer && !peer.destroyed) peer.reconnect();
+    });
   }
 
-  myDossier = serverDossiers[myName];
-  myActionCard = distributedCards[myName];
+  function setConnStatus(state, text) {
+    const dot = document.getElementById('conn-dot');
+    const txt = document.getElementById('conn-status-text');
+    if(dot) dot.className = 'conn-dot ' + state;
+    if(txt) txt.textContent = text;
+  }
+  initPeer();
 
-  broadcast({ type:'game-start', disaster:disasterObj, dossiers:serverDossiers, actionCards:distributedCards, mapData:generatedMapData, activePlayers });
-  applyGameStartPayload();
-  updateOxygenAndEnergy();
-}
+  function setScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
 
-function applyGameStartPayload() {
-  setScreen('scr-game');
-  startClock();
-  document.getElementById('bunker-disaster').textContent = disasterObj.name;
-  document.getElementById('bunker-desc').textContent = disasterObj.desc;
-  document.getElementById('round-disaster-short').textContent = disasterObj.name;
-  document.getElementById('round-players-count').textContent = activePlayers.length + ' чел.';
-  document.getElementById('hdr-players').textContent = activePlayers.length + ' / ' + maxPlayers;
-  if(myRole === 'host') document.getElementById('btn-action').style.display = 'block';
-  document.getElementById('action-card-name').textContent = myActionCard.name;
-  document.getElementById('action-card-desc').textContent = myActionCard.desc;
-  renderDossierScreen();
-  drawBlueprintMap();
-  initNeuroPanel();
-  initExpeditionPanel();
-  startThreatSystem();
-  logMessage('Системы активированы. Все досье — открыты.', 'sys');
-  updateActivePlayers();
-}
-
-function renderDossierScreen() {
-  const box = document.getElementById('dossier-box');
-  box.innerHTML = "";
-  const fields = [
-    { key:'age', label:'Возраст' },
-    { key:'gender', label:'Пол / Биология' },
-    { key:'prof', label:'Профессия' },
-    { key:'health', label:'Состояние здоровья' },
-    { key:'hobby', label:'Хобби' },
-    { key:'baggage', label:'Багаж' },
-    { key:'phobia', label:'Фобия' },
-    { key:'habit', label:'Привычки' }
-  ];
-  fields.forEach(f => {
-    const cell = document.createElement('div');
-    cell.className = 'dossier-cell';
-    const val = f.key === 'age' ? myDossier[f.key] + ' лет' : myDossier[f.key];
-    cell.innerHTML = `<div class="cell-key">${f.label}</div><div class="cell-val">${val||'—'}</div>`;
-    box.appendChild(cell);
-  });
-}
-
-function drawBlueprintMap() {
-  const name = document.getElementById('map-bunker-name');
-  if(name) name.textContent = generatedMapData.bunkerName;
-  const box = document.getElementById('map-blueprint-box');
-  box.innerHTML = "";
-  generatedMapData.floors.forEach(f => {
-    const fl = document.createElement('div');
-    fl.className = `floor-item ${f.sealed?'sealed':''}`;
-    fl.innerHTML = `
-      <div class="floor-num">ЯРУС 0${f.num}</div>
-      <div class="floor-name">${f.room.toUpperCase()}</div>
-      <div class="floor-status ${f.sealed?'err':'ok'}">${f.sealed?'⚠ ИЗОЛИРОВАН':'✓ ФУНКЦИОНИРУЕТ'}</div>
-    `;
-    box.appendChild(fl);
-  });
-}
-
-// ─── КИСЛОРОД С УЧЁТОМ ЗДОРОВЬЯ ──────────────────────────────────────────────
-function updateOxygenAndEnergy() {
-  if(myRole !== 'host') return;
-
-  const count = activePlayers.length;
-  // Базовые потери O2 от числа людей
-  let oxygenBase = Math.max(0, 100 - count * 8);
-
-  // Дополнительные потери от болезней (суммируем штрафы всех активных игроков)
-  let healthPenaltyTotal = 0;
-  let healthImpact = []; // [{name, penalty}]
-  activePlayers.forEach(p => {
-    const d = serverDossiers[p];
-    if(d) {
-      const penalty = d.healthPenalty || 0;
-      healthPenaltyTotal += penalty;
-      if(penalty !== 0) healthImpact.push({ name:p, penalty });
-    }
-  });
-
-  let oxygenVal = Math.max(0, Math.min(100, oxygenBase - healthPenaltyTotal));
-  let energyVal = Math.max(0, 100 - count * 5);
-  let tempVal = 65, radVal = 15;
-
-  drawMetricsUI(oxygenVal, energyVal, tempVal, radVal, healthImpact);
-  broadcast({ type:'sync-metrics', oxygen:oxygenVal, energy:energyVal, temp:tempVal, rad:radVal, healthImpact });
-
-  const sealedCount = maxPlayers - count;
-  generatedMapData.floors.forEach((f,idx) => { f.sealed = idx < sealedCount; });
-  drawBlueprintMap();
-  broadcast({ type:'sync-map', mapData:generatedMapData });
-  updateActivePlayers();
-}
-
-function drawMetricsUI(ox, en, te, rd, healthImpact) {
-  const setBar = (id, val, mode) => {
-    const el = document.getElementById('bar-'+id);
-    if(el) { el.style.width = val+'%'; el.className = 'bar-fill '+mode; }
-  };
-  const setVal = (id, text, cls) => {
-    const el = document.getElementById('val-'+id);
-    if(el) { el.textContent = text; el.className = 'metric-value '+cls; }
-  };
-  const setLbl = (id, text) => { const el = document.getElementById('lbl-'+id); if(el) el.textContent = text; };
-
-  const oxMode = ox<=20?'danger':ox<=45?'warn':'';
-  setBar('oxygen', ox, oxMode); setVal('oxygen', ox+'%', oxMode||'good'); setLbl('oxygen', ox>25?'Стабильная подача':'Резервный клапан');
-
-  const enMode = en<=20?'danger':en<=45?'warn':'';
-  setBar('energy', en, enMode); setVal('energy', en+'%', enMode||'good'); setLbl('energy', en>40?'Сеть стабильна':'Аккумуляторы');
-
-  setBar('temp', te, ''); setVal('temp', '+21°C', 'good'); setLbl('temp', 'Климат-контроль');
-  setBar('rad', rd, ''); setVal('rad', '0.12 мЗв', 'good'); setLbl('rad', 'Щит защиты');
-
-  // Блок влияния здоровья
-  const hil = document.getElementById('health-impact-list');
-  if(hil && healthImpact) {
-    if(healthImpact.length === 0) {
-      hil.innerHTML = '<span style="color:var(--accent-dim);">Состояние здоровья не влияет на O₂</span>';
-    } else {
-      hil.innerHTML = healthImpact.map(h =>
-        `<div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-          <span style="color:var(--text)">${h.name}</span>
-          <span style="color:${h.penalty>0?'var(--danger)':'var(--accent)'};">${h.penalty>0?'−'+h.penalty:'+'+Math.abs(h.penalty)}% O₂</span>
-        </div>`
-      ).join('');
+  function logMessage(text) {
+    const logBox = document.getElementById('game-log');
+    if(logBox) {
+      const d = document.createElement('div');
+      d.textContent = '> ' + text;
+      logBox.appendChild(d);
+      logBox.scrollTop = logBox.scrollHeight;
     }
   }
-}
 
-function updateActivePlayers() {
-  const list = document.getElementById('active-players-list');
-  if(!list) return;
-  if(!activePlayers.length) { list.textContent = '—'; return; }
-  list.innerHTML = activePlayers.map(p =>
-    `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
-      <div style="width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;"></div>
-      <span>${p}</span>
-    </div>`
-  ).join('');
-  document.getElementById('round-players-count').textContent = activePlayers.length + ' чел.';
-  document.getElementById('hdr-players').textContent = activePlayers.length + ' / ' + maxPlayers;
-}
+  function copyRoomId() {
+    const code = document.getElementById('lobby-code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const toast = document.getElementById('copy-toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    });
+  }
 
-// ─── НЕЙРО-ПРОФИЛЬ ────────────────────────────────────────────────────────────
-function initNeuroPanel() {
-  const panel = document.getElementById('neuro-panel');
-  const sel = document.getElementById('neuro-target-select');
-  const others = activePlayers.filter(p => p !== myName);
-  if(!others.length) return;
-  sel.innerHTML = others.map(p => `<option value="${p}">${p}</option>`).join('');
-  panel.classList.add('active');
-}
+  function resetMetrics() {
+    updateMetricFill('bar-oxygen', 'lbl-oxygen', 0, 'idle', 'ОТКЛЮЧЕНО');
+    updateMetricFill('bar-energy', 'lbl-energy', 0, 'idle', 'ОТКЛЮЧЕНО');
+    updateMetricFill('bar-temp', 'lbl-temp', 0, 'idle', 'ОТКЛЮЧЕНО');
+    updateMetricFill('bar-rad', 'lbl-rad', 0, 'idle', 'ОТКЛЮЧЕНО');
+    document.getElementById('val-oxygen').textContent = '—';
+    document.getElementById('val-energy').textContent = '—';
+    document.getElementById('val-temp').textContent = '—';
+    document.getElementById('val-rad').textContent = '—';
+  }
 
-function runNeuroProfile() {
-  if(neuroUsed) return;
-  const target = document.getElementById('neuro-target-select').value;
-  if(!target) return;
-  const result = document.getElementById('neuro-result');
-  const bars = document.getElementById('neuro-bars');
-  const btn = document.getElementById('btn-neuro');
-  result.textContent = 'Сбор биометрических паттернов...';
-  result.style.color = 'var(--text-dim)';
+  function updateMetricFill(barId, lblId, val, mode, labelText) {
+    const bar = document.getElementById(barId);
+    const lbl = document.getElementById(lblId);
+    if(bar) {
+      bar.style.width = val + '%';
+      bar.className = `flask-fill ${mode}`;
+    }
+    if(lbl) {
+      lbl.textContent = labelText;
+      if(mode==='good' || mode==='cold' || mode==='hot') lbl.style.color = 'rgba(255,255,255,0.8)';
+      else if(mode==='warn' || mode==='danger') lbl.style.color = '#fff';
+      else lbl.style.color = 'rgba(255,255,255,0.25)';
+    }
+  }
 
-  setTimeout(() => {
-    neuroUsed = true;
-    btn.disabled = true; btn.textContent = 'Использован';
+  // ─── СЛУЧАЙНЫЕ УГРОЗЫ (АТМОСФЕРА) ────────────────────────────────────────
+  function startThreatSystem() {
+    if(threatTimer) clearInterval(threatTimer);
+    // Первая угроза через 35 секунд, потом каждые 40-80 сек
+    function scheduleThreat() {
+      const delay = 35000 + Math.random() * 45000;
+      threatTimer = setTimeout(() => {
+        showRandomThreat();
+        scheduleThreat();
+      }, delay);
+    }
+    scheduleThreat();
+  }
 
-    const trust = Math.floor(10 + Math.random() * 85);
-    const stress = Math.floor(15 + Math.random() * 75);
-    const aggr = Math.floor(5 + Math.random() * 60);
-    const lead = Math.floor(10 + Math.random() * 80);
+  function showRandomThreat() {
+    const t = RANDOM_THREATS[Math.floor(Math.random() * RANDOM_THREATS.length)];
+    const alert = document.getElementById('threat-alert');
+    document.getElementById('threat-icon').textContent = t.icon;
+    document.getElementById('threat-text').textContent = t.text;
+    alert.classList.remove('hiding');
+    alert.classList.add('show');
 
-    bars.style.display = 'flex';
+    // Логируем угрозу
+    logMessage(`⚠️ СИСТЕМНАЯ ТРЕВОГА: ${t.text}`);
+
+    // Прячем через 6 сек
     setTimeout(() => {
-      document.getElementById('nb-trust').style.width = trust+'%';
-      document.getElementById('nb-stress').style.width = stress+'%';
-      document.getElementById('nb-aggr').style.width = aggr+'%';
-      document.getElementById('nb-lead').style.width = lead+'%';
-      document.getElementById('nb-trust-val').textContent = trust+'%';
-      document.getElementById('nb-stress-val').textContent = stress+'%';
-      document.getElementById('nb-aggr-val').textContent = aggr+'%';
-      document.getElementById('nb-lead-val').textContent = lead+'%';
-    }, 100);
+      alert.classList.add('hiding');
+      setTimeout(() => {
+        alert.classList.remove('show');
+        alert.classList.remove('hiding');
+      }, 300);
+    }, 6000);
+  }
 
-    const verdicts = [
-      trust>60 ? `Субъект ${target} демонстрирует высокий коэффициент доверия. Стресс${stress>50?' повышен':' в норме'}.` :
-      `Профиль субъекта ${target} вызывает вопросы. Коэффициент доверия ниже нормы — возможное сокрытие информации.`
-    ];
-    result.textContent = verdicts[0];
-    result.style.color = trust>60 ? 'var(--accent)' : 'var(--warn)';
-    logMessage(`Нейро-профиль ${target}: доверие ${trust}%, стресс ${stress}%`);
-  }, 2500);
-}
-
-// ─── ЭКСПЕДИЦИЯ ───────────────────────────────────────────────────────────────
-function initExpeditionPanel() {
-  if(myRole !== 'host') return; // только хост запускает
-  const panel = document.getElementById('expedition-panel');
-  const sel = document.getElementById('exp-target-select');
-  sel.innerHTML = activePlayers.map(p => `<option value="${p}">${p}</option>`).join('');
-  panel.classList.add('active');
-}
-
-function launchExpedition() {
-  if(expeditionUsed) return;
-  const target = document.getElementById('exp-target-select').value;
-  if(!target) return;
-  if(!confirm(`Отправить "${target}" на поверхность? Исход неизвестен.`)) return;
-
-  expeditionUsed = true;
-  document.getElementById('btn-exp').disabled = true;
-  document.getElementById('btn-exp').querySelector('span').textContent = 'Экспедиция отправлена...';
-
-  const box = document.getElementById('expedition-status-box');
-  box.innerHTML = `<div class="expedition-status">↑ ${target} покинул бункер · Ожидание результата...</div>`;
-
-  logMessage(`↑ ${target} отправлен на поверхность. Связь через 2 минуты...`, 'exp');
-  broadcast({ type:'log-relay', msg:`↑ ${target} отправлен на поверхность. Ожидаем результата...`, cls:'exp' });
-
-  // Рандомный исход: 35% успех, 40% заражение, 25% гибель
-  const roll = Math.random();
-  let outcomeGroup;
-  if(roll < 0.35) outcomeGroup = EXP_OUTCOMES[0];
-  else if(roll < 0.75) outcomeGroup = EXP_OUTCOMES[1];
-  else outcomeGroup = EXP_OUTCOMES[2];
-
-  const outcome = outcomeGroup[Math.floor(Math.random() * outcomeGroup.length)];
-  const finalOutcome = { ...outcome, text: outcome.text.replace(/{name}/g, target) };
-
-  // Задержка "выхода" — 4 секунды
-  setTimeout(() => {
-    let removed = false;
-
-    // Если гибель — убираем игрока
-    if(outcome.type === 'ПОТЕРЯ') {
-      activePlayers = activePlayers.filter(p => p !== target);
-      removed = true;
+  // ─── ДЕТЕКТОР ЛЖИ ────────────────────────────────────────────────────────
+  function initLieDetector() {
+    const panel = document.getElementById('lie-detector-panel');
+    const sel = document.getElementById('lie-target-select');
+    panel.classList.add('active');
+    sel.innerHTML = "";
+    activePlayers.filter(p => p !== myName).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = p;
+      sel.appendChild(opt);
+    });
+    if(sel.options.length === 0) {
+      panel.classList.remove('active');
     }
+  }
 
-    // Если заражение — штраф O2
-    if(outcome.type === 'ЗАРАЖЕНИЕ' || outcome.type === 'ТРАВМА') {
-      const infected = serverDossiers[target];
-      if(infected) {
-        infected.healthPenalty = (infected.healthPenalty||0) + 12;
-        infected.health = `ЗАРАЖЁН (${infected.health})`;
+  function runLieDetector() {
+    if(lieDetectorUsed) return;
+    const target = document.getElementById('lie-target-select').value;
+    if(!target) return;
+
+    const resultEl = document.getElementById('lie-result');
+    resultEl.textContent = '🔄 Сканирование биометрических данных...';
+    resultEl.style.color = '#888';
+
+    setTimeout(() => {
+      lieDetectorUsed = true;
+      const isGuilty = Math.random() > 0.45; // чаще виновен — больше драмы
+      const pool = isGuilty ? LIE_RESULTS_GUILTY : LIE_RESULTS_CLEAR;
+      const result = pool[Math.floor(Math.random() * pool.length)];
+      resultEl.textContent = `[${target}] — ${result}`;
+      resultEl.style.color = isGuilty ? '#ff4444' : '#00cc66';
+      logMessage(`Детектор ЛЖИ: субъект "${target}" — ${isGuilty ? 'ЛОЖЬ ОБНАРУЖЕНА' : 'ЧИСТ'}`);
+      document.querySelector('.btn-lie').disabled = true;
+      document.querySelector('.btn-lie').textContent = 'Использован';
+    }, 2200);
+  }
+
+  // ─── САБОТАЖ ─────────────────────────────────────────────────────────────
+  function initSabotagePanel() {
+    // Только хост получает саботаж (как секретное оружие ведущего)
+    if(myRole !== 'host') return;
+    const panel = document.getElementById('saboteur-panel');
+    const sel = document.getElementById('sabotage-target-select');
+    panel.classList.add('active');
+    // Заполняем список систем бункера
+    const systems = ["Система кислорода", "Энергетическая сеть", "Климат-контроль", "Радиационный щит"];
+    sel.innerHTML = "";
+    systems.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+  }
+
+  function executeSabotage() {
+    if(sabotageUsed) return;
+    const target = document.getElementById('sabotage-target-select').value;
+    const event = SABOTAGE_EVENTS[Math.floor(Math.random() * SABOTAGE_EVENTS.length)];
+    const resultEl = document.getElementById('sabotage-result');
+
+    sabotageUsed = true;
+    document.getElementById('btn-sabotage').disabled = true;
+    resultEl.textContent = `✅ Выполнено: ${event}`;
+
+    // Показываем угрозу на экране
+    const icons = ["🔴","⚠️","💀","⚙️"];
+    const icon = icons[Math.floor(Math.random() * icons.length)];
+    const alert = document.getElementById('threat-alert');
+    document.getElementById('threat-icon').textContent = icon;
+    document.getElementById('threat-text').textContent = `ХОСТ АКТИВИРОВАЛ: ${target.toUpperCase()} — СБОЙ СИСТЕМЫ`;
+    alert.classList.remove('hiding');
+    alert.classList.add('show');
+    setTimeout(() => {
+      alert.classList.add('hiding');
+      setTimeout(() => { alert.classList.remove('show'); alert.classList.remove('hiding'); }, 300);
+    }, 6000);
+
+    logMessage(`🔴 ХОСТ: Саботаж системы "${target}" активирован!`);
+    broadcast({ type: 'log-relay', msg: `🔴 ВНИМАНИЕ: Зафиксирован сбой системы "${target}"!` });
+  }
+
+  // ─── СЕТЕВАЯ ЛОГИКА ────────────────────────────────────────────────────────
+  function createRoom() {
+    const nameInput = document.getElementById('player-name').value.trim();
+    if(!nameInput) { alert("Введите позывной!"); return; }
+    myName = nameInput; localStorage.setItem('bunker_nick', myName);
+    myRole = "host";
+    maxPlayers = parseInt(document.getElementById('max-players-select').value);
+    allPlayersNames = [myName];
+    activePlayers = [myName];
+    document.getElementById('host-id-section').style.display = 'block';
+    document.getElementById('lobby-max').textContent = maxPlayers;
+    document.getElementById('lobby-count').textContent = "1";
+    document.getElementById('btn-start-game').style.display = 'block';
+    renderLobbyPlayers();
+    setScreen('scr-lobby');
+    peer.on('connection', c => {
+      if(clients.length >= maxPlayers - 1) {
+        c.on('open', () => c.send({ type: 'lobby-full' }));
+        setTimeout(() => c.close(), 1000);
+        return;
       }
+      setupHostConnection(c);
+    });
+    checkLobbyReadiness();
+  }
+
+  function setupHostConnection(c) {
+    c.on('open', () => {
+      clients.push(c);
+      logMessage(`Система: Новое подключение терминала.`);
+    });
+    c.on('data', data => {
+      if(data.type === 'join-request') {
+        c.playerName = data.name;
+        if(allPlayersNames.includes(data.name)) {
+          c.send({ type: 'join-error', reason: 'Позывной уже занят в сети!' });
+          return;
+        }
+        allPlayersNames.push(data.name);
+        activePlayers.push(data.name);
+        document.getElementById('lobby-count').textContent = allPlayersNames.length;
+        renderLobbyPlayers();
+        checkLobbyReadiness();
+        broadcast({ type: 'lobby-update', names: allPlayersNames, max: maxPlayers });
+      }
+      if(data.type === 'use-card-click') handleRemoteCardUse(data.sender, data.cardId);
+      if(data.type === 'submit-vote') {
+        votesReceived[data.voter] = data.target;
+        logMessage(`Голос получен от: ${data.voter}`);
+        checkVotesProgress();
+      }
+    });
+    c.on('close', () => {
+      clients = clients.filter(x => x !== c);
+      if(c.playerName) {
+        allPlayersNames = allPlayersNames.filter(n => n !== c.playerName);
+        activePlayers = activePlayers.filter(n => n !== c.playerName);
+        document.getElementById('lobby-count').textContent = allPlayersNames.length;
+        renderLobbyPlayers();
+        checkLobbyReadiness();
+        broadcast({ type: 'lobby-update', names: allPlayersNames, max: maxPlayers });
+        if(gameActive) checkGameOverStatus();
+      }
+    });
+  }
+
+  function joinRoom() {
+    const nameInput = document.getElementById('player-name').value.trim();
+    const rId = document.getElementById('room-id').value.trim();
+    if(!nameInput) { alert("Введите позывной!"); return; }
+    if(!rId) { alert("Введите ID хоста!"); return; }
+    myName = nameInput; localStorage.setItem('bunker_nick', myName);
+    myRole = "guest";
+    document.getElementById('btn-join').disabled = true;
+    document.getElementById('btn-join').textContent = "⚡ Синхронизация...";
+    conn = peer.connect(rId, { reliable: true });
+    setupClientConnection(conn);
+  }
+
+  function setupClientConnection(c) {
+    c.on('open', () => { c.send({ type: 'join-request', name: myName }); });
+    c.on('data', data => {
+      if(data.type === 'join-error') { alert(data.reason); c.close(); window.location.reload(); }
+      if(data.type === 'lobby-full') { alert("Жилой блок переполнен! Подключение невозможно."); c.close(); }
+      if(data.type === 'lobby-update') {
+        allPlayersNames = data.names; maxPlayers = data.max;
+        document.getElementById('lobby-count').textContent = allPlayersNames.length;
+        document.getElementById('lobby-max').textContent = maxPlayers;
+        document.getElementById('client-wait-msg').style.display = 'block';
+        setScreen('scr-lobby'); renderLobbyPlayers();
+      }
+      if(data.type === 'game-start') {
+        gameActive = true;
+        disasterObj = data.disaster;
+        myDossier = data.dossiers[myName];
+        myActionCard = data.actionCards[myName];
+        generatedMapData = data.mapData;
+        activePlayers = data.activePlayers;
+        applyGameStartPayload();
+      }
+      if(data.type === 'sync-dossier-update') { myDossier = data.dossier; renderDossierScreen(); }
+      if(data.type === 'sync-metrics') drawBunkerMetricsUI(data.oxygen, data.energy, data.temp, data.rad);
+      if(data.type === 'sync-map') { generatedMapData = data.mapData; drawBunkerBlueprintMap(); }
+      if(data.type === 'open-voting-panel') showVotingUI(data.targets);
+      if(data.type === 'voting-results') {
+        activePlayers = data.activePlayers;
+        document.getElementById('vote-area').style.display = 'none';
+        alert(data.msg); logMessage(data.msg);
+      }
+      if(data.type === 'game-over-screen') showGameOverScreen(data.winner, data.msg);
+      if(data.type === 'log-relay') logMessage(data.msg);
+    });
+    c.on('close', () => { alert("Канал связи с хостом разорван."); window.location.reload(); });
+  }
+
+  function broadcast(obj) {
+    clients.forEach(c => { if(c.open) c.send(obj); });
+  }
+
+  function checkLobbyReadiness() {
+    if(myRole !== 'host') return;
+    const btn = document.getElementById('btn-start-game');
+    if(allPlayersNames.length === maxPlayers) {
+      btn.disabled = false;
+      btn.textContent = "🚀 ЗАПЕЧАТАТЬ ШЛЮЗ И НАЧАТЬ";
+    } else {
+      btn.disabled = true;
+      btn.textContent = `Ожидание игроков (${allPlayersNames.length}/${maxPlayers})`;
+    }
+  }
+
+  function renderLobbyPlayers() {
+    const container = document.getElementById('player-list');
+    container.innerHTML = "";
+    allPlayersNames.forEach(p => {
+      const isHost = (p === allPlayersNames[0]);
+      const pill = document.createElement('div');
+      pill.className = 'player-pill';
+      pill.innerHTML = `<div class="pill-dot ${isHost?'host-dot':''}"></div> <span>${p} ${isHost?'[ХОСТ]':''}</span>`;
+      container.appendChild(pill);
+    });
+  }
+
+  // ─── ИГРОВАЯ ГЕНЕРАЦИЯ ─────────────────────────────────────────────────────
+  function generateBunkerSession() {
+    if(myRole !== 'host') return;
+    gameActive = true;
+    disasterObj = DISASTERS[Math.floor(Math.random() * DISASTERS.length)];
+
+    allPlayersNames.forEach(p => {
+      serverDossiers[p] = {
+        prof: PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)],
+        health: HEALTH[Math.floor(Math.random() * HEALTH.length)],
+        hobby: HOBBIES[Math.floor(Math.random() * HOBBIES.length)],
+        baggage: BAGGAGE[Math.floor(Math.random() * BAGGAGE.length)],
+        phobia: PHOBIAS[Math.floor(Math.random() * PHOBIAS.length)],
+        habit: HABITS[Math.floor(Math.random() * HABITS.length)],
+        gender: GENDERS[Math.floor(Math.random() * GENDERS.length)]
+      };
+    });
+
+    let cardsDeck = [...ACTION_CARDS];
+    let distributedCards = {};
+    allPlayersNames.forEach(p => {
+      if(cardsDeck.length === 0) cardsDeck = [...ACTION_CARDS];
+      const idx = Math.floor(Math.random() * cardsDeck.length);
+      distributedCards[p] = cardsDeck.splice(idx, 1)[0];
+    });
+
+    const bType = BUNKER_TYPES[Math.floor(Math.random() * BUNKER_TYPES.length)];
+    generatedMapData = { bunkerName: bType, floors: [] };
+    let roomsShuffled = [...BUNKER_ROOMS].sort(() => 0.5 - Math.random());
+    for(let i=0; i<4; i++) {
+      generatedMapData.floors.push({ num: 4 - i, room: roomsShuffled[i] || "Вспомогательный отсек", sealed: false });
     }
 
-    // Если успех — бонус к кислороду
-    if(outcome.type === 'УСПЕХ') {
-      // Символически — просто логируем, можно добавить реальный бонус
-    }
+    myDossier = serverDossiers[myName];
+    myActionCard = distributedCards[myName];
 
-    showExpModal(finalOutcome, target, removed);
-    broadcast({ type:'exp-result', outcome:finalOutcome, expName:target, removed });
-
+    broadcast({ type: 'game-start', disaster: disasterObj, dossiers: serverDossiers, actionCards: distributedCards, mapData: generatedMapData, activePlayers });
+    applyGameStartPayload();
     updateOxygenAndEnergy();
-    if(removed) checkGameOverStatus();
-    initExpeditionPanel(); // Обновляем список
-    expeditionUsed = false; // Следующий раунд
-    document.getElementById('btn-exp').disabled = false;
-    document.getElementById('btn-exp').querySelector('span').textContent = 'Отправить на поверхность';
-    box.innerHTML = '';
+  }
 
-  }, 4000);
-}
+  function applyGameStartPayload() {
+    setScreen('scr-game');
+    document.getElementById('bunker-disaster').textContent = disasterObj.name;
+    document.getElementById('bunker-desc').textContent = disasterObj.desc;
+    if(myRole === 'host') document.getElementById('btn-action').style.display = 'block';
+    document.getElementById('action-card-name').textContent = myActionCard.name;
+    document.getElementById('action-card-desc').textContent = myActionCard.desc;
+    renderDossierScreen();
+    drawBunkerBlueprintMap();
+    logMessage(`СБ: Системы активированы. Все характеристики досье доступны.`);
 
-function showExpModal(outcome, name, removed) {
-  const modal = document.getElementById('exp-modal');
-  document.getElementById('exp-modal-icon').textContent = outcome.icon;
-  document.getElementById('exp-modal-type').style.color = outcome.color;
-  document.getElementById('exp-modal-type').textContent = outcome.type;
-  document.getElementById('exp-modal-text').textContent = outcome.text;
-  modal.classList.add('show');
-  logMessage(outcome.text, outcome.type==='ПОТЕРЯ'?'danger':outcome.type==='УСПЕХ'?'sys':'warn');
-}
+    // ── ЗАПУСК НОВЫХ ФИЧ ──
+    startThreatSystem();
+    initLieDetector();
+    initSabotagePanel();
+  }
 
-function closeExpModal() {
-  document.getElementById('exp-modal').classList.remove('show');
-}
+  function renderDossierScreen() {
+    const box = document.getElementById('dossier-box');
+    box.innerHTML = "";
+    const fields = [
+      { key: 'prof', label: '💼 Профессия' },
+      { key: 'health', label: '🩺 Здоровье' },
+      { key: 'hobby', label: '🎯 Хобби' },
+      { key: 'baggage', label: '🎒 Багаж' },
+      { key: 'phobia', label: '🧠 Фобия' },
+      { key: 'habit', label: '🚬 Привычка' },
+      { key: 'gender', label: '🧬 Пол/Био' }
+    ];
+    fields.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'char-row';
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;">
+          <span class="char-status">ОТКРЫТО</span>
+          <span class="char-label">${f.label}</span>
+        </div>
+        <div class="char-val">${myDossier[f.key]}</div>
+      `;
+      box.appendChild(row);
+    });
+  }
 
-// ─── СПЕЦКАРТЫ ────────────────────────────────────────────────────────────────
-function useActionCard() {
-  if(isCardUsed) return;
-  if(!confirm(`Активировать "${myActionCard.name}"?`)) return;
-  isCardUsed = true;
-  document.getElementById('btn-use-card').disabled = true;
-  document.getElementById('btn-use-card').querySelector('span').textContent = 'Активировано';
-  if(myRole === 'host') handleRemoteCardUse(myName, myActionCard.id);
-  else conn.send({ type:'use-card-click', sender:myName, cardId:myActionCard.id });
-}
+  function drawBunkerBlueprintMap() {
+    document.getElementById('map-bunker-name').textContent = generatedMapData.bunkerName;
+    const box = document.getElementById('map-blueprint-box');
+    box.innerHTML = "";
+    const g = document.createElement('div');
+    g.className = 'map-bunker-graphic';
+    generatedMapData.floors.forEach(f => {
+      const fl = document.createElement('div');
+      fl.className = `bunker-floor-block ${f.sealed?'sealed':''}`;
+      fl.innerHTML = `
+        <div class="floor-header">
+          <span style="color:var(--text-dark);">ЯРУС 0${f.num}</span>
+          <span class="floor-status-text" style="color:${f.sealed?'#ff3333':'var(--neon-green)'};">${f.sealed?'🔒 ИЗОЛИРОВАН':'🔓 ФУНКЦИОНИРУЕТ'}</span>
+        </div>
+        <div class="floor-title">${f.room.toUpperCase()}</div>
+      `;
+      g.appendChild(fl);
+    });
+    box.appendChild(g);
+  }
 
-function handleRemoteCardUse(sender, cardId) {
-  const cObj = ACTION_CARDS.find(x => x.id===cardId);
-  let msg = `${sender} активировал карту: ${cObj ? '"'+cObj.name+'"' : cardId}`;
-  if(cardId === 'heal_card') {
-    if(sender === myName) { myDossier.health = "Абсолютно здоров"; myDossier.healthPenalty = 0; renderDossierScreen(); }
-    else {
-      const cl = clients.find(x => x.playerName===sender);
-      if(cl) {
-        serverDossiers[sender].health = "Абсолютно здоров";
-        serverDossiers[sender].healthPenalty = 0;
-        cl.send({ type:'sync-dossier-update', dossier:serverDossiers[sender] });
+  function updateOxygenAndEnergy() {
+    if(myRole !== 'host') return;
+    let count = activePlayers.length;
+    let oxygenVal = Math.max(0, 100 - (count * 8));
+    let oxygenMode = oxygenVal <= 20 ? 'danger' : oxygenVal <= 40 ? 'warn' : 'good';
+    let energyVal = Math.max(0, 100 - (count * 5));
+    let energyMode = energyVal <= 20 ? 'danger' : energyVal <= 50 ? 'warn' : 'good';
+
+    drawBunkerMetricsUI(oxygenVal, energyVal, 65, 15);
+    broadcast({ type: 'sync-metrics', oxygen: oxygenVal, energy: energyVal, temp: 65, rad: 15 });
+
+    let sealedCount = maxPlayers - count;
+    generatedMapData.floors.forEach((f, idx) => { f.sealed = (idx < sealedCount); });
+    drawBunkerBlueprintMap();
+    broadcast({ type: 'sync-map', mapData: generatedMapData });
+  }
+
+  function drawBunkerMetricsUI(ox, en, te, rd) {
+    document.getElementById('val-oxygen').textContent = ox + '%';
+    let oxMode = ox<=20?'danger':ox<=40?'warn':'good';
+    updateMetricFill('bar-oxygen', 'lbl-oxygen', ox, oxMode, ox > 25 ? "СТАБИЛЬНО" : "РЕЗЕРВНЫЙ КЛАПАН");
+
+    document.getElementById('val-energy').textContent = en + '%';
+    let enMode = en<=20?'danger':en<=40?'warn':'good';
+    updateMetricFill('bar-energy', 'lbl-energy', en, enMode, en > 40 ? "СЕТЬ СТАБИЛЬНА" : "АККУМУЛЯТОРЫ");
+
+    document.getElementById('val-temp').textContent = '+21°C';
+    updateMetricFill('bar-temp', 'lbl-temp', te, 'good', 'КЛИМАТ-КОНТРОЛЬ');
+
+    document.getElementById('val-rad').textContent = '0.12 мЗв';
+    updateMetricFill('bar-rad', 'lbl-rad', rd, 'good', 'ЭКРАН ЗАЩИТЫ');
+
+    const layout = document.getElementById('terminal-layout');
+    if(ox <= 20) layout.classList.add('critical-alert');
+    else layout.classList.remove('critical-alert');
+  }
+
+  // ─── СПЕЦКАРТЫ ────────────────────────────────────────────────────────────
+  function useActionCard() {
+    if(isCardUsed) return;
+    if(!confirm(`Активировать спецкарту "${myActionCard.name}"?`)) return;
+    isCardUsed = true;
+    document.getElementById('btn-use-card').disabled = true;
+    document.getElementById('btn-use-card').textContent = "КАРТА АКТИВИРОВАНА";
+    if(myRole === 'host') handleRemoteCardUse(myName, myActionCard.id);
+    else conn.send({ type: 'use-card-click', sender: myName, cardId: myActionCard.id });
+  }
+
+  function handleRemoteCardUse(sender, cardId) {
+    let msg = `Игрок ${sender} активировал карту: `;
+    const cObj = ACTION_CARDS.find(x => x.id === cardId);
+    if(cObj) msg += `"${cObj.name}"`;
+    if(cardId === 'heal_card') {
+      if(sender === myName) { myDossier.health = "Абсолютно здоров"; renderDossierScreen(); }
+      else {
+        let cl = clients.find(x => x.playerName === sender);
+        if(cl) { serverDossiers[sender].health = "Абсолютно здоров"; cl.send({ type: 'sync-dossier-update', dossier: serverDossiers[sender] }); }
       }
+      msg += ` → Здоровье восстановлено!`;
+    } else if(cardId === 'immunity_card') {
+      immunePlayers.push(sender);
+      msg += ` → Получена защита от изгнания!`;
+    } else if(cardId === 'hack') {
+      msg += ` → Взлом архивов активирован.`;
+    } else if(cardId === 'swap_all') {
+      msg += ` → Квантовая рокировка запущена.`;
     }
-    if(myRole==='host') updateOxygenAndEnergy();
-    msg += ' → Здоровье восстановлено';
-  } else if(cardId === 'immunity_card') {
-    immunePlayers.push(sender);
-    msg += ' → Иммунитет активирован';
+    logMessage(msg);
+    broadcast({ type: 'log-relay', msg });
   }
-  logMessage(msg, 'sys');
-  broadcast({ type:'log-relay', msg, cls:'sys' });
-}
 
-// ─── ГОЛОСОВАНИЕ ──────────────────────────────────────────────────────────────
-function startVotingSession() {
-  if(myRole !== 'host') return;
-  votesReceived = {}; hasVoted = false;
-  showVotingUI(activePlayers);
-  broadcast({ type:'open-voting-panel', targets:activePlayers });
-  logMessage('🗳 Запущена процедура голосования за изгнание.', 'danger');
-}
-
-function showVotingUI(targets) {
-  const area = document.getElementById('vote-area');
-  area.style.display = 'block';
-  const grid = document.getElementById('vote-grid');
-  grid.innerHTML = ""; hasVoted = false;
-  targets.forEach(t => {
-    const btn = document.createElement('button');
-    btn.className = 'vote-btn';
-    btn.textContent = t === myName ? `${t} (Себя)` : t;
-    btn.onclick = () => submitVoteAction(t);
-    grid.appendChild(btn);
-  });
-}
-
-function submitVoteAction(target) {
-  if(hasVoted) return;
-  hasVoted = true;
-  document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
-  document.getElementById('vote-instruction').textContent = `Голос за депортацию: ${target.toUpperCase()}`;
-  if(myRole === 'host') { votesReceived[myName] = target; checkVotesProgress(); }
-  else conn.send({ type:'submit-vote', voter:myName, target });
-}
-
-function checkVotesProgress() {
-  if(myRole !== 'host') return;
-  if(Object.keys(votesReceived).length >= activePlayers.length) processVotingResults();
-}
-
-function processVotingResults() {
-  let counts = {};
-  activePlayers.forEach(p => counts[p] = 0);
-  for(const v in votesReceived) { if(counts[votesReceived[v]] !== undefined) counts[votesReceived[v]]++; }
-  let maxV = -1, loser = "Ничья";
-  for(const t in counts) {
-    if(immunePlayers.includes(t)) { logMessage(`Иммунитет: ${t} защищён`, 'sys'); continue; }
-    if(counts[t] > maxV) { maxV = counts[t]; loser = t; }
-    else if(counts[t] === maxV && maxV > 0) loser = "Ничья";
+  // ─── ГОЛОСОВАНИЕ ──────────────────────────────────────────────────────────
+  function startVotingSession() {
+    if(myRole !== 'host') return;
+    votesReceived = {}; hasVoted = false;
+    showVotingUI(activePlayers);
+    broadcast({ type: 'open-voting-panel', targets: activePlayers });
+    logMessage("🚨 СБ: Запущена процедура голосования за изгнание!");
   }
-  if(loser !== "Ничья") activePlayers = activePlayers.filter(p => p !== loser);
-  const msg = `Голосование: ${Object.entries(counts).map(([p,c])=>`${p}:${c}`).join(' | ')} → Изгнан: ${loser.toUpperCase()}`;
-  broadcast({ type:'voting-results', msg, activePlayers });
-  logMessage(msg, 'danger'); alert(msg);
-  document.getElementById('vote-area').style.display = 'none';
-  votesReceived = {}; immunePlayers = [];
-  updateOxygenAndEnergy(); checkGameOverStatus();
-  initNeuroPanel();
-  initExpeditionPanel();
-}
 
-function checkGameOverStatus() {
-  if(myRole !== 'host') return;
-  if(activePlayers.length <= 1) {
-    const winner = activePlayers[0] || "Никто";
-    const msg = `Финал: в живых остался ${winner.toUpperCase()}. Системы переведены на поддержание 1 выжившего.`;
-    showGameOverScreen(winner, msg);
-    broadcast({ type:'game-over-screen', winner, msg });
+  function showVotingUI(targets) {
+    document.getElementById('vote-area').style.display = 'block';
+    const grid = document.getElementById('vote-grid');
+    grid.innerHTML = ""; hasVoted = false;
+    targets.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-vote-user';
+      btn.textContent = t === myName ? `${t} (Себя)` : t;
+      btn.onclick = () => submitVoteAction(t);
+      grid.appendChild(btn);
+    });
   }
-}
 
-function showGameOverScreen(winner, message) {
-  if(threatTimer) clearTimeout(threatTimer);
-  if(clockInterval) clearInterval(clockInterval);
-  const center = document.getElementById('scr-game');
-  center.innerHTML = `
-    <div class="game-over">
-      <div class="game-over-title" style="color:var(--accent);">Бункер запечатан</div>
-      <div style="font-size:0.62rem;letter-spacing:3px;color:var(--text-dim);margin-bottom:24px;">СЕССИЯ ЗАВЕРШЕНА</div>
-      <div style="background:var(--panel);border:1px solid var(--border-lit);padding:20px;text-align:left;margin-bottom:24px;max-width:480px;width:100%;">
-        <div style="font-size:0.6rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;">РАПОРТ СБ-ТЕРМИНАЛА</div>
-        <div class="game-over-msg" style="margin:0;">${message}</div>
+  function submitVoteAction(targetName) {
+    if(hasVoted) return;
+    hasVoted = true;
+    document.querySelectorAll('.btn-vote-user').forEach(b => b.disabled = true);
+    document.getElementById('vote-instruction').textContent = `Ваш голос отправлен против: ${targetName.toUpperCase()}`;
+    if(myRole === 'host') {
+      votesReceived[myName] = targetName;
+      logMessage(`Голос получен от: ${myName} (Хост)`);
+      checkVotesProgress();
+    } else {
+      conn.send({ type: 'submit-vote', voter: myName, target: targetName });
+    }
+  }
+
+  function checkVotesProgress() {
+    if(myRole !== 'host') return;
+    if(Object.keys(votesReceived).length >= activePlayers.length) processVotingResults();
+  }
+
+  function processVotingResults() {
+    let voteCounts = {};
+    activePlayers.forEach(p => voteCounts[p] = 0);
+    for(let voter in votesReceived) {
+      const target = votesReceived[voter];
+      if(voteCounts[target] !== undefined) voteCounts[target]++;
+    }
+    let maxV = -1, loser = "Никто (Ничья)";
+    for(let t in voteCounts) {
+      if(immunePlayers.includes(t)) {
+        const shieldMsg = `Защитный протокол: Игрок ${t} защищен!`;
+        logMessage(shieldMsg); broadcast({ type: 'log-relay', msg: shieldMsg });
+        continue;
+      }
+      if(voteCounts[t] > maxV) { maxV = voteCounts[t]; loser = t; }
+      else if(voteCounts[t] === maxV && maxV > 0) loser = "Никто (Ничья голосов)";
+    }
+    if(loser !== "Никто (Ничья)" && loser !== "Никто (Ничья голосов)") {
+      activePlayers = activePlayers.filter(p => p !== loser);
+    }
+    let resultText = `Голосование завершено → `;
+    for(let p in voteCounts) resultText += `[${p}: ${voteCounts[p]}] `;
+    resultText += `→ РЕШЕНИЕ: Выдворен: ${loser.toUpperCase()}!`;
+    broadcast({ type: 'voting-results', msg: resultText, activePlayers });
+    logMessage(resultText);
+    document.getElementById('vote-area').style.display = 'none';
+    alert(resultText);
+    votesReceived = {}; immunePlayers = [];
+    updateOxygenAndEnergy();
+    checkGameOverStatus();
+
+    // Обновляем список в детекторе ЛЖИ
+    initLieDetector();
+  }
+
+  function checkGameOverStatus() {
+    if(myRole !== 'host') return;
+    if(activePlayers.length <= 1) {
+      let finalWinner = activePlayers[0] || "Никто";
+      let finalMsg = `Финал сессии. В живых в бункере остался: ${finalWinner.toUpperCase()}. Ресурсы перераспределены на поддержание 1 единицы жизни.`;
+      showGameOverScreen(finalWinner, finalMsg);
+      broadcast({ type: 'game-over-screen', winner: finalWinner, msg: finalMsg });
+    }
+  }
+
+  function showGameOverScreen(winner, message) {
+    if(threatTimer) clearTimeout(threatTimer);
+    const mainWindow = document.getElementById('main-window');
+    mainWindow.innerHTML = `
+      <div style="text-align:center; padding:2rem 0;">
+        <h1 style="color:var(--neon-green-glow); font-size:2rem; margin-bottom:1.5rem;">🔒 БУНКЕР ЗАПЕЧАТАН</h1>
+        <div style="background:#09090d; border:1px solid var(--neon-green); padding:1.2rem; border-radius:8px; margin-bottom:1.5rem; text-align:left; font-size:0.85rem; line-height:1.5;">
+          <b style="color:var(--neon);">СБ Терминала сообщает:</b><br>${message}
+        </div>
+        <p style="font-size:0.75rem; color:var(--text-dark); margin-bottom:2rem;">Системы переведены в автономный режим поддержания жизни.</p>
+        <button class="btn" onclick="window.location.reload();">🔄 Выйти в главное меню шлюза</button>
       </div>
-      <button class="btn" onclick="window.location.reload()"><span>Выйти в главное меню</span></button>
-    </div>
-  `;
-}
-
-// ─── ХЕДЕР ТАЙМЕР ────────────────────────────────────────────────────────────
-// (уже в startClock)
+    `;
+    resetMetrics();
+  }
 </script>
 </body>
 </html>
