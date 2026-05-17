@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberArena 1v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&family=Syne:wght@800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #030305;
+    --p1-color: #00ff66;
+    --p2-color: #ff0055;
+    --border: rgba(255, 255, 255, 0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  /* Киберпанк сетка */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 0;
+  }
+  #wrapper { position: relative; z-index: 1; text-align: center; }
+  h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.5rem; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 0.5rem; background: linear-gradient(90deg, var(--p1-color), var(--p2-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  
+  /* Верхняя панель со здоровьем */
+  .hud { display: flex; justify-content: space-between; width: 800px; margin-bottom: 10px; font-weight: bold; }
+  .hp-bar-container { width: 300px; height: 15px; background: #111; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
+  .hp-fill { height: 100%; width: 100%; transition: width 0.1s ease; }
+  #p1-hp { background: var(--p1-color); box-shadow: 0 0 10px var(--p1-color); }
+  #p2-hp { background: var(--p2-color); box-shadow: 0 0 10px var(--p2-color); }
+
+  /* Арена */
+  canvas { background: #080810; border: 2px solid #1a1a2e; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: block; }
+  
+  /* Окно старта/конца */
+  .overlay { position: absolute; inset: 0; background: rgba(5,5,8,0.9); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+  .btn { background: #fff; color: #000; border: none; padding: 1rem 2.5rem; font-family: 'Syne', sans-serif; font-weight: 800; text-transform: uppercase; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+  .btn:hover { transform: scale(1.05); background: linear-gradient(90deg, var(--p1-color), var(--p2-color)); color: #fff; }
+  .controls-hint { display: flex; gap: 3rem; font-size: 0.8rem; color: #666; margin-top: 1rem; text-align: left; }
+  .controls-hint b { color: #fff; }
+</style>
+</head>
+<body>
+
+<div id="wrapper">
+  <h1>CyberArena 1v1</h1>
+  
+  <div class="hud">
+    <div>
+      <span style="color: var(--p1-color)">ИГРОК 1 (Зеленый)</span>
+      <div class="hp-bar-container"><div class="hp-fill" id="p1-hp"></div></div>
+    </div>
+    <div>
+      <span style="color: var(--p2-color)">ИГРОК 2 (Красный)</span>
+      <div class="hp-bar-container"><div class="hp-fill" id="p2-hp"></div></div>
+    </div>
+  </div>
+
+  <div style="position: relative;">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    
+    <!-- Экран старта -->
+    <div class="overlay" id="start-screen">
+      <h2 style="font-family:'Syne'; font-size: 2rem;">ГОТОВЫ К БОЮ?</h2>
+      <button class="btn" onclick="initGame()">ПРИНЯТЬ БОЙ</button>
+      <div class="controls-hint">
+        <div>🟢 <b>Игрок 1:</b><br>Ходить: <b>W, A, S, D</b><br>Стрелять: <b>Пробел</b></div>
+        <div>🔴 <b>Игрок 2:</b><br>Ходить: <b>Стрелочки</b><br>Стрелять: <b>Enter</b></div>
+      </div>
+    </div>
+
+    <!-- Экран финиша -->
+    <div class="overlay" id="end-screen" style="display: none;">
+      <h2 id="win-text" style="font-family:'Syne'; font-size: 2.5rem;">ПОБЕДА!</h2>
+      <button class="btn" onclick="initGame()">РЕВАНШ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let gameActive = false;
+  let keys = {};
+
+  // Настройки игроков
+  let p1, p2, bullets, particles, obstacles;
+
+  // Слушаем клавиатуру
+  window.addEventListener('keydown', e => keys[e.code] = true);
+  window.addEventListener('keyup', e => keys[e.code] = false);
+
+  function initGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('end-screen').style.display = 'none';
+    
+    p1 = { x: 80, y: 225, r: 15, color: '#00ff66', hp: 100, speed: 4, lastShot: 0, dir: {x: 1, y: 0} };
+    p2 = { x: 720, y: 225, r: 15, color: '#ff0055', hp: 100, speed: 4, lastShot: 0, dir: {x: -1, y: 0} };
+    bullets = [];
+    particles = [];
+    
+    // Препятствия на карте (карты генерируются со случайными блоками)
+    obstacles = [
+      { x: 385, y: 50, w: 30, h: 100 },
+      { x: 385, y: 300, w: 30, h: 100 },
+      { x: 180, y: 160, w: 40, h: 130 },
+      { x: 580, y: 160, w: 40, h: 130 }
+    ];
+
+    document.getElementById('p1-hp').style.width = '100%';
+    document.getElementById('p2-hp').style.width = '100%';
+    
+    if(!gameActive) {
+      gameActive = true;
+      gameLoop();
+    }
+  }
+
+  function createParticles(x, y, color) {
+    for(let i=0; i<8; i++) {
+      particles.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 6,
+        vy: (Math.random() - 0.5) * 6,
+        alpha: 1,
+        color: color,
+        r: Math.random() * 3 + 1
+      });
+    }
+  }
+
+  function checkWallCollision(obj, nextX, nextY) {
+    // Границы карты
+    if (nextX - obj.r < 0 || nextX + obj.r > canvas.width) return true;
+    if (nextY - obj.r < 0 || nextY + obj.r > canvas.height) return true;
+    
+    // Препятствия
+    for(let obs of obstacles) {
+      if (nextX + obj.r > obs.x && nextX - obj.r < obs.x + obs.w &&
+          nextY + obj.r > obs.y && nextY - obj.r < obs.y + obs.h) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function update() {
+    if (!gameActive) return;
+
+    // --- Управление Игрока 1 (WASD) ---
+    let p1MoveX = 0, p1MoveY = 0;
+    if (keys['KeyW']) p1MoveY = -1;
+    if (keys['KeyS']) p1MoveY = 1;
+    if (keys['KeyA']) p1MoveX = -1;
+    if (keys['KeyD']) p1MoveX = 1;
+
+    if (p1MoveX !== 0 || p1MoveY !== 0) {
+      // Нормализация вектора направления движения
+      let len = Math.sqrt(p1MoveX*p1MoveX + p1MoveY*p1MoveY);
+      p1.dir.x = p1MoveX / len;
+      p1.dir.y = p1MoveY / len;
+      
+      let nextX = p1.x + p1.dir.x * p1.speed;
+      let nextY = p1.y + p1.dir.y * p1.speed;
+      
+      if (!checkWallCollision(p1, nextX, p1.y)) p1.x = nextX;
+      if (!checkWallCollision(p1, p1.x, nextY)) p1.y = nextY;
+    }
+
+    // Стрельба Игрока 1 (Space)
+    if (keys['Space'] && Date.now() - p1.lastShot > 350) {
+      bullets.push({ x: p1.x + p1.dir.x*20, y: p1.y + p1.dir.y*20, vx: p1.dir.x * 7, vy: p1.dir.y * 7, owner: 1, color: p1.color });
+      p1.lastShot = Date.now();
+    }
+
+    // --- Управление Игрока 2 (Стрелочки) ---
+    let p2MoveX = 0, p2MoveY = 0;
+    if (keys['ArrowUp']) p2MoveY = -1;
+    if (keys['ArrowDown']) p2MoveY = 1;
+    if (keys['ArrowLeft']) p2MoveX = -1;
+    if (keys['ArrowRight']) p2MoveX = 1;
+
+    if (p2MoveX !== 0 || p2MoveY !== 0) {
+      let len = Math.sqrt(p2MoveX*p2MoveX + p2MoveY*p2MoveY);
+      p2.dir.x = p2MoveX / len;
+      p2.dir.y = p2MoveY / len;
+
+      let nextX = p2.x + p2.dir.x * p2.speed;
+      let nextY = p2.y + p2.dir.y * p2.speed;
+
+      if (!checkWallCollision(p2, nextX, p2.y)) p2.x = nextX;
+      if (!checkWallCollision(p2, p2.x, nextY)) p2.y = nextY;
+    }
+
+    // Стрельба Игрока 2 (Enter)
+    if (keys['Enter'] && Date.now() - p2.lastShot > 350) {
+      bullets.push({ x: p2.x + p2.dir.x*20, y: p2.y + p2.dir.y*20, vx: p2.dir.x * 7, vy: p2.dir.y * 7, owner: 2, color: p2.color });
+      p2.lastShot = Date.now();
+    }
+
+    // --- Логика пуль ---
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      let b = bullets[i];
+      b.x += b.vx;
+      b.y += b.vy;
+
+      // Рикошет или исчезновение при ударе о границы
+      if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
+        bullets.splice(i, 1);
+        continue;
+      }
+
+      // Столкновение пуль с препятствиями
+      let hitObs = false;
+      for (let obs of obstacles) {
+        if (b.x > obs.x && b.x < obs.x + obs.w && b.y > obs.y && b.y < obs.y + obs.h) {
+          createParticles(b.x, b.y, '#555');
+          bullets.splice(i, 1);
+          hitObs = true;
+          break;
+        }
+      }
+      if (hitObs) continue;
+
+      // Попадание в Игрока 2
+      if (b.owner === 1) {
+        let dist = Math.hypot(b.x - p2.x, b.y - p2.y);
+        if (dist < p2.r) {
+          p2.hp -= 10;
+          createParticles(b.x, b.y, p2.color);
+          document.getElementById('p2-hp').style.width = Math.max(0, p2.hp) + '%';
+          bullets.splice(i, 1);
+          if (p2.hp <= 0) endGame(1);
+          continue;
+        }
+      }
+
+      // Попадание в Игрока 1
+      if (b.owner === 2) {
+        let dist = Math.hypot(b.x - p1.x, b.y - p1.y);
+        if (dist < p1.r) {
+          p1.hp -= 10;
+          createParticles(b.x, b.y, p1.color);
+          document.getElementById('p1-hp').style.width = Math.max(0, p1.hp) + '%';
+          bullets.splice(i, 1);
+          if (p1.hp <= 0) endGame(2);
+          continue;
+        }
+      }
+    }
+
+    // Частицы
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.03;
+      if (p.alpha <= 0) particles.splice(i, 1);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Рисуем препятствия
+    ctx.fillStyle = '#141424';
+    ctx.strokeStyle = '#2a2a44';
+    obstacles.forEach(obs => {
+      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+      ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+    });
+
+    if (!gameActive) return;
+
+    // Рисуем Игрока 1
+    ctx.beginPath();
+    ctx.arc(p1.x, p1.y, p1.r, 0, Math.PI * 2);
+    ctx.fillStyle = p1.color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = p1.color;
+    ctx.fill();
+
+    // Вектор направления Игрока 1
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p1.x + p1.dir.x * 20, p1.y + p1.dir.y * 20);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Рисуем Игрока 2
+    ctx.beginPath();
+    ctx.arc(p2.x, p2.y, p2.r, 0, Math.PI * 2);
+    ctx.fillStyle = p2.color;
+    ctx.shadowColor = p2.color;
+    ctx.fill();
+
+    // Вектор направления Игрока 2
+    ctx.beginPath();
+    ctx.moveTo(p2.x, p2.y);
+    ctx.lineTo(p2.x + p2.dir.x * 20, p2.y + p2.dir.y * 20);
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+
+    // Рисуем пули
+    ctx.shadowBlur = 8;
+    bullets.forEach(b => {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.shadowColor = b.color;
+      ctx.fill();
+    });
+
+    // Рисуем частицы (искры от попаданий)
+    ctx.shadowBlur = 0;
+    particles.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function endGame(winner) {
+    gameActive = false;
+    document.getElementById('end-screen').style.display = 'flex';
+    const text = document.getElementById('win-text');
+    if (winner === 1) {
+      text.textContent = 'ПОБЕДА ЗЕЛЕНОГО ИГРОКА!';
+      text.style.color = '#00ff66';
+    } else {
+      text.textContent = 'ПОБЕДА КРАСНОГО ИГРОКА!';
+      text.style.color = '#ff0055';
+    }
+  }
+
+  function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+</script>
+</body>
+</html>
