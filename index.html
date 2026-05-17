@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CyberBunker v2.0</title>
+<title>CyberBunker v3.0 Ultimate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -13,6 +13,7 @@
     --bg: #06060c;
     --neon: #ffaa00;
     --neon-blue: #00e5ff;
+    --neon-red: #ff3366;
     --card: #111122;
     --text: #ffffff;
     --border: rgba(255,255,255,0.08);
@@ -28,14 +29,14 @@
   body::before {
     content: ''; position: fixed; inset: 0;
     background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px; z-index: 0; opacity: 0.3;
+    background-size: 40px 40px; z-index: 0; opacity: 0.2;
     pointer-events: none;
   }
 
   .window {
     position: relative; z-index: 10; background: var(--card);
     padding: 2rem; border-radius: 24px; border: 1px solid var(--border);
-    width: 100%; max-width: 480px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    width: 100%; max-width: 500px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
   }
 
   h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 15px rgba(255,170,0,0.2); }
@@ -47,10 +48,13 @@
     font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
   }
   .btn:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
-  .btn:disabled { border-color: #444; color: #444; cursor: not-allowed; }
+  .btn:disabled { border-color: #444; color: #444; cursor: not-allowed; box-shadow: none !important; background: transparent !important; }
 
   .btn-blue { border-color: var(--neon-blue); color: #fff; }
   .btn-blue:hover:not(:disabled) { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+  
+  .btn-red { border-color: var(--neon-red); color: #fff; }
+  .btn-red:hover:not(:disabled) { background: var(--neon-red); color: #000; box-shadow: 0 0 15px var(--neon-red); }
 
   .input-field, .select-field {
     width: 100%; padding: 1rem; background: #16162a; border: 1px solid var(--border);
@@ -62,23 +66,30 @@
   .screen.active { display: block; }
 
   .bunker-info { background: #090914; padding: 1rem; border-radius: 12px; text-align: left; font-size: 0.85rem; border-left: 4px solid var(--neon); margin-bottom: 1.5rem; }
-  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); text-align: left; }
+  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); text-align: left; align-items: center; }
   .char-label { color: #888; font-size: 0.8rem; text-transform: uppercase; }
-  .char-val { font-weight: bold; color: #fff; text-align: right; max-width: 60%; }
-  .char-val.hidden { color: #ff3366; font-style: italic; font-weight: normal; }
+  .char-val { font-weight: bold; color: #fff; text-align: right; max-width: 65%; font-size: 0.9rem; }
+  .char-val.hidden { color: var(--neon-red); font-style: italic; font-weight: normal; }
 
-  /* Карты действий */
   .action-card-box {
     background: linear-gradient(135deg, #1a1135 0%, #0d0822 100%);
     border: 1px solid var(--neon-blue); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;
     box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
   }
   
-  /* Лог событий */
   .game-log {
     background: #000; color: #00ff66; font-size: 0.75rem; font-family: 'Space Mono', monospace;
-    padding: 0.5rem; border-radius: 8px; max-height: 80px; overflow-y: auto; text-align: left; margin-bottom: 1rem; border: 1px solid #113311;
+    padding: 0.5rem; border-radius: 8px; max-height: 90px; overflow-y: auto; text-align: left; margin-bottom: 1rem; border: 1px solid #113311;
   }
+
+  /* Блок Голосования */
+  .vote-box {
+    background: #1a0a15; border: 1px solid var(--neon-red); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left;
+  }
+  .vote-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.8rem; }
+  .btn-vote-user { background: #11050e; border: 1px solid #551122; color: #fff; padding: 0.6rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; }
+  .btn-vote-user:hover:not(:disabled) { background: var(--neon-red); border-color: #fff; }
+  .btn-vote-user:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -91,12 +102,12 @@
       
       <input type="text" id="player-name" class="input-field" placeholder="Твой ник..." maxlength="12">
       
-      <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.3rem; text-align: left;">КОЛИЧЕСТВО ИГРОКОВ (ДЛЯ ХОСТА):</div>
+      <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.3rem; text-align: left;">КОЛИЧЕСТВО МЕСТ В БУНКЕРЕ (ДЛЯ ХОСТА):</div>
       <select id="max-players-select" class="select-field">
         <option value="2">2 Игрока</option>
         <option value="3" selected>3 Игрока</option>
         <option value="4">4 Игрока</option>
-        <option value="5">5 Игрока</option>
+        <option value="5">5 Игроков</option>
         <option value="6">6 Игроков</option>
         <option value="7">7 Игроков</option>
         <option value="8">8 Игроков</option>
@@ -130,22 +141,31 @@
     <div id="scr-game" class="screen">
       <h2 id="round-title" style="color:var(--neon); font-size:1.1rem; margin-bottom: 1rem;">РАУНД 1</h2>
       
-      <!-- Системный Лог -->
-      <div class="game-log" id="game-log">Служба безопасности: Протокол запущен.</div>
+      <!-- Чат-Лог -->
+      <div class="game-log" id="game-log">Служба безопасности: Терминал активирован.</div>
 
+      <!-- Катастрофа -->
       <div class="bunker-info">
-        <div style="font-weight:bold; color:var(--neon); margin-bottom:0.3rem;">КАТАСТРОФА МИРА:</div>
+        <div style="font-weight:bold; color:var(--neon); margin-bottom:0.3rem;">КАТАСТРОФА:</div>
         <div id="bunker-disaster" style="margin-bottom:0.5rem; font-weight:bold; color:#fff;">...</div>
         <div id="bunker-desc" style="color:#aaa; line-height: 1.3;">...</div>
       </div>
 
+      <!-- Досье игрока -->
       <div style="text-align:left; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; color:var(--neon);">ТВОЯ КАРТА ПЕРСОНАЖА:</div>
       <div id="dossier-box" style="margin-bottom:1.2rem;"></div>
 
+      <!-- Интерактивное Голосование -->
+      <div class="vote-box" id="vote-area" style="display: none;">
+        <div style="font-weight:bold; color:var(--neon-red); font-size:0.85rem; text-transform:uppercase; text-align:center;">🗳️ ВРЕМЯ ИЗГНАНИЯ 🗳️</div>
+        <div style="color:#bbb; font-size:0.75rem; text-align:center; margin-top:0.2rem;" id="vote-instruction">Выберите, кого выкинуть на поверхность:</div>
+        <div class="vote-btn-grid" id="vote-grid"></div>
+      </div>
+
       <!-- Карты Действий -->
       <div class="action-card-box" id="action-card-area">
-        <div style="font-weight:bold; color:var(--neon-blue); font-size:0.8rem; margin-bottom:0.3rem; text-transform:uppercase;">Карта Действия (Спецкарта):</div>
-        <div id="action-card-name" style="font-weight:bold; margin-bottom:0.3rem; color:#fff;">Загрузка...</div>
+        <div style="font-weight:bold; color:var(--neon-blue); font-size:0.8rem; margin-bottom:0.3rem; text-transform:uppercase;">Спецкарта действия:</div>
+        <div id="action-card-name" style="font-weight:bold; margin-bottom:0.3rem; color:#fff;">...</div>
         <div id="action-card-desc" style="color:#ccc; font-size:0.8rem; margin-bottom:0.8rem;">...</div>
         <button class="btn btn-blue" id="btn-use-card" onclick="useActionCard()" style="padding:0.5rem; font-size:0.8rem; margin:0;">Активировать Карту</button>
       </div>
@@ -155,27 +175,64 @@
   </div>
 
 <script>
-  // Базы данных игры
+  // ОГРОМНЫЕ БАЗЫ ДАННЫХ ХАРАКТЕРИСТИК (v3.0)
   const DISASTERS = [
-    { name: "Ядерная зима", desc: "Температура на улице -60°C. Бункер оборудован хорошим генератором, но запасов еды строго на ограниченный круг лиц." },
-    { name: "Восстание ИИ", desc: "Роботы выкашивают всё живое. Бункер полностью экранирован, но фильтрация воды работает на честном слове." },
-    { name: "Генетическая чума", desc: "Вирус превращает органику в слизь. Бункер стерилен, но медицинский отсек пуст, инструментов нет." },
-    { name: "Солнечная вспышка", desc: "Атмосфера выжжена радиацией. На поверхности адское пекло. В бункере барахлит система кондиционирования." }
+    { name: "Ядерная зима", desc: "Температура упала до -65°C. Земля покрыта льдом. В бункере идеальный ядерный реактор, но гидропоника вместит строго половину прибывших." },
+    { name: "Кибер-Восстание ИИ", desc: "Боевые дроны зачищают поверхность. Бункер полностью заблокирован и невидим для радаров, но запасы чистой воды на исходе." },
+    { name: "Генетическая чума 2.0", desc: "Вирус плавит ДНК на свежем воздухе. Бункер абсолютно герметичен, однако медицинский склад полностью пуст." },
+    { name: "Адское пекло (Солнечный шторм)", desc: "Вспышка сожгла озоновый слой. На поверхности +70°C. В бункере критически перегружена система охлаждения воздуха." },
+    { name: "Грибной Апокалипсис", desc: "Споры кордицепса захватили фауну. Бункер защищен мощными фильтрами, но система вентиляции требует ручной очистки каждые 2 недели." }
   ];
 
-  const PROFESSIONS = ["Инженер-физик", "Врач-хирург", "Программист ИИ", "Фермер-агроном", "Военный спецназовец", "Повар-технолог", "Слесарь-механик", "Ученый-генетик", "Психолог"];
-  const BIOLOGY = ["Мужчина, 23 года, бесплоден", "Женщина, 45 лет, здорова", "Мужчина, 38 лет, здоров", "Женщина, 19 лет, здорова", "Мужчина, 52 года, здоров", "Женщина, 28 лет, бесплодна"];
-  const HEALTH = ["Идеальное здоровье", "Хроническая астма", "Слабое сердце", "Аллергия на всё", "Ранняя стадия диабета", "Абсолютно здоров", "Лучевая болезнь (легкая)"];
-  const HOBBIES = ["Стрельба из лука", "Ботаника и травы", "Кулинария", "Ремонт электроники", "Прослушивание рэпа", "Карточные фокусы", "Дзюдо"];
-  const PHOBIAS = ["Боязнь темноты", "Клаустрофобия", "Паника при виде крови", "Страх остаться одному", "Арахнофобия", "Некрофобия"];
-  const BAGGAGE = ["Канистра бензина 10л", "Дробовик (3 патрона)", "Набор хирургических нитей", "Семена томатов", "Резиновая уточка", "Старый ноутбук", "Аптечка первой помощи"];
+  const PROFESSIONS = [
+    "Инженер-ядерщик", "Врач-реаниматолог", "Программист ИИ", "Фермер-гидропоник", "Военный спецназовец", 
+    "Повар-технолог консервации", "Слесарь-механик систем жизнеобеспечения", "Ученый-генетик", "Клинический психолог",
+    "Электрик высоковольтных сетей", "Профессиональный строитель-каменщик", "Ученый-биолог", "Пилот тяжелой техники",
+    "Химик-фармацевт", "Охранник-кинолог", "Специалист по утилизации отходов", "Бывший хакер"
+  ];
+
+  const BIOLOGY = [
+    "Мужчина, 21 год, гетеро, абсолютно фертилен", "Женщина, 25 лет, гетеро, способна к зачатию", 
+    "Мужчина, 32 года, бисексуал, бесплоден", "Женщина, 19 лет, лесбиянка, фертильна", 
+    "Мужчина, 44 года, гетеро, лидер по натуре", "Женщина, 28 лет, чайлдфри, крепкое телосложение", 
+    "Мужчина, 55 лет, гетеро, мудрый, слабое зрение", "Женщина, 35 лет, бисексуал, гениальный интеллект",
+    "Мужчина, 27 лет, гей, спортивное телосложение", "Женщина, 41 год, гетеро, высокая выносливость"
+  ];
+
+  const HEALTH = [
+    "Идеальное здоровье (без патологий)", "Хроническая астма (нужен ингалятор)", "Слабое сердце (пролапс клапана)", 
+    "Тяжелая аллергия на пыльцу и споры", "Сахарный диабет 1-го типа (нужен инсулин)", "Хроническая бессонница и мигрени", 
+    "Легкая степень лучевой болезни", "Частичная глухота на левое ухо", "Абсолютно здоров, крепкий иммунитет",
+    "Язва желудка в стадии ремиссии", "Склонность к частым переломам (дефицит кальция)"
+  ];
+
+  const HOBBIES = [
+    "Снайперская стрельба из лука", "Ботаника и выращивание грибов", "Электронная кулинария из сухпайков", 
+    "Ремонт старой радиотехники", "Изучение психологии толпы", "Карточные фокусы и блеф", "Спортивное дзюдо", 
+    "Проектирование чертежей мебели", "Фильтрация самодельного алкоголя", "Самогоноварение и химия", "Игра на гитаре"
+  ];
+
+  const PHOBIAS = [
+    "Боязнь темноты (Никтофобия)", "Паника в замкнутых пространствах", "Острый страх крови (Гемофобия)", 
+    "Страх остаться в одиночестве", "Боязнь пауков и насекомых", "Панический страх микробов (Мизофобия)",
+    "Боязнь компьютеров и ИИ (Киберфобия)", "Страх высоты и открытых люков"
+  ];
+
+  const BAGGAGE = [
+    "Канистра бензина 10л", "Охотничий дробовик (3 патрона)", "Армейская аптечка с антибиотиками", 
+    "Большой мешок семян овощей", "Профессиональный навигатор (без сети)", "Мощный тактический фонарь", 
+    "Запас консервов на 2 недели", "Набор точных отверток и паяльник", "Справочник по выживанию в ЧС", 
+    "Дозиметр радиации", "Защитный костюм ОЗК (1 шт)"
+  ];
 
   const ACTION_CARDS = [
-    { id: "heal", name: "📜 Медицинское чудо", desc: "Исцеляет ваше здоровье. Ваше здоровье становится: 'Абсолютно здоров'." },
-    { id: "swap_bag", name: "📜 Ночной грабёж", desc: "Случайный игрок отдает вам свой Багаж, а забирает ваш." },
-    { id: "check_phobia", name: "📜 Детектор лжи", desc: "Вы заставляете всех игроков мгновенно раскрыть их Фобии." },
-    { id: "change_prof", name: "📜 Переквалификация", desc: "Вы меняете свою текущую профессию на случайную новую." },
-    { id: "bunker_bonus", name: "📜 Тайник в стене", desc: "Вы нашли скрытые припасы. Ваша полезность для бункера удваивается." }
+    { id: "heal", name: "📜 Медицинский прорыв", desc: "Полностью исцеляет ваше здоровье. Текущее заболевание меняется на: 'Идеальное здоровье'." },
+    { id: "swap_bag", name: "📜 Рокировка запасов", desc: "Вы тайно забираете багаж у хоста игры, отдавая ему свой взамен." },
+    { id: "check_phobia", name: "📜 Сыворотка правды", desc: "Вы заставляете ВСЕХ игроков экстренно раскрыть их Фобии прямо сейчас." },
+    { id: "change_prof", name: "📜 Второе высшее", desc: "Ваша текущая профессия стирается. Вы получаете случайную новую профессию." },
+    { id: "immunity", name: "📜 Блат в СБ бункера", desc: "Абсолютный иммунитет на текущем раунде. Если за вас проголосуют — вы всё равно остаетесь." },
+    { id: "expose_one", name: "📜 Вскрытие архивов", desc: "Заставляет хоста принудительно раскрыть Багаж всех игроков прямо сейчас." },
+    { id: "change_bio", name: "📜 Генная терапия", desc: "Случайным образом меняет вашу Биологию (возраст/ориентацию) на новую из базы." }
   ];
 
   let peer, conn, myName = "", myRole = "guest";
@@ -187,6 +244,11 @@
   let currentRound = 1;
   let disasterObj = {};
   let isCardUsed = false;
+  
+  // Переменные голосования
+  let votesReceived = {};
+  let hasVoted = false;
+  let immunePlayers = [];
 
   function setScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -201,38 +263,48 @@
     }
   }
 
-  // Настройка PeerJS
-  const shortId = Math.floor(100000 + Math.random() * 900000).toString(); // 6-значный красивый ID
-  peer = new Peer(shortId);
+  // Конфигурация для глобального WebRTC-подключения через NAT (STUN-серверы)
+  const peerConfig = {
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' }
+      ]
+    }
+  };
+
+  // Инициализация сети
+  const shortId = Math.floor(100000 + Math.random() * 900000).toString();
+  peer = new Peer(shortId, peerConfig);
   
   peer.on('open', id => {
-    document.getElementById('net-status').textContent = "Протокол синхронизирован. Выберите параметры:";
+    document.getElementById('net-status').textContent = "Протоколы связи активны. Настройте шлюз:";
     document.getElementById('btn-create').style.display = 'block';
     document.getElementById('btn-join').style.display = 'block';
     document.getElementById('lobby-code').textContent = id;
   });
 
   peer.on('error', err => {
-    alert("Ошибка сети! Попробуйте обновить страницу или проверить ID.");
-    console.error(err);
+    alert("Ошибка узла связи PeerJS! Перезагрузите страницу.");
   });
 
-  // Логика Хоста
+  // ХОСТ
   function createRoom() {
     myName = document.getElementById('player-name').value.trim();
     maxPlayers = parseInt(document.getElementById('max-players-select').value);
-    if(!myName) return alert("Введите имя!");
+    if(!myName) return alert("Введите свой позывной!");
     
     myRole = "host";
     allPlayersNames.push(myName);
-    
-    document.getElementById('btn-start-game').style.display = 'block';
     updateLobbyUI();
     setScreen('scr-lobby');
 
     peer.on('connection', connection => {
       connection.on('open', () => {
-        // Запрашиваем имя и проверяем лимит мест
         connection.send({type: 'req-info', maxPlayers: maxPlayers});
       });
 
@@ -246,42 +318,46 @@
           allPlayersNames.push(data.name);
           updateLobbyUI();
           
-          // Рассылаем всем обновленное лобби
           broadcast({type: 'sync-lobby', players: allPlayersNames, max: maxPlayers});
           
           if(allPlayersNames.length >= maxPlayers) {
-            const startBtn = document.getElementById('btn-start-game');
-            startBtn.disabled = false;
-            startBtn.textContent = "Открыть гермозатвор!";
+            const sBtn = document.getElementById('btn-start-game');
+            sBtn.disabled = false;
+            sBtn.textContent = "Загерметизировать шлюз и начать";
           }
         }
         
-        // Пересылка сообщений об активации карт действий от клиентов всем остальным
+        // Трансляция активации карт
         if(data.type === 'card-activated-broadcast') {
+          if(data.cardId === 'immunity') immunePlayers.push(data.from);
           broadcast(data);
           logMessage(data.msg);
+          if(data.cardId === 'check_phobia') { currentRound = Math.max(currentRound, 2.2); broadcast({type: 'force-next-round', round: currentRound}); }
+          if(data.cardId === 'expose_one') { currentRound = Math.max(currentRound, 3); broadcast({type: 'force-next-round', round: currentRound}); }
+        }
+
+        // Сбор голосов на стороне хоста
+        if(data.type === 'submit-vote') {
+          votesReceived[data.from] = data.target;
+          checkVotesCompleteness();
         }
       });
 
       connection.on('close', () => {
         clients = clients.filter(c => c.conn.peer !== connection.peer);
-        // Пересобираем имена выживших
         allPlayersNames = [myName, ...clients.map(c => c.name)];
         updateLobbyUI();
         broadcast({type: 'sync-lobby', players: allPlayersNames, max: maxPlayers});
-        
-        const startBtn = document.getElementById('btn-start-game');
-        startBtn.disabled = true;
-        startBtn.textContent = "Ожидание игроков...";
+        document.getElementById('btn-start-game').disabled = true;
       });
     });
   }
 
-  // Логика Клиента
+  // КЛИЕНТ
   function joinRoom() {
     myName = document.getElementById('player-name').value.trim();
     const id = document.getElementById('room-id').value.trim();
-    if(!myName || !id) return alert("Введите имя и ID бункера хоста!");
+    if(!myName || !id) return alert("Заполните имя и ID хоста!");
     
     myRole = "guest";
     document.getElementById('client-wait-msg').style.display = 'block';
@@ -295,7 +371,7 @@
         conn.send({type: 'send-name', name: myName});
       }
       if(data.type === 'lobby-full') {
-        alert("В этом бункере уже нет свободных мест!");
+        alert("В бункере заняты все койки!");
         window.location.reload();
       }
       if(data.type === 'sync-lobby') { 
@@ -312,15 +388,20 @@
       if(data.type === 'force-next-round') {
         currentRound = data.round;
         updateDossierRender();
-        logMessage(`Начался Раунд ${currentRound}`);
+        logMessage(`Внимание: статус раунда обновлен до уровня ${Math.floor(currentRound)}`);
       }
       if(data.type === 'card-activated-broadcast') {
         logMessage(data.msg);
-        if(data.cardId === 'check_phobia') {
-          // Если кто-то сыграл детектор лжи, у всех принудительно открывается фобия раньше времени
-          currentRound = Math.max(currentRound, 2.5); // Технический триггер для показа фобии
-          updateDossierRender();
-        }
+        if(data.cardId === 'check_phobia') { currentRound = Math.max(currentRound, 2.2); updateDossierRender(); }
+        if(data.cardId === 'expose_one') { currentRound = Math.max(currentRound, 3); updateDossierRender(); }
+      }
+      if(data.type === 'start-voting-ui') {
+        showVotingUI();
+      }
+      if(data.type === 'voting-results') {
+        logMessage(data.msg);
+        document.getElementById('vote-area').style.display = 'none';
+        alert(data.msg);
       }
     });
   }
@@ -333,17 +414,14 @@
 
   function broadcast(data) { clients.forEach(c => c.conn.send(data)); }
 
-  // Генерация игровой сессии (Только Хост)
+  // Старт (Хост)
   function generateBunkerSession() {
-    if(allPlayersNames.length < maxPlayers) return alert("Дождитесь всех игроков!");
+    if(allPlayersNames.length < maxPlayers) return alert("Недостаточно людей для герметизации!");
     
     disasterObj = DISASTERS[Math.floor(Math.random() * DISASTERS.length)];
-    
-    // Генерируем данные для хоста
     myDossier = generateSingleDossier();
     myActionCard = ACTION_CARDS[Math.floor(Math.random() * ACTION_CARDS.length)];
 
-    // Генерируем и отправляем данные каждому клиенту индивидуально
     clients.forEach((client) => {
       client.conn.send({
         type: 'start-session',
@@ -371,13 +449,10 @@
     setScreen('scr-game');
     document.getElementById('bunker-disaster').textContent = disasterObj.name.toUpperCase();
     document.getElementById('bunker-desc').textContent = disasterObj.desc;
-    
     document.getElementById('action-card-name').textContent = myActionCard.name;
     document.getElementById('action-card-desc').textContent = myActionCard.desc;
     
-    if(myRole === 'host') {
-      document.getElementById('btn-action').style.display = 'block';
-    }
+    if(myRole === 'host') document.getElementById('btn-action').style.display = 'block';
     updateDossierRender();
   }
 
@@ -385,74 +460,133 @@
     const box = document.getElementById('dossier-box');
     const rTitle = document.getElementById('round-title');
     
-    if(currentRound >= 3) {
-      rTitle.textContent = `🚨 ФИНАЛЬНОЕ ГОЛОСОВАНИЕ`;
-    } else {
-      rTitle.textContent = `РАУНД ${Math.floor(currentRound)}: Раскрытие карт`;
-    }
+    if(currentRound >= 3) rTitle.textContent = `🚨 ПРОТОКОЛ ИЗГНАНИЯ`;
+    else rTitle.textContent = `РАУНД ${Math.floor(currentRound)}: Анализ Био-карт`;
 
     box.innerHTML = `
-      <div class="char-row"><span class="char-label">Профессия:</span><span class="char-val">${myDossier.prof}</span></div>
+      <div class="char-row"><span class="char-label">Профессия:</span><span class="char-val" style="color:var(--neon-blue);">${myDossier.prof}</span></div>
       <div class="char-row"><span class="char-label">Биология:</span><span class="char-val">${myDossier.bio}</span></div>
       
       <div class="char-row"><span class="char-label">Здоровье:</span>
-        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.health : '[СКРЫТО В РАУНДЕ 2]'}</span>
+        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.health : '[СКРЫТО ДО Р2]'}</span>
       </div>
       <div class="char-row"><span class="char-label">Хобби:</span>
-        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.hobby : '[СКРЫТО В РАУНДЕ 2]'}</span>
+        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.hobby : '[СКРЫТО ДО Р2]'}</span>
       </div>
       
       <div class="char-row"><span class="char-label">Фобия:</span>
-        <span class="char-val ${currentRound < 2.5 ? 'hidden' : ''}">${currentRound >= 2.5 ? myDossier.phobia : '[СКРЫТО В РАУНДЕ 3]'}</span>
+        <span class="char-val ${currentRound < 2.2 ? 'hidden' : ''}">${currentRound >= 2.2 ? myDossier.phobia : '[СКРЫТО ДО Р3]'}</span>
       </div>
       <div class="char-row"><span class="char-label">Багаж:</span>
-        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.bag : '[СКРЫТО В РАУНДЕ 3]'}</span>
+        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.bag : '[СКРЫТО ДО Р3]'}</span>
       </div>
     `;
 
     if(myRole === 'host') {
       if(currentRound === 1) document.getElementById('btn-action').textContent = "Открыть Здоровье и Хобби (Р2)";
       if(currentRound === 2) document.getElementById('btn-action').textContent = "Открыть Фобии и Багаж (Р3)";
-      if(currentRound >= 3) document.getElementById('btn-action').textContent = "ОБЪЯВИТЬ ГОЛОСОВАНИЕ НА ВЫЛЕТ";
+      if(currentRound >= 3) {
+        document.getElementById('btn-action').textContent = "ВКЛЮЧИТЬ ТЕРМИНАЛ ГОЛОСОВАНИЯ";
+        document.getElementById('btn-action').className = "btn btn-red";
+      }
     }
   }
 
-  // Применение Карты Действия
+  // Карты Действий
   function useActionCard() {
     if(isCardUsed) return;
     isCardUsed = true;
     document.getElementById('btn-use-card').disabled = true;
-    document.getElementById('btn-use-card').textContent = "ИСПОЛЬЗОВАНО";
+    document.getElementById('btn-use-card').textContent = "АКТИВИРОВАНО";
     
-    let eventMessage = `Игрок ${myName} активировал карту: "${myActionCard.name}"!`;
+    let msg = `${myName} активирует Спецкарту: [${myActionCard.name}]`;
     
-    // Эффекты карт локально
-    if(myActionCard.id === "heal") {
-      myDossier.health = "Абсолютно здоров (Излечен картой)";
-      updateDossierRender();
-    }
-    if(myActionCard.id === "change_prof") {
-      myDossier.prof = PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)] + " (Новая профессия)";
-      updateDossierRender();
-    }
-    if(myActionCard.id === "bunker_bonus") {
-      myDossier.prof += " [+Найденный Скрытый Тайник]";
-      updateDossierRender();
-    }
+    if(myActionCard.id === "heal") myDossier.health = "Абсолютно здоров (Регенерация спецкартой)";
+    if(myActionCard.id === "change_prof") myDossier.prof = PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)] + " (Переучен)";
+    if(myActionCard.id === "change_bio") myDossier.bio = BIOLOGY[Math.floor(Math.random() * BIOLOGY.length)] + " (Коррекция ДНК)";
+    if(myActionCard.id === "immunity") { msg += " -> Получает защиту от изгнания на этот раунд!"; immunePlayers.push(myName); }
+    if(myActionCard.id === "check_phobia") { currentRound = Math.max(currentRound, 2.2); msg += " -> Все фобии взломаны и раскрыты!"; }
+    if(myActionCard.id === "expose_one") { currentRound = Math.max(currentRound, 3); msg += " -> Борт-компьютер открыл багаж всех выживающих!"; }
 
-    // Синхронизация события по сети
-    const networkEvent = {
-      type: 'card-activated-broadcast',
-      cardId: myActionCard.id,
-      msg: eventMessage
-    };
+    updateDossierRender();
+
+    const netEv = { type: 'card-activated-broadcast', cardId: myActionCard.id, msg: msg, from: myName };
+    if(myRole === 'host') { broadcast(netEv); logMessage(msg); }
+    else { conn.send(netEv); logMessage(msg); }
+  }
+
+  // ЛОГИКА ИНТЕРАКТИВНОГО ГОЛОСОВАНИЯ
+  function showVotingUI() {
+    hasVoted = false;
+    document.getElementById('vote-area').style.display = 'block';
+    const grid = document.getElementById('vote-grid');
+    grid.innerHTML = '';
+
+    allPlayersNames.forEach(player => {
+      const btn = document.createElement('button');
+      btn.className = 'btn-vote-user';
+      btn.textContent = player === myName ? `${player} (Вы)` : player;
+      btn.onclick = () => sendVote(player);
+      grid.appendChild(btn);
+    });
+    document.getElementById('vote-instruction').textContent = "Нажмите на имя игрока, чтобы отдать голос:";
+  }
+
+  function sendVote(target) {
+    if(hasVoted) return;
+    hasVoted = true;
+    
+    // Блокируем кнопки
+    document.querySelectorAll('.btn-vote-user').forEach(b => b.disabled = true);
+    document.getElementById('vote-instruction').textContent = `Ваш голос против ${target} зафиксирован.`;
 
     if(myRole === 'host') {
-      broadcast(networkEvent);
-      logMessage(networkEvent.msg);
+      votesReceived[myName] = target;
+      checkVotesCompleteness();
     } else {
-      conn.send({type: 'card-activated-broadcast', cardId: myActionCard.id, msg: eventMessage});
-      logMessage(networkEvent.msg);
+      conn.send({type: 'submit-vote', from: myName, target: target});
+    }
+  }
+
+  function checkVotesCompleteness() {
+    if(Object.keys(votesReceived).length === allPlayersNames.length) {
+      // Все проголосовали - считаем результаты
+      let voteCounts = {};
+      allPlayersNames.forEach(p => voteCounts[p] = 0);
+
+      for(let voter in votesReceived) {
+        let target = votesReceived[voter];
+        voteCounts[target]++;
+      }
+
+      // Находим лидера по голосам, проверяя иммунитет
+      let maxVotes = -1;
+      let loser = "Никто (Ничья)";
+      
+      for(let target in voteCounts) {
+        if(voteCounts[target] > maxVotes) {
+          if(immunePlayers.includes(target)) {
+            logMessage(`Игрок ${target} защищен иммунитетом спецкарты! Голоса против него сгорели.`);
+            continue; 
+          }
+          maxVotes = voteCounts[target];
+          loser = target;
+        } else if(voteCounts[target] === maxVotes && maxVotes > 0) {
+          loser = "Никто (Разделение голосов)";
+        }
+      }
+
+      let resultText = `Голосование завершено! Итоги: `;
+      for(let p in voteCounts) { resultText += `[${p}: ${voteCounts[p]} гол.] `; }
+      resultText += ` -> ВЕРДИКТ: Из бункера изгоняется: ${loser.toUpperCase()}!`;
+
+      // Рассылаем результаты и сбрасываем состояние
+      broadcast({type: 'voting-results', msg: resultText});
+      logMessage(resultText);
+      document.getElementById('vote-area').style.display = 'none';
+      alert(resultText);
+      
+      votesReceived = {}; // Сброс
     }
   }
 
@@ -460,12 +594,12 @@
     if(currentRound < 3) {
       currentRound = Math.floor(currentRound) + 1;
       updateDossierRender();
-      logMessage(`Хост перевел игру на Раунд ${currentRound}`);
+      logMessage(`Система: Переход к фазе раскрытия данных.`);
       broadcast({type: 'force-next-round', round: currentRound});
     } else {
-      const finalMsg = "Голосование активировано! Обсудите вживую, кто покинет шлюз. Мест на всех не хватит!";
-      logMessage(finalMsg);
-      alert(finalMsg);
+      logMessage("Внимание: Хост активировал протокол тайного голосования!");
+      broadcast({type: 'start-voting-ui'});
+      showVotingUI();
     }
   }
 </script>
