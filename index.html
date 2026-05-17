@@ -2,6 +2,277 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CyberSpy — Сетевой Шпион</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<style>
+  :root {
+    --bg: #040408;
+    --neon-green: #00ff66;
+    --neon-red: #ff0055;
+    --card: #0d0d18;
+    --text: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
+    background-size: 30px 30px; z-index: 0;
+  }
+
+  .window {
+    position: relative; z-index: 10; background: var(--card);
+    padding: 2rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);
+    width: 90%; max-width: 420px; text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+
+  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon-green); text-shadow: 0 0 15px rgba(0,255,102,0.2); }
+
+  .btn {
+    background: transparent; border: 2px solid var(--neon-green); color: #fff;
+    padding: 1rem; width: 100%; border-radius: 12px; font-family: 'Orbitron', sans-serif;
+    font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 15px var(--neon-green); }
+  .btn.red { border-color: var(--neon-red); }
+  .btn.red:hover { background: var(--neon-red); color: #fff; box-shadow: 0 0 15px var(--neon-red); }
+
+  .input-field {
+    width: 100%; padding: 1rem; background: #121222; border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; border-radius: 12px; font-family: inherit; text-align: center;
+    font-size: 1.1rem; margin-bottom: 1rem; outline: none;
+  }
+
+  /* Игровые экраны */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .role-box {
+    background: #121224; padding: 1.5rem; border-radius: 12px;
+    margin: 1.5rem 0; border: 1px dashed rgba(255,255,255,0.1);
+  }
+  .role-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+  
+  .loc-list { text-align: left; font-size: 0.8rem; color: #777; margin-top: 1.5rem; max-height: 120px; overflow-y: auto; padding: 5px; background: #07070f; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+  <div class="window">
+    <div id="scr-connect" class="screen active">
+      <h1>CyberSpy 1v1+</h1>
+      <div id="net-status" style="color: #666; margin-bottom: 1.5rem; font-size: 0.85rem;">Запуск зашифрованного узла...</div>
+      
+      <input type="text" id="player-name" class="input-field" placeholder="Твой ник..." maxlength="12">
+      
+      <button class="btn" id="btn-create" onclick="createRoom()" style="display:none;">Создать сервер лобби</button>
+      <div style="margin: 0.5rem 0; color: #333; font-size: 0.8rem;">— ИЛИ —</div>
+      <input type="number" id="room-id" class="input-field" placeholder="ID сервера хоста...">
+      <button class="btn red" id="btn-join" onclick="joinRoom()" style="display:none;">Подключиться к лобби</button>
+    </div>
+
+    <div id="scr-lobby" class="screen">
+      <h1>Ожидание игроков</h1>
+      <div style="font-size: 0.9rem; margin-bottom: 1rem;">Код вашей комнаты: <b id="lobby-code" style="color:var(--neon-green); font-size: 1.3rem;">-</b></div>
+      <div style="text-align: left; margin-bottom: 1.5rem;">
+        <div style="color:#555; margin-bottom: 0.5rem;">ПОДКЛЮЧЕНЫ:</div>
+        <ul id="player-list" style="list-style: none; padding-left: 5px; color: var(--neon-green);"></ul>
+      </div>
+      <button class="btn" id="btn-start-game" onclick="generateAndSendRoles()" style="display:none;">Запустить раздачу ролей</button>
+      <div id="client-wait-msg" style="color:#555; font-size:0.85rem; display:none;">Ждем, пока создатель запустит сессию...</div>
+    </div>
+
+    <div id="scr-game" class="screen">
+      <h1>Статус агента</h1>
+      
+      <div class="role-box">
+        <div id="role-name" class="role-title">—</div>
+        <div id="role-info" style="color: #aaa; font-size: 0.9rem;">—</div>
+      </div>
+
+      <div style="font-size: 0.85rem; color: #555; margin-bottom: 1rem;">Задавайте друг другу вопросы по кругу. Вычислите крысу или не спалитесь сами!</div>
+      
+      <button class="btn red" onclick="exitGame()">Выйти из сессии</button>
+
+      <div style="font-weight:bold; font-size:0.75rem; color:#444; text-align:left;">СПИСОК ВОЗМОЖНЫХ ЛОКАЦИЙ В ИГРЕ:</div>
+      <div class="loc-list" id="locations-display"></div>
+    </div>
+  </div>
+
+<script>
+  // Список локаций (можешь менять, удалять, вписывать свои локальные приколы)
+  const LOCATIONS = [
+    "Серверная ВКонтакте", "Кальянная у Ашота", "Пентхаус Дурова", 
+    "Офис стримеров казино", "Компьютерный клуб", "Бункер Илона Маска", 
+    "Очередь за шаурмой", "Секретная лаба бабок", "Психбольница", 
+    "Подвал майнеров", "Школьная столовая", "Дача Дмитрия Анатольевича"
+  ];
+
+  let peer, conn;
+  let myName = "";
+  let myRole = "guest"; // host или guest
+  let clients = []; // только у хоста: список объектов {conn, name}
+  let allPlayersNames = [];
+
+  function setScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // Запуск сети
+  const shortId = Math.floor(1000 + Math.random() * 9000).toString();
+  peer = new Peer(shortId);
+
+  peer.on('open', (id) => {
+    document.getElementById('net-status').textContent = "Узел синхронизирован. Введите ник.";
+    document.getElementById('btn-create').style.display = 'block';
+    document.getElementById('btn-join').style.display = 'block';
+    document.getElementById('lobby-code').textContent = id;
+  });
+
+  // Логика Хоста (сервер комнаты)
+  function createRoom() {
+    myName = document.getElementById('player-name').value.trim();
+    if(!myName) return alert("Введите свой ник!");
+    myRole = "host";
+    
+    allPlayersNames.push(myName);
+    updateLobbyList();
+    
+    document.getElementById('btn-start-game').style.display = 'block';
+    setScreen('scr-lobby');
+
+    peer.on('connection', (connection) => {
+      connection.on('open', () => {
+        // Запрашиваем имя у подключившегося игрока
+        connection.send({type: 'request-name'});
+      });
+
+      connection.on('data', (data) => {
+        if(data.type === 'send-name') {
+          clients.push({conn: connection, name: data.name});
+          allPlayersNames.push(data.name);
+          updateLobbyList();
+          // Рассылаем всем обновленный список участников
+          broadcast({type: 'sync-lobby', players: allPlayersNames});
+        }
+      });
+
+      connection.on('close', () => {
+        clients = clients.filter(c => c.conn !== connection);
+        // Тут по-хорошему надо пересобрать имена, упростим для демки
+      });
+    });
+  }
+
+  // Логика Гостя (подключение)
+  function joinRoom() {
+    myName = document.getElementById('player-name').value.trim();
+    const id = document.getElementById('room-id').value.trim();
+    if(!myName || !id) return alert("Введите ник и ID сервера!");
+    
+    myRole = "guest";
+    document.getElementById('client-wait-msg').style.display = 'block';
+    setScreen('scr-lobby');
+
+    conn = peer.connect(id);
+
+    conn.on('data', (data) => {
+      if(data.type === 'request-name') {
+        conn.send({type: 'send-name', name: myName});
+      }
+      if(data.type === 'sync-lobby') {
+        allPlayersNames = data.players;
+        updateLobbyList();
+      }
+      if(data.type === 'assign-role') {
+        renderRoleScreen(data.role, data.location);
+      }
+    });
+  }
+
+  function updateLobbyList() {
+    const list = document.getElementById('player-list');
+    list.innerHTML = allPlayersNames.map(p => `<li>🟢 ${p}</li>`).join('');
+  }
+
+  function broadcast(data) {
+    clients.forEach(c => c.conn.send(data));
+  }
+
+  // Раздача ролей (Выполняет только Хост)
+  function generateAndSendRoles() {
+    if(allPlayersNames.length < 2) return alert("Нужно хотя бы 2 игрока (лучше от 3-4)!");
+    
+    const randomLocation = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
+    
+    // Выбираем случайного хакера среди ВСЕХ (включая хоста)
+    const hackerIndex = Math.floor(Math.random() * allPlayersNames.length);
+    
+    // Проверяем роль для себя (хоста)
+    let hostRole = (hackerIndex === 0) ? "ХАКЕР" : "АГЕНТ БЕЗОПАСНОСТИ";
+    renderRoleScreen(hostRole, randomLocation);
+
+    // Отправляем роли остальным клиентам
+    clients.forEach((client, index) => {
+      // Имена клиентов начинаются со сдвигом 1, так как 0 индекс — это хост
+      let clientRole = (hackerIndex === index + 1) ? "ХАКЕР" : "АГЕНТ БЕЗОПАСНОСТИ";
+      client.conn.send({
+        type: 'assign-role',
+        role: clientRole,
+        location: randomLocation
+      });
+    });
+  }
+
+  function renderRoleScreen(role, location) {
+    setScreen('scr-game');
+    const title = document.getElementById('role-name');
+    const info = document.getElementById('role-info');
+    
+    // Выводим шпаргалку локаций на экран
+    document.getElementById('locations-display').innerHTML = LOCATIONS.map(l => `• ${l}<br>`).join('');
+
+    if(role === "ХАКЕР") {
+      title.textContent = "ВЫ ХАКЕР 🥷";
+      title.style.color = var(--neon-red);
+      info.innerHTML = "Вы проникли в сеть, но база данных зашифрована.<br><br>Слушайте вопросы игроков, поймите где вы находитесь и не выдайте себя.";
+    } else {
+      title.textContent = "ВЫ АГЕНТ 🛡️";
+      title.style.color = var(--neon-green);
+      info.innerHTML = `Текущая локация:<br><b style="color:#fff; font-size:1.3rem;">${location}</b><br><br>Задавайте хитрые вопросы, чтобы вычислить хакера, но не называйте место вслух!`;
+    }
+  }
+
+  function exitGame() {
+    location.reload();
+  }
+
+  function varColor(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CyberArena 1v1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
