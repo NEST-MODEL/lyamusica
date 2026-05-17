@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CyberBunker 1v1v1</title>
+<title>CyberBunker v2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -12,6 +12,7 @@
   :root {
     --bg: #06060c;
     --neon: #ffaa00;
+    --neon-blue: #00e5ff;
     --card: #111122;
     --text: #ffffff;
     --border: rgba(255,255,255,0.08);
@@ -21,189 +22,334 @@
   body {
     background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace;
     min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px;
   }
 
   body::before {
     content: ''; position: fixed; inset: 0;
     background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
     background-size: 40px 40px; z-index: 0; opacity: 0.3;
+    pointer-events: none;
   }
 
   .window {
     position: relative; z-index: 10; background: var(--card);
     padding: 2rem; border-radius: 24px; border: 1px solid var(--border);
-    width: 95%; max-width: 450px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    width: 100%; max-width: 480px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
   }
 
   h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 15px rgba(255,170,0,0.2); }
+  h2 { font-family: 'Orbitron', sans-serif; }
 
   .btn {
     background: transparent; border: 2px solid var(--neon); color: #fff;
     padding: 1rem; width: 100%; border-radius: 12px; font-family: 'Orbitron', sans-serif;
     font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
   }
-  .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+  .btn:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+  .btn:disabled { border-color: #444; color: #444; cursor: not-allowed; }
 
-  .input-field {
+  .btn-blue { border-color: var(--neon-blue); color: #fff; }
+  .btn-blue:hover:not(:disabled) { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+
+  .input-field, .select-field {
     width: 100%; padding: 1rem; background: #16162a; border: 1px solid var(--border);
     color: #fff; border-radius: 12px; font-family: inherit; text-align: center; font-size: 1.1rem; margin-bottom: 1rem; outline: none;
   }
+  .select-field { text-align-last: center; appearance: none; cursor: pointer; }
 
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* Стили карточки характеристик */
   .bunker-info { background: #090914; padding: 1rem; border-radius: 12px; text-align: left; font-size: 0.85rem; border-left: 4px solid var(--neon); margin-bottom: 1.5rem; }
-  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-  .char-label { color: #666; font-size: 0.8rem; text-transform: uppercase; }
-  .char-val { font-weight: bold; color: #fff; }
+  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); text-align: left; }
+  .char-label { color: #888; font-size: 0.8rem; text-transform: uppercase; }
+  .char-val { font-weight: bold; color: #fff; text-align: right; max-width: 60%; }
   .char-val.hidden { color: #ff3366; font-style: italic; font-weight: normal; }
+
+  /* Карты действий */
+  .action-card-box {
+    background: linear-gradient(135deg, #1a1135 0%, #0d0822 100%);
+    border: 1px solid var(--neon-blue); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
+  }
+  
+  /* Лог событий */
+  .game-log {
+    background: #000; color: #00ff66; font-size: 0.75rem; font-family: 'Space Mono', monospace;
+    padding: 0.5rem; border-radius: 8px; max-height: 80px; overflow-y: auto; text-align: left; margin-bottom: 1rem; border: 1px solid #113311;
+  }
 </style>
 </head>
 <body>
 
   <div class="window">
+    <!-- ЭКРАН ПОДКЛЮЧЕНИЯ -->
     <div id="scr-connect" class="screen active">
       <h1>CyberBunker</h1>
-      <div id="net-status" style="color: #666; margin-bottom: 1.5rem; font-size: 0.85rem;">Загрузка протокола выживания...</div>
+      <div id="net-status" style="color: #666; margin-bottom: 1.5rem; font-size: 0.85rem;">Инициализация протоколов...</div>
+      
       <input type="text" id="player-name" class="input-field" placeholder="Твой ник..." maxlength="12">
+      
+      <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.3rem; text-align: left;">КОЛИЧЕСТВО ИГРОКОВ (ДЛЯ ХОСТА):</div>
+      <select id="max-players-select" class="select-field">
+        <option value="2">2 Игрока</option>
+        <option value="3" selected>3 Игрока</option>
+        <option value="4">4 Игрока</option>
+        <option value="5">5 Игрока</option>
+        <option value="6">6 Игроков</option>
+        <option value="7">7 Игроков</option>
+        <option value="8">8 Игроков</option>
+        <option value="9">9 Игроков</option>
+        <option value="10">10 Игроков</option>
+      </select>
+
       <button class="btn" id="btn-create" onclick="createRoom()" style="display:none;">Создать бункер (Хост)</button>
-      <div style="margin: 0.5rem 0; color: #333;">— ИЛИ —</div>
-      <input type="number" id="room-id" class="input-field" placeholder="ID бункера хоста...">
-      <button class="btn" id="btn-join" onclick="joinRoom()" style="display:none;">Постучаться в бункер</button>
+      <div style="margin: 0.5rem 0; color: #444;">— ИЛИ —</div>
+      <input type="text" id="room-id" class="input-field" placeholder="ID бункера хоста...">
+      <button class="btn btn-blue" id="btn-join" onclick="joinRoom()" style="display:none;">Постучаться в бункер</button>
     </div>
 
+    <!-- ЭКРАН ЛОББИ -->
     <div id="scr-lobby" class="screen">
       <h1>Гермозатвор</h1>
       <div style="font-size: 0.9rem; margin-bottom: 1rem;">Код шлюза: <b id="lobby-code" style="color:var(--neon); font-size: 1.4rem;">-</b></div>
+      
       <div style="text-align: left; margin-bottom: 1.5rem;">
-        <div style="color:#555; font-size:0.8rem; margin-bottom: 0.5rem;">ЖЕЛАЮЩИЕ ВОЙТИ (НАДО 3 ИГРОКА):</div>
-        <ul id="player-list" style="list-style: none; color: var(--neon);"></ul>
+        <div style="color:#888; font-size:0.8rem; margin-bottom: 0.5rem; font-weight: bold;">
+          СПИСОК ВЫЖИВАЮЩИХ (<span id="lobby-count">0</span>/<span id="lobby-max">0</span>):
+        </div>
+        <ul id="player-list" style="list-style: none; color: var(--neon); font-size: 1.1rem; line-height: 1.6;"></ul>
       </div>
-      <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;">Герметизировать и Начать</button>
-      <div id="client-wait-msg" style="color:#555; font-size:0.85rem; display:none;">Хост проверяет запасы... Ждите старта.</div>
+      
+      <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;" disabled>Ожидание игроков...</button>
+      <div id="client-wait-msg" style="color:#888; font-size:0.85rem; display:none;">Хост проверяет шлюзы... Ожидайте старта.</div>
     </div>
 
+    <!-- ЭКРАН ИГРЫ -->
     <div id="scr-game" class="screen">
-      <h2 id="round-title" style="color:var(--neon); font-size:1.2rem; margin-bottom: 1rem;">РАУНД 1: Знакомство</h2>
+      <h2 id="round-title" style="color:var(--neon); font-size:1.1rem; margin-bottom: 1rem;">РАУНД 1</h2>
       
+      <!-- Системный Лог -->
+      <div class="game-log" id="game-log">Служба безопасности: Протокол запущен.</div>
+
       <div class="bunker-info">
-        <div style="font-weight:bold; color:var(--neon); margin-bottom:0.3rem;">УСЛОВИЯ МИРА:</div>
-        <div id="bunker-disaster" style="margin-bottom:0.5rem; font-weight:bold;">Загрузка...</div>
-        <div id="bunker-desc" style="color:#aaa;">Загрузка...</div>
+        <div style="font-weight:bold; color:var(--neon); margin-bottom:0.3rem;">КАТАСТРОФА МИРА:</div>
+        <div id="bunker-disaster" style="margin-bottom:0.5rem; font-weight:bold; color:#fff;">...</div>
+        <div id="bunker-desc" style="color:#aaa; line-height: 1.3;">...</div>
       </div>
 
-      <div style="text-align:left; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; color:var(--neon);">ТВОЁ ДОСЬЕ:</div>
-      <div id="dossier-box" style="margin-bottom:1.5rem;"></div>
+      <div style="text-align:left; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; color:var(--neon);">ТВОЯ КАРТА ПЕРСОНАЖА:</div>
+      <div id="dossier-box" style="margin-bottom:1.2rem;"></div>
 
-      <button class="btn" id="btn-action" onclick="nextRoundAction()">Открыть следующие данные</button>
+      <!-- Карты Действий -->
+      <div class="action-card-box" id="action-card-area">
+        <div style="font-weight:bold; color:var(--neon-blue); font-size:0.8rem; margin-bottom:0.3rem; text-transform:uppercase;">Карта Действия (Спецкарта):</div>
+        <div id="action-card-name" style="font-weight:bold; margin-bottom:0.3rem; color:#fff;">Загрузка...</div>
+        <div id="action-card-desc" style="color:#ccc; font-size:0.8rem; margin-bottom:0.8rem;">...</div>
+        <button class="btn btn-blue" id="btn-use-card" onclick="useActionCard()" style="padding:0.5rem; font-size:0.8rem; margin:0;">Активировать Карту</button>
+      </div>
+
+      <button class="btn" id="btn-action" onclick="nextRoundAction()" style="display:none;">Открыть следующие данные</button>
     </div>
   </div>
 
 <script>
-  // Списки для генерации карт персонажей
+  // Базы данных игры
   const DISASTERS = [
-    { name: "Ядерная зима", desc: "Температура на улице -60°C. Бункер оборудован хорошим генератором, но запасов еды строго на двоих на 1 год." },
-    { name: "Восстание ИИ и Киборгов", desc: "Роботы выкашивают всё живое. Бункер полностью экранирован, но фильтрация воды работает на честном слове." },
-    { name: "Генетическая чума", desc: "Вирус превращает людей в слизь. Бункер стерилен, но медицинский отсек пуст, инструментов нет." }
+    { name: "Ядерная зима", desc: "Температура на улице -60°C. Бункер оборудован хорошим генератором, но запасов еды строго на ограниченный круг лиц." },
+    { name: "Восстание ИИ", desc: "Роботы выкашивают всё живое. Бункер полностью экранирован, но фильтрация воды работает на честном слове." },
+    { name: "Генетическая чума", desc: "Вирус превращает органику в слизь. Бункер стерилен, но медицинский отсек пуст, инструментов нет." },
+    { name: "Солнечная вспышка", desc: "Атмосфера выжжена радиацией. На поверхности адское пекло. В бункере барахлит система кондиционирования." }
   ];
 
-  const PROFESSIONS = ["Инженер-физик", "Врач-хирург", "Программист ИИ", "Фермер-агроном", "Военный спецназовец", "Повар-технолог", "Слесарь-механик"];
-  const BIOLOGY = ["Мужчина, 23 года", "Женщина, 45 лет", "Мужчина, 38 лет", "Женщина, 19 лет", "Мужчина, 52 года", "Женщина, 28 лет"];
-  const HEALTH = ["Идеальное здоровье", "Хроническая астма", "Слабое сердце", "Аллергия на всё", "Ранняя стадия диабета", "Абсолютно здоров"];
-  const HOBBIES = ["Стрельба из лука", "Ботаника и травы", "Кулинария", "Ремонт электроники", "Прослушивание рэпа", "Карточные фокусы"];
-  const PHOBIAS = ["Боязнь темноты", "Клаустрофобия", "Боязнь замкнутых пространств", "Паника при виде крови", "Страх остаться одному"];
-  const BAGGAGE = ["Канистра бензина 10л", "Дробовик (3 патрона)", "Набор хирургических нитей", "Семена томатов", "Резиновая уточка", "Старый ноутбук"];
+  const PROFESSIONS = ["Инженер-физик", "Врач-хирург", "Программист ИИ", "Фермер-агроном", "Военный спецназовец", "Повар-технолог", "Слесарь-механик", "Ученый-генетик", "Психолог"];
+  const BIOLOGY = ["Мужчина, 23 года, бесплоден", "Женщина, 45 лет, здорова", "Мужчина, 38 лет, здоров", "Женщина, 19 лет, здорова", "Мужчина, 52 года, здоров", "Женщина, 28 лет, бесплодна"];
+  const HEALTH = ["Идеальное здоровье", "Хроническая астма", "Слабое сердце", "Аллергия на всё", "Ранняя стадия диабета", "Абсолютно здоров", "Лучевая болезнь (легкая)"];
+  const HOBBIES = ["Стрельба из лука", "Ботаника и травы", "Кулинария", "Ремонт электроники", "Прослушивание рэпа", "Карточные фокусы", "Дзюдо"];
+  const PHOBIAS = ["Боязнь темноты", "Клаустрофобия", "Паника при виде крови", "Страх остаться одному", "Арахнофобия", "Некрофобия"];
+  const BAGGAGE = ["Канистра бензина 10л", "Дробовик (3 патрона)", "Набор хирургических нитей", "Семена томатов", "Резиновая уточка", "Старый ноутбук", "Аптечка первой помощи"];
+
+  const ACTION_CARDS = [
+    { id: "heal", name: "📜 Медицинское чудо", desc: "Исцеляет ваше здоровье. Ваше здоровье становится: 'Абсолютно здоров'." },
+    { id: "swap_bag", name: "📜 Ночной грабёж", desc: "Случайный игрок отдает вам свой Багаж, а забирает ваш." },
+    { id: "check_phobia", name: "📜 Детектор лжи", desc: "Вы заставляете всех игроков мгновенно раскрыть их Фобии." },
+    { id: "change_prof", name: "📜 Переквалификация", desc: "Вы меняете свою текущую профессию на случайную новую." },
+    { id: "bunker_bonus", name: "📜 Тайник в стене", desc: "Вы нашли скрытые припасы. Ваша полезность для бункера удваивается." }
+  ];
 
   let peer, conn, myName = "", myRole = "guest";
+  let maxPlayers = 3;
   let clients = []; 
   let allPlayersNames = [];
   let myDossier = {};
+  let myActionCard = {};
   let currentRound = 1;
   let disasterObj = {};
+  let isCardUsed = false;
 
   function setScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
-  // Сеть
-  const shortId = Math.floor(1000 + Math.random() * 9000).toString();
+  function logMessage(text) {
+    const logBox = document.getElementById('game-log');
+    if(logBox) {
+      logBox.innerHTML += `<div>> ${text}</div>`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+  }
+
+  // Настройка PeerJS
+  const shortId = Math.floor(100000 + Math.random() * 900000).toString(); // 6-значный красивый ID
   peer = new Peer(shortId);
+  
   peer.on('open', id => {
-    document.getElementById('net-status').textContent = "Шлюз готов. Введите позывной.";
+    document.getElementById('net-status').textContent = "Протокол синхронизирован. Выберите параметры:";
     document.getElementById('btn-create').style.display = 'block';
     document.getElementById('btn-join').style.display = 'block';
     document.getElementById('lobby-code').textContent = id;
   });
 
+  peer.on('error', err => {
+    alert("Ошибка сети! Попробуйте обновить страницу или проверить ID.");
+    console.error(err);
+  });
+
+  // Логика Хоста
   function createRoom() {
     myName = document.getElementById('player-name').value.trim();
+    maxPlayers = parseInt(document.getElementById('max-players-select').value);
     if(!myName) return alert("Введите имя!");
+    
     myRole = "host";
     allPlayersNames.push(myName);
-    updateLobbyList();
+    
     document.getElementById('btn-start-game').style.display = 'block';
+    updateLobbyUI();
     setScreen('scr-lobby');
 
     peer.on('connection', connection => {
-      connection.on('open', () => connection.send({type: 'req-name'}));
+      connection.on('open', () => {
+        // Запрашиваем имя и проверяем лимит мест
+        connection.send({type: 'req-info', maxPlayers: maxPlayers});
+      });
+
       connection.on('data', data => {
         if(data.type === 'send-name') {
+          if(allPlayersNames.length >= maxPlayers) {
+            connection.send({type: 'lobby-full'});
+            return;
+          }
           clients.push({conn: connection, name: data.name});
           allPlayersNames.push(data.name);
-          updateLobbyList();
-          broadcast({type: 'sync-lobby', players: allPlayersNames});
+          updateLobbyUI();
+          
+          // Рассылаем всем обновленное лобби
+          broadcast({type: 'sync-lobby', players: allPlayersNames, max: maxPlayers});
+          
+          if(allPlayersNames.length >= maxPlayers) {
+            const startBtn = document.getElementById('btn-start-game');
+            startBtn.disabled = false;
+            startBtn.textContent = "Открыть гермозатвор!";
+          }
         }
+        
+        // Пересылка сообщений об активации карт действий от клиентов всем остальным
+        if(data.type === 'card-activated-broadcast') {
+          broadcast(data);
+          logMessage(data.msg);
+        }
+      });
+
+      connection.on('close', () => {
+        clients = clients.filter(c => c.conn.peer !== connection.peer);
+        // Пересобираем имена выживших
+        allPlayersNames = [myName, ...clients.map(c => c.name)];
+        updateLobbyUI();
+        broadcast({type: 'sync-lobby', players: allPlayersNames, max: maxPlayers});
+        
+        const startBtn = document.getElementById('btn-start-game');
+        startBtn.disabled = true;
+        startBtn.textContent = "Ожидание игроков...";
       });
     });
   }
 
+  // Логика Клиента
   function joinRoom() {
     myName = document.getElementById('player-name').value.trim();
     const id = document.getElementById('room-id').value.trim();
-    if(!myName || !id) return alert("Заполните поля!");
+    if(!myName || !id) return alert("Введите имя и ID бункера хоста!");
+    
     myRole = "guest";
     document.getElementById('client-wait-msg').style.display = 'block';
     setScreen('scr-lobby');
 
     conn = peer.connect(id);
+    
     conn.on('data', data => {
-      if(data.type === 'req-name') conn.send({type: 'send-name', name: myName});
-      if(data.type === 'sync-lobby') { allPlayersNames = data.players; updateLobbyList(); }
+      if(data.type === 'req-info') {
+        maxPlayers = data.maxPlayers;
+        conn.send({type: 'send-name', name: myName});
+      }
+      if(data.type === 'lobby-full') {
+        alert("В этом бункере уже нет свободных мест!");
+        window.location.reload();
+      }
+      if(data.type === 'sync-lobby') { 
+        allPlayersNames = data.players; 
+        maxPlayers = data.max;
+        updateLobbyUI(); 
+      }
       if(data.type === 'start-session') {
         disasterObj = data.disaster;
         myDossier = data.dossier;
+        myActionCard = data.actionCard;
         runGameInterface();
       }
       if(data.type === 'force-next-round') {
         currentRound = data.round;
         updateDossierRender();
+        logMessage(`Начался Раунд ${currentRound}`);
+      }
+      if(data.type === 'card-activated-broadcast') {
+        logMessage(data.msg);
+        if(data.cardId === 'check_phobia') {
+          // Если кто-то сыграл детектор лжи, у всех принудительно открывается фобия раньше времени
+          currentRound = Math.max(currentRound, 2.5); // Технический триггер для показа фобии
+          updateDossierRender();
+        }
       }
     });
   }
 
-  function updateLobbyList() {
-    document.getElementById('player-list').innerHTML = allPlayersNames.map(p => `<li>📦 ${p}</li>`).join('');
+  function updateLobbyUI() {
+    document.getElementById('lobby-count').textContent = allPlayersNames.length;
+    document.getElementById('lobby-max').textContent = maxPlayers;
+    document.getElementById('player-list').innerHTML = allPlayersNames.map((p, i) => `<li>${i===0 ? '👑' : '👤'} ${p}</li>`).join('');
   }
 
   function broadcast(data) { clients.forEach(c => c.conn.send(data)); }
 
-  // Генерация всей сессии (Только Хост)
+  // Генерация игровой сессии (Только Хост)
   function generateBunkerSession() {
-    if(allPlayersNames.length < 3) return alert("Для полноценного Бункера нужно ровно 3 человека!");
+    if(allPlayersNames.length < maxPlayers) return alert("Дождитесь всех игроков!");
     
     disasterObj = DISASTERS[Math.floor(Math.random() * DISASTERS.length)];
     
-    // Генерируем досье для хоста (индекс 0)
+    // Генерируем данные для хоста
     myDossier = generateSingleDossier();
+    myActionCard = ACTION_CARDS[Math.floor(Math.random() * ACTION_CARDS.length)];
 
-    // Генерируем и отсылаем досье клиентам
-    clients.forEach((client, i) => {
+    // Генерируем и отправляем данные каждому клиенту индивидуально
+    clients.forEach((client) => {
       client.conn.send({
         type: 'start-session',
         disaster: disasterObj,
-        dossier: generateSingleDossier()
+        dossier: generateSingleDossier(),
+        actionCard: ACTION_CARDS[Math.floor(Math.random() * ACTION_CARDS.length)]
       });
     });
 
@@ -226,50 +372,100 @@
     document.getElementById('bunker-disaster').textContent = disasterObj.name.toUpperCase();
     document.getElementById('bunker-desc').textContent = disasterObj.desc;
     
-    if(myRole !== 'host') {
-      document.getElementById('btn-action').style.display = 'none'; // Раундами управляет только хост
+    document.getElementById('action-card-name').textContent = myActionCard.name;
+    document.getElementById('action-card-desc').textContent = myActionCard.desc;
+    
+    if(myRole === 'host') {
+      document.getElementById('btn-action').style.display = 'block';
     }
     updateDossierRender();
   }
 
   function updateDossierRender() {
     const box = document.getElementById('dossier-box');
-    document.getElementById('round-title').textContent = `РАУНД ${currentRound}: Из Поколения в Поколение`;
+    const rTitle = document.getElementById('round-title');
+    
+    if(currentRound >= 3) {
+      rTitle.textContent = `🚨 ФИНАЛЬНОЕ ГОЛОСОВАНИЕ`;
+    } else {
+      rTitle.textContent = `РАУНД ${Math.floor(currentRound)}: Раскрытие карт`;
+    }
 
-    // Рендерим строки в зависимости от текущего раунда (скрываем или открываем факты)
     box.innerHTML = `
       <div class="char-row"><span class="char-label">Профессия:</span><span class="char-val">${myDossier.prof}</span></div>
       <div class="char-row"><span class="char-label">Биология:</span><span class="char-val">${myDossier.bio}</span></div>
       
       <div class="char-row"><span class="char-label">Здоровье:</span>
-        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.health : '[ЗАБЛОКИРОВАНО]'}</span>
+        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.health : '[СКРЫТО В РАУНДЕ 2]'}</span>
       </div>
       <div class="char-row"><span class="char-label">Хобби:</span>
-        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.hobby : '[ЗАБЛОКИРОВАНО]'}</span>
+        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.hobby : '[СКРЫТО В РАУНДЕ 2]'}</span>
       </div>
       
       <div class="char-row"><span class="char-label">Фобия:</span>
-        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.phobia : '[ЗАБЛОКИРОВАНО]'}</span>
+        <span class="char-val ${currentRound < 2.5 ? 'hidden' : ''}">${currentRound >= 2.5 ? myDossier.phobia : '[СКРЫТО В РАУНДЕ 3]'}</span>
       </div>
       <div class="char-row"><span class="char-label">Багаж:</span>
-        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.bag : '[ЗАБЛОКИРОВАНО]'}</span>
+        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.bag : '[СКРЫТО В РАУНДЕ 3]'}</span>
       </div>
     `;
 
     if(myRole === 'host') {
-      if(currentRound === 1) document.getElementById('btn-action').textContent = "Перейти к Раунду 2 (Здоровье и Хобби)";
-      if(currentRound === 2) document.getElementById('btn-action').textContent = "Перейти к Раунду 3 (Фобии и Снаряжение)";
-      if(currentRound === 3) document.getElementById('btn-action').textContent = "ФИНАЛЬНОЕ ГОЛОСОВАНИЕ НА ВЫЛЕТ";
+      if(currentRound === 1) document.getElementById('btn-action').textContent = "Открыть Здоровье и Хобби (Р2)";
+      if(currentRound === 2) document.getElementById('btn-action').textContent = "Открыть Фобии и Багаж (Р3)";
+      if(currentRound >= 3) document.getElementById('btn-action').textContent = "ОБЪЯВИТЬ ГОЛОСОВАНИЕ НА ВЫЛЕТ";
+    }
+  }
+
+  // Применение Карты Действия
+  function useActionCard() {
+    if(isCardUsed) return;
+    isCardUsed = true;
+    document.getElementById('btn-use-card').disabled = true;
+    document.getElementById('btn-use-card').textContent = "ИСПОЛЬЗОВАНО";
+    
+    let eventMessage = `Игрок ${myName} активировал карту: "${myActionCard.name}"!`;
+    
+    // Эффекты карт локально
+    if(myActionCard.id === "heal") {
+      myDossier.health = "Абсолютно здоров (Излечен картой)";
+      updateDossierRender();
+    }
+    if(myActionCard.id === "change_prof") {
+      myDossier.prof = PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)] + " (Новая профессия)";
+      updateDossierRender();
+    }
+    if(myActionCard.id === "bunker_bonus") {
+      myDossier.prof += " [+Найденный Скрытый Тайник]";
+      updateDossierRender();
+    }
+
+    // Синхронизация события по сети
+    const networkEvent = {
+      type: 'card-activated-broadcast',
+      cardId: myActionCard.id,
+      msg: eventMessage
+    };
+
+    if(myRole === 'host') {
+      broadcast(networkEvent);
+      logMessage(networkEvent.msg);
+    } else {
+      conn.send({type: 'card-activated-broadcast', cardId: myActionCard.id, msg: eventMessage});
+      logMessage(networkEvent.msg);
     }
   }
 
   function nextRoundAction() {
     if(currentRound < 3) {
-      currentRound++;
+      currentRound = Math.floor(currentRound) + 1;
       updateDossierRender();
+      logMessage(`Хост перевел игру на Раунд ${currentRound}`);
       broadcast({type: 'force-next-round', round: currentRound});
     } else {
-      alert("Время вышло! Обсудите вживую, кто из вас троих лишний, и проголосуйте пальцем. В бункер пройдут только двое!");
+      const finalMsg = "Голосование активировано! Обсудите вживую, кто покинет шлюз. Мест на всех не хватит!";
+      logMessage(finalMsg);
+      alert(finalMsg);
     }
   }
 </script>
