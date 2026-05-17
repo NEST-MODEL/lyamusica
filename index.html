@@ -3,632 +3,274 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CyberSpy — Сетевой Шпион</title>
+<title>CyberBunker 1v1v1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <style>
   :root {
-    --bg: #040408;
-    --neon-green: #00ff66;
-    --neon-red: #ff0055;
-    --card: #0d0d18;
+    --bg: #06060c;
+    --neon: #ffaa00;
+    --card: #111122;
     --text: #ffffff;
+    --border: rgba(255,255,255,0.08);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
 
   body::before {
     content: ''; position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
-    background-size: 30px 30px; z-index: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px; z-index: 0; opacity: 0.3;
   }
 
   .window {
     position: relative; z-index: 10; background: var(--card);
-    padding: 2rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);
-    width: 90%; max-width: 420px; text-align: center;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    padding: 2rem; border-radius: 24px; border: 1px solid var(--border);
+    width: 95%; max-width: 450px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
   }
 
-  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon-green); text-shadow: 0 0 15px rgba(0,255,102,0.2); }
+  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 15px rgba(255,170,0,0.2); }
 
   .btn {
-    background: transparent; border: 2px solid var(--neon-green); color: #fff;
+    background: transparent; border: 2px solid var(--neon); color: #fff;
     padding: 1rem; width: 100%; border-radius: 12px; font-family: 'Orbitron', sans-serif;
     font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
   }
-  .btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 15px var(--neon-green); }
-  .btn.red { border-color: var(--neon-red); }
-  .btn.red:hover { background: var(--neon-red); color: #fff; box-shadow: 0 0 15px var(--neon-red); }
+  .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
 
   .input-field {
-    width: 100%; padding: 1rem; background: #121222; border: 1px solid rgba(255,255,255,0.1);
-    color: #fff; border-radius: 12px; font-family: inherit; text-align: center;
-    font-size: 1.1rem; margin-bottom: 1rem; outline: none;
+    width: 100%; padding: 1rem; background: #16162a; border: 1px solid var(--border);
+    color: #fff; border-radius: 12px; font-family: inherit; text-align: center; font-size: 1.1rem; margin-bottom: 1rem; outline: none;
   }
 
-  /* Игровые экраны */
   .screen { display: none; }
   .screen.active { display: block; }
 
-  .role-box {
-    background: #121224; padding: 1.5rem; border-radius: 12px;
-    margin: 1.5rem 0; border: 1px dashed rgba(255,255,255,0.1);
-  }
-  .role-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; }
-  
-  .loc-list { text-align: left; font-size: 0.8rem; color: #777; margin-top: 1.5rem; max-height: 120px; overflow-y: auto; padding: 5px; background: #07070f; border-radius: 6px; }
+  /* Стили карточки характеристик */
+  .bunker-info { background: #090914; padding: 1rem; border-radius: 12px; text-align: left; font-size: 0.85rem; border-left: 4px solid var(--neon); margin-bottom: 1.5rem; }
+  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .char-label { color: #666; font-size: 0.8rem; text-transform: uppercase; }
+  .char-val { font-weight: bold; color: #fff; }
+  .char-val.hidden { color: #ff3366; font-style: italic; font-weight: normal; }
 </style>
 </head>
 <body>
 
   <div class="window">
     <div id="scr-connect" class="screen active">
-      <h1>CyberSpy 1v1+</h1>
-      <div id="net-status" style="color: #666; margin-bottom: 1.5rem; font-size: 0.85rem;">Запуск зашифрованного узла...</div>
-      
+      <h1>CyberBunker</h1>
+      <div id="net-status" style="color: #666; margin-bottom: 1.5rem; font-size: 0.85rem;">Загрузка протокола выживания...</div>
       <input type="text" id="player-name" class="input-field" placeholder="Твой ник..." maxlength="12">
-      
-      <button class="btn" id="btn-create" onclick="createRoom()" style="display:none;">Создать сервер лобби</button>
-      <div style="margin: 0.5rem 0; color: #333; font-size: 0.8rem;">— ИЛИ —</div>
-      <input type="number" id="room-id" class="input-field" placeholder="ID сервера хоста...">
-      <button class="btn red" id="btn-join" onclick="joinRoom()" style="display:none;">Подключиться к лобби</button>
+      <button class="btn" id="btn-create" onclick="createRoom()" style="display:none;">Создать бункер (Хост)</button>
+      <div style="margin: 0.5rem 0; color: #333;">— ИЛИ —</div>
+      <input type="number" id="room-id" class="input-field" placeholder="ID бункера хоста...">
+      <button class="btn" id="btn-join" onclick="joinRoom()" style="display:none;">Постучаться в бункер</button>
     </div>
 
     <div id="scr-lobby" class="screen">
-      <h1>Ожидание игроков</h1>
-      <div style="font-size: 0.9rem; margin-bottom: 1rem;">Код вашей комнаты: <b id="lobby-code" style="color:var(--neon-green); font-size: 1.3rem;">-</b></div>
+      <h1>Гермозатвор</h1>
+      <div style="font-size: 0.9rem; margin-bottom: 1rem;">Код шлюза: <b id="lobby-code" style="color:var(--neon); font-size: 1.4rem;">-</b></div>
       <div style="text-align: left; margin-bottom: 1.5rem;">
-        <div style="color:#555; margin-bottom: 0.5rem;">ПОДКЛЮЧЕНЫ:</div>
-        <ul id="player-list" style="list-style: none; padding-left: 5px; color: var(--neon-green);"></ul>
+        <div style="color:#555; font-size:0.8rem; margin-bottom: 0.5rem;">ЖЕЛАЮЩИЕ ВОЙТИ (НАДО 3 ИГРОКА):</div>
+        <ul id="player-list" style="list-style: none; color: var(--neon);"></ul>
       </div>
-      <button class="btn" id="btn-start-game" onclick="generateAndSendRoles()" style="display:none;">Запустить раздачу ролей</button>
-      <div id="client-wait-msg" style="color:#555; font-size:0.85rem; display:none;">Ждем, пока создатель запустит сессию...</div>
+      <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;">Герметизировать и Начать</button>
+      <div id="client-wait-msg" style="color:#555; font-size:0.85rem; display:none;">Хост проверяет запасы... Ждите старта.</div>
     </div>
 
     <div id="scr-game" class="screen">
-      <h1>Статус агента</h1>
+      <h2 id="round-title" style="color:var(--neon); font-size:1.2rem; margin-bottom: 1rem;">РАУНД 1: Знакомство</h2>
       
-      <div class="role-box">
-        <div id="role-name" class="role-title">—</div>
-        <div id="role-info" style="color: #aaa; font-size: 0.9rem;">—</div>
+      <div class="bunker-info">
+        <div style="font-weight:bold; color:var(--neon); margin-bottom:0.3rem;">УСЛОВИЯ МИРА:</div>
+        <div id="bunker-disaster" style="margin-bottom:0.5rem; font-weight:bold;">Загрузка...</div>
+        <div id="bunker-desc" style="color:#aaa;">Загрузка...</div>
       </div>
 
-      <div style="font-size: 0.85rem; color: #555; margin-bottom: 1rem;">Задавайте друг другу вопросы по кругу. Вычислите крысу или не спалитесь сами!</div>
-      
-      <button class="btn red" onclick="exitGame()">Выйти из сессии</button>
+      <div style="text-align:left; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; color:var(--neon);">ТВОЁ ДОСЬЕ:</div>
+      <div id="dossier-box" style="margin-bottom:1.5rem;"></div>
 
-      <div style="font-weight:bold; font-size:0.75rem; color:#444; text-align:left;">СПИСОК ВОЗМОЖНЫХ ЛОКАЦИЙ В ИГРЕ:</div>
-      <div class="loc-list" id="locations-display"></div>
+      <button class="btn" id="btn-action" onclick="nextRoundAction()">Открыть следующие данные</button>
     </div>
   </div>
 
 <script>
-  // Список локаций (можешь менять, удалять, вписывать свои локальные приколы)
-  const LOCATIONS = [
-    "Серверная ВКонтакте", "Кальянная у Ашота", "Пентхаус Дурова", 
-    "Офис стримеров казино", "Компьютерный клуб", "Бункер Илона Маска", 
-    "Очередь за шаурмой", "Секретная лаба бабок", "Психбольница", 
-    "Подвал майнеров", "Школьная столовая", "Дача Дмитрия Анатольевича"
+  // Списки для генерации карт персонажей
+  const DISASTERS = [
+    { name: "Ядерная зима", desc: "Температура на улице -60°C. Бункер оборудован хорошим генератором, но запасов еды строго на двоих на 1 год." },
+    { name: "Восстание ИИ и Киборгов", desc: "Роботы выкашивают всё живое. Бункер полностью экранирован, но фильтрация воды работает на честном слове." },
+    { name: "Генетическая чума", desc: "Вирус превращает людей в слизь. Бункер стерилен, но медицинский отсек пуст, инструментов нет." }
   ];
 
-  let peer, conn;
-  let myName = "";
-  let myRole = "guest"; // host или guest
-  let clients = []; // только у хоста: список объектов {conn, name}
+  const PROFESSIONS = ["Инженер-физик", "Врач-хирург", "Программист ИИ", "Фермер-агроном", "Военный спецназовец", "Повар-технолог", "Слесарь-механик"];
+  const BIOLOGY = ["Мужчина, 23 года", "Женщина, 45 лет", "Мужчина, 38 лет", "Женщина, 19 лет", "Мужчина, 52 года", "Женщина, 28 лет"];
+  const HEALTH = ["Идеальное здоровье", "Хроническая астма", "Слабое сердце", "Аллергия на всё", "Ранняя стадия диабета", "Абсолютно здоров"];
+  const HOBBIES = ["Стрельба из лука", "Ботаника и травы", "Кулинария", "Ремонт электроники", "Прослушивание рэпа", "Карточные фокусы"];
+  const PHOBIAS = ["Боязнь темноты", "Клаустрофобия", "Боязнь замкнутых пространств", "Паника при виде крови", "Страх остаться одному"];
+  const BAGGAGE = ["Канистра бензина 10л", "Дробовик (3 патрона)", "Набор хирургических нитей", "Семена томатов", "Резиновая уточка", "Старый ноутбук"];
+
+  let peer, conn, myName = "", myRole = "guest";
+  let clients = []; 
   let allPlayersNames = [];
+  let myDossier = {};
+  let currentRound = 1;
+  let disasterObj = {};
 
   function setScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
-  // Запуск сети
+  // Сеть
   const shortId = Math.floor(1000 + Math.random() * 9000).toString();
   peer = new Peer(shortId);
-
-  peer.on('open', (id) => {
-    document.getElementById('net-status').textContent = "Узел синхронизирован. Введите ник.";
+  peer.on('open', id => {
+    document.getElementById('net-status').textContent = "Шлюз готов. Введите позывной.";
     document.getElementById('btn-create').style.display = 'block';
     document.getElementById('btn-join').style.display = 'block';
     document.getElementById('lobby-code').textContent = id;
   });
 
-  // Логика Хоста (сервер комнаты)
   function createRoom() {
     myName = document.getElementById('player-name').value.trim();
-    if(!myName) return alert("Введите свой ник!");
+    if(!myName) return alert("Введите имя!");
     myRole = "host";
-    
     allPlayersNames.push(myName);
     updateLobbyList();
-    
     document.getElementById('btn-start-game').style.display = 'block';
     setScreen('scr-lobby');
 
-    peer.on('connection', (connection) => {
-      connection.on('open', () => {
-        // Запрашиваем имя у подключившегося игрока
-        connection.send({type: 'request-name'});
-      });
-
-      connection.on('data', (data) => {
+    peer.on('connection', connection => {
+      connection.on('open', () => connection.send({type: 'req-name'}));
+      connection.on('data', data => {
         if(data.type === 'send-name') {
           clients.push({conn: connection, name: data.name});
           allPlayersNames.push(data.name);
           updateLobbyList();
-          // Рассылаем всем обновленный список участников
           broadcast({type: 'sync-lobby', players: allPlayersNames});
         }
-      });
-
-      connection.on('close', () => {
-        clients = clients.filter(c => c.conn !== connection);
-        // Тут по-хорошему надо пересобрать имена, упростим для демки
       });
     });
   }
 
-  // Логика Гостя (подключение)
   function joinRoom() {
     myName = document.getElementById('player-name').value.trim();
     const id = document.getElementById('room-id').value.trim();
-    if(!myName || !id) return alert("Введите ник и ID сервера!");
-    
+    if(!myName || !id) return alert("Заполните поля!");
     myRole = "guest";
     document.getElementById('client-wait-msg').style.display = 'block';
     setScreen('scr-lobby');
 
     conn = peer.connect(id);
-
-    conn.on('data', (data) => {
-      if(data.type === 'request-name') {
-        conn.send({type: 'send-name', name: myName});
+    conn.on('data', data => {
+      if(data.type === 'req-name') conn.send({type: 'send-name', name: myName});
+      if(data.type === 'sync-lobby') { allPlayersNames = data.players; updateLobbyList(); }
+      if(data.type === 'start-session') {
+        disasterObj = data.disaster;
+        myDossier = data.dossier;
+        runGameInterface();
       }
-      if(data.type === 'sync-lobby') {
-        allPlayersNames = data.players;
-        updateLobbyList();
-      }
-      if(data.type === 'assign-role') {
-        renderRoleScreen(data.role, data.location);
+      if(data.type === 'force-next-round') {
+        currentRound = data.round;
+        updateDossierRender();
       }
     });
   }
 
   function updateLobbyList() {
-    const list = document.getElementById('player-list');
-    list.innerHTML = allPlayersNames.map(p => `<li>🟢 ${p}</li>`).join('');
+    document.getElementById('player-list').innerHTML = allPlayersNames.map(p => `<li>📦 ${p}</li>`).join('');
   }
 
-  function broadcast(data) {
-    clients.forEach(c => c.conn.send(data));
-  }
+  function broadcast(data) { clients.forEach(c => c.conn.send(data)); }
 
-  // Раздача ролей (Выполняет только Хост)
-  function generateAndSendRoles() {
-    if(allPlayersNames.length < 2) return alert("Нужно хотя бы 2 игрока (лучше от 3-4)!");
+  // Генерация всей сессии (Только Хост)
+  function generateBunkerSession() {
+    if(allPlayersNames.length < 3) return alert("Для полноценного Бункера нужно ровно 3 человека!");
     
-    const randomLocation = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
+    disasterObj = DISASTERS[Math.floor(Math.random() * DISASTERS.length)];
     
-    // Выбираем случайного хакера среди ВСЕХ (включая хоста)
-    const hackerIndex = Math.floor(Math.random() * allPlayersNames.length);
-    
-    // Проверяем роль для себя (хоста)
-    let hostRole = (hackerIndex === 0) ? "ХАКЕР" : "АГЕНТ БЕЗОПАСНОСТИ";
-    renderRoleScreen(hostRole, randomLocation);
+    // Генерируем досье для хоста (индекс 0)
+    myDossier = generateSingleDossier();
 
-    // Отправляем роли остальным клиентам
-    clients.forEach((client, index) => {
-      // Имена клиентов начинаются со сдвигом 1, так как 0 индекс — это хост
-      let clientRole = (hackerIndex === index + 1) ? "ХАКЕР" : "АГЕНТ БЕЗОПАСНОСТИ";
+    // Генерируем и отсылаем досье клиентам
+    clients.forEach((client, i) => {
       client.conn.send({
-        type: 'assign-role',
-        role: clientRole,
-        location: randomLocation
+        type: 'start-session',
+        disaster: disasterObj,
+        dossier: generateSingleDossier()
       });
     });
+
+    runGameInterface();
   }
 
-  function renderRoleScreen(role, location) {
+  function generateSingleDossier() {
+    return {
+      prof: PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)],
+      bio: BIOLOGY[Math.floor(Math.random() * BIOLOGY.length)],
+      health: HEALTH[Math.floor(Math.random() * HEALTH.length)],
+      hobby: HOBBIES[Math.floor(Math.random() * HOBBIES.length)],
+      phobia: PHOBIAS[Math.floor(Math.random() * PHOBIAS.length)],
+      bag: BAGGAGE[Math.floor(Math.random() * BAGGAGE.length)]
+    };
+  }
+
+  function runGameInterface() {
     setScreen('scr-game');
-    const title = document.getElementById('role-name');
-    const info = document.getElementById('role-info');
+    document.getElementById('bunker-disaster').textContent = disasterObj.name.toUpperCase();
+    document.getElementById('bunker-desc').textContent = disasterObj.desc;
     
-    // Выводим шпаргалку локаций на экран
-    document.getElementById('locations-display').innerHTML = LOCATIONS.map(l => `• ${l}<br>`).join('');
-
-    if(role === "ХАКЕР") {
-      title.textContent = "ВЫ ХАКЕР 🥷";
-      title.style.color = var(--neon-red);
-      info.innerHTML = "Вы проникли в сеть, но база данных зашифрована.<br><br>Слушайте вопросы игроков, поймите где вы находитесь и не выдайте себя.";
-    } else {
-      title.textContent = "ВЫ АГЕНТ 🛡️";
-      title.style.color = var(--neon-green);
-      info.innerHTML = `Текущая локация:<br><b style="color:#fff; font-size:1.3rem;">${location}</b><br><br>Задавайте хитрые вопросы, чтобы вычислить хакера, но не называйте место вслух!`;
+    if(myRole !== 'host') {
+      document.getElementById('btn-action').style.display = 'none'; // Раундами управляет только хост
     }
+    updateDossierRender();
   }
 
-  function exitGame() {
-    location.reload();
-  }
+  function updateDossierRender() {
+    const box = document.getElementById('dossier-box');
+    document.getElementById('round-title').textContent = `РАУНД ${currentRound}: Из Поколения в Поколение`;
 
-  function varColor(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberArena 1v1</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&family=Syne:wght@800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #030305;
-    --p1-color: #00ff66;
-    --p2-color: #ff0055;
-    --border: rgba(255, 255, 255, 0.05);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-  body {
-    background: var(--bg);
-    color: #fff;
-    font-family: 'Space Mono', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  /* Киберпанк сетка */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 30px 30px;
-    z-index: 0;
-  }
-  #wrapper { position: relative; z-index: 1; text-align: center; }
-  h1 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.5rem; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 0.5rem; background: linear-gradient(90deg, var(--p1-color), var(--p2-color)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  
-  /* Верхняя панель со здоровьем */
-  .hud { display: flex; justify-content: space-between; width: 800px; margin-bottom: 10px; font-weight: bold; }
-  .hp-bar-container { width: 300px; height: 15px; background: #111; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
-  .hp-fill { height: 100%; width: 100%; transition: width 0.1s ease; }
-  #p1-hp { background: var(--p1-color); box-shadow: 0 0 10px var(--p1-color); }
-  #p2-hp { background: var(--p2-color); box-shadow: 0 0 10px var(--p2-color); }
-
-  /* Арена */
-  canvas { background: #080810; border: 2px solid #1a1a2e; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: block; }
-  
-  /* Окно старта/конца */
-  .overlay { position: absolute; inset: 0; background: rgba(5,5,8,0.9); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
-  .btn { background: #fff; color: #000; border: none; padding: 1rem 2.5rem; font-family: 'Syne', sans-serif; font-weight: 800; text-transform: uppercase; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-  .btn:hover { transform: scale(1.05); background: linear-gradient(90deg, var(--p1-color), var(--p2-color)); color: #fff; }
-  .controls-hint { display: flex; gap: 3rem; font-size: 0.8rem; color: #666; margin-top: 1rem; text-align: left; }
-  .controls-hint b { color: #fff; }
-</style>
-</head>
-<body>
-
-<div id="wrapper">
-  <h1>CyberArena 1v1</h1>
-  
-  <div class="hud">
-    <div>
-      <span style="color: var(--p1-color)">ИГРОК 1 (Зеленый)</span>
-      <div class="hp-bar-container"><div class="hp-fill" id="p1-hp"></div></div>
-    </div>
-    <div>
-      <span style="color: var(--p2-color)">ИГРОК 2 (Красный)</span>
-      <div class="hp-bar-container"><div class="hp-fill" id="p2-hp"></div></div>
-    </div>
-  </div>
-
-  <div style="position: relative;">
-    <canvas id="gameCanvas" width="800" height="450"></canvas>
-    
-    <!-- Экран старта -->
-    <div class="overlay" id="start-screen">
-      <h2 style="font-family:'Syne'; font-size: 2rem;">ГОТОВЫ К БОЮ?</h2>
-      <button class="btn" onclick="initGame()">ПРИНЯТЬ БОЙ</button>
-      <div class="controls-hint">
-        <div>🟢 <b>Игрок 1:</b><br>Ходить: <b>W, A, S, D</b><br>Стрелять: <b>Пробел</b></div>
-        <div>🔴 <b>Игрок 2:</b><br>Ходить: <b>Стрелочки</b><br>Стрелять: <b>Enter</b></div>
+    // Рендерим строки в зависимости от текущего раунда (скрываем или открываем факты)
+    box.innerHTML = `
+      <div class="char-row"><span class="char-label">Профессия:</span><span class="char-val">${myDossier.prof}</span></div>
+      <div class="char-row"><span class="char-label">Биология:</span><span class="char-val">${myDossier.bio}</span></div>
+      
+      <div class="char-row"><span class="char-label">Здоровье:</span>
+        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.health : '[ЗАБЛОКИРОВАНО]'}</span>
       </div>
-    </div>
-
-    <!-- Экран финиша -->
-    <div class="overlay" id="end-screen" style="display: none;">
-      <h2 id="win-text" style="font-family:'Syne'; font-size: 2.5rem;">ПОБЕДА!</h2>
-      <button class="btn" onclick="initGame()">РЕВАНШ</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-
-  let gameActive = false;
-  let keys = {};
-
-  // Настройки игроков
-  let p1, p2, bullets, particles, obstacles;
-
-  // Слушаем клавиатуру
-  window.addEventListener('keydown', e => keys[e.code] = true);
-  window.addEventListener('keyup', e => keys[e.code] = false);
-
-  function initGame() {
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('end-screen').style.display = 'none';
-    
-    p1 = { x: 80, y: 225, r: 15, color: '#00ff66', hp: 100, speed: 4, lastShot: 0, dir: {x: 1, y: 0} };
-    p2 = { x: 720, y: 225, r: 15, color: '#ff0055', hp: 100, speed: 4, lastShot: 0, dir: {x: -1, y: 0} };
-    bullets = [];
-    particles = [];
-    
-    // Препятствия на карте (карты генерируются со случайными блоками)
-    obstacles = [
-      { x: 385, y: 50, w: 30, h: 100 },
-      { x: 385, y: 300, w: 30, h: 100 },
-      { x: 180, y: 160, w: 40, h: 130 },
-      { x: 580, y: 160, w: 40, h: 130 }
-    ];
-
-    document.getElementById('p1-hp').style.width = '100%';
-    document.getElementById('p2-hp').style.width = '100%';
-    
-    if(!gameActive) {
-      gameActive = true;
-      gameLoop();
-    }
-  }
-
-  function createParticles(x, y, color) {
-    for(let i=0; i<8; i++) {
-      particles.push({
-        x: x, y: y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        alpha: 1,
-        color: color,
-        r: Math.random() * 3 + 1
-      });
-    }
-  }
-
-  function checkWallCollision(obj, nextX, nextY) {
-    // Границы карты
-    if (nextX - obj.r < 0 || nextX + obj.r > canvas.width) return true;
-    if (nextY - obj.r < 0 || nextY + obj.r > canvas.height) return true;
-    
-    // Препятствия
-    for(let obs of obstacles) {
-      if (nextX + obj.r > obs.x && nextX - obj.r < obs.x + obs.w &&
-          nextY + obj.r > obs.y && nextY - obj.r < obs.y + obs.h) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function update() {
-    if (!gameActive) return;
-
-    // --- Управление Игрока 1 (WASD) ---
-    let p1MoveX = 0, p1MoveY = 0;
-    if (keys['KeyW']) p1MoveY = -1;
-    if (keys['KeyS']) p1MoveY = 1;
-    if (keys['KeyA']) p1MoveX = -1;
-    if (keys['KeyD']) p1MoveX = 1;
-
-    if (p1MoveX !== 0 || p1MoveY !== 0) {
-      // Нормализация вектора направления движения
-      let len = Math.sqrt(p1MoveX*p1MoveX + p1MoveY*p1MoveY);
-      p1.dir.x = p1MoveX / len;
-      p1.dir.y = p1MoveY / len;
+      <div class="char-row"><span class="char-label">Хобби:</span>
+        <span class="char-val ${currentRound < 2 ? 'hidden' : ''}">${currentRound >= 2 ? myDossier.hobby : '[ЗАБЛОКИРОВАНО]'}</span>
+      </div>
       
-      let nextX = p1.x + p1.dir.x * p1.speed;
-      let nextY = p1.y + p1.dir.y * p1.speed;
-      
-      if (!checkWallCollision(p1, nextX, p1.y)) p1.x = nextX;
-      if (!checkWallCollision(p1, p1.x, nextY)) p1.y = nextY;
-    }
+      <div class="char-row"><span class="char-label">Фобия:</span>
+        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.phobia : '[ЗАБЛОКИРОВАНО]'}</span>
+      </div>
+      <div class="char-row"><span class="char-label">Багаж:</span>
+        <span class="char-val ${currentRound < 3 ? 'hidden' : ''}">${currentRound >= 3 ? myDossier.bag : '[ЗАБЛОКИРОВАНО]'}</span>
+      </div>
+    `;
 
-    // Стрельба Игрока 1 (Space)
-    if (keys['Space'] && Date.now() - p1.lastShot > 350) {
-      bullets.push({ x: p1.x + p1.dir.x*20, y: p1.y + p1.dir.y*20, vx: p1.dir.x * 7, vy: p1.dir.y * 7, owner: 1, color: p1.color });
-      p1.lastShot = Date.now();
-    }
-
-    // --- Управление Игрока 2 (Стрелочки) ---
-    let p2MoveX = 0, p2MoveY = 0;
-    if (keys['ArrowUp']) p2MoveY = -1;
-    if (keys['ArrowDown']) p2MoveY = 1;
-    if (keys['ArrowLeft']) p2MoveX = -1;
-    if (keys['ArrowRight']) p2MoveX = 1;
-
-    if (p2MoveX !== 0 || p2MoveY !== 0) {
-      let len = Math.sqrt(p2MoveX*p2MoveX + p2MoveY*p2MoveY);
-      p2.dir.x = p2MoveX / len;
-      p2.dir.y = p2MoveY / len;
-
-      let nextX = p2.x + p2.dir.x * p2.speed;
-      let nextY = p2.y + p2.dir.y * p2.speed;
-
-      if (!checkWallCollision(p2, nextX, p2.y)) p2.x = nextX;
-      if (!checkWallCollision(p2, p2.x, nextY)) p2.y = nextY;
-    }
-
-    // Стрельба Игрока 2 (Enter)
-    if (keys['Enter'] && Date.now() - p2.lastShot > 350) {
-      bullets.push({ x: p2.x + p2.dir.x*20, y: p2.y + p2.dir.y*20, vx: p2.dir.x * 7, vy: p2.dir.y * 7, owner: 2, color: p2.color });
-      p2.lastShot = Date.now();
-    }
-
-    // --- Логика пуль ---
-    for (let i = bullets.length - 1; i >= 0; i--) {
-      let b = bullets[i];
-      b.x += b.vx;
-      b.y += b.vy;
-
-      // Рикошет или исчезновение при ударе о границы
-      if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) {
-        bullets.splice(i, 1);
-        continue;
-      }
-
-      // Столкновение пуль с препятствиями
-      let hitObs = false;
-      for (let obs of obstacles) {
-        if (b.x > obs.x && b.x < obs.x + obs.w && b.y > obs.y && b.y < obs.y + obs.h) {
-          createParticles(b.x, b.y, '#555');
-          bullets.splice(i, 1);
-          hitObs = true;
-          break;
-        }
-      }
-      if (hitObs) continue;
-
-      // Попадание в Игрока 2
-      if (b.owner === 1) {
-        let dist = Math.hypot(b.x - p2.x, b.y - p2.y);
-        if (dist < p2.r) {
-          p2.hp -= 10;
-          createParticles(b.x, b.y, p2.color);
-          document.getElementById('p2-hp').style.width = Math.max(0, p2.hp) + '%';
-          bullets.splice(i, 1);
-          if (p2.hp <= 0) endGame(1);
-          continue;
-        }
-      }
-
-      // Попадание в Игрока 1
-      if (b.owner === 2) {
-        let dist = Math.hypot(b.x - p1.x, b.y - p1.y);
-        if (dist < p1.r) {
-          p1.hp -= 10;
-          createParticles(b.x, b.y, p1.color);
-          document.getElementById('p1-hp').style.width = Math.max(0, p1.hp) + '%';
-          bullets.splice(i, 1);
-          if (p1.hp <= 0) endGame(2);
-          continue;
-        }
-      }
-    }
-
-    // Частицы
-    for (let i = particles.length - 1; i >= 0; i--) {
-      let p = particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.alpha -= 0.03;
-      if (p.alpha <= 0) particles.splice(i, 1);
+    if(myRole === 'host') {
+      if(currentRound === 1) document.getElementById('btn-action').textContent = "Перейти к Раунду 2 (Здоровье и Хобби)";
+      if(currentRound === 2) document.getElementById('btn-action').textContent = "Перейти к Раунду 3 (Фобии и Снаряжение)";
+      if(currentRound === 3) document.getElementById('btn-action').textContent = "ФИНАЛЬНОЕ ГОЛОСОВАНИЕ НА ВЫЛЕТ";
     }
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Рисуем препятствия
-    ctx.fillStyle = '#141424';
-    ctx.strokeStyle = '#2a2a44';
-    obstacles.forEach(obs => {
-      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-      ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-    });
-
-    if (!gameActive) return;
-
-    // Рисуем Игрока 1
-    ctx.beginPath();
-    ctx.arc(p1.x, p1.y, p1.r, 0, Math.PI * 2);
-    ctx.fillStyle = p1.color;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = p1.color;
-    ctx.fill();
-
-    // Вектор направления Игрока 1
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p1.x + p1.dir.x * 20, p1.y + p1.dir.y * 20);
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Рисуем Игрока 2
-    ctx.beginPath();
-    ctx.arc(p2.x, p2.y, p2.r, 0, Math.PI * 2);
-    ctx.fillStyle = p2.color;
-    ctx.shadowColor = p2.color;
-    ctx.fill();
-
-    // Вектор направления Игрока 2
-    ctx.beginPath();
-    ctx.moveTo(p2.x, p2.y);
-    ctx.lineTo(p2.x + p2.dir.x * 20, p2.y + p2.dir.y * 20);
-    ctx.strokeStyle = '#fff';
-    ctx.stroke();
-
-    // Рисуем пули
-    ctx.shadowBlur = 8;
-    bullets.forEach(b => {
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = b.color;
-      ctx.shadowColor = b.color;
-      ctx.fill();
-    });
-
-    // Рисуем частицы (искры от попаданий)
-    ctx.shadowBlur = 0;
-    particles.forEach(p => {
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-      ctx.restore();
-    });
-  }
-
-  function endGame(winner) {
-    gameActive = false;
-    document.getElementById('end-screen').style.display = 'flex';
-    const text = document.getElementById('win-text');
-    if (winner === 1) {
-      text.textContent = 'ПОБЕДА ЗЕЛЕНОГО ИГРОКА!';
-      text.style.color = '#00ff66';
+  function nextRoundAction() {
+    if(currentRound < 3) {
+      currentRound++;
+      updateDossierRender();
+      broadcast({type: 'force-next-round', round: currentRound});
     } else {
-      text.textContent = 'ПОБЕДА КРАСНОГО ИГРОКА!';
-      text.style.color = '#ff0055';
+      alert("Время вышло! Обсудите вживую, кто из вас троих лишний, и проголосуйте пальцем. В бункер пройдут только двое!");
     }
-  }
-
-  function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
   }
 </script>
 </body>
