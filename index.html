@@ -201,6 +201,7 @@
   }
   .game-player { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
   .game-score { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  
   .game-progress-bar {
     width: 100%;
     max-width: 700px;
@@ -214,6 +215,7 @@
     height: 100%;
     background: var(--accent);
     border-radius: 99px;
+    width: 0%;
     transition: width 0.4s ease;
   }
 
@@ -290,77 +292,14 @@
   }
   .play-btn:hover { transform: scale(1.08); box-shadow: 0 0 30px rgba(200,255,0,0.5); }
   .play-btn svg { width: 26px; height: 26px; fill: #000; }
-  .play-hint { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; }
+  .play-hint { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; text-align: center; }
 
-  /* === ANSWERS GRID === */
+  /* === ANSWERS WRAP === */
   .answers-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
     width: 100%;
     max-width: 500px;
     margin-bottom: 1.5rem;
   }
-  .answer-btn {
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.8rem;
-    padding: 1rem;
-    border-radius: 10px;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s;
-    line-height: 1.4;
-  }
-  .answer-btn:hover:not(:disabled) { border-color: var(--border2); background: var(--bg3); }
-  .answer-btn.correct { border-color: var(--accent); background: rgba(200,255,0,0.1); color: var(--accent); }
-  .answer-btn.wrong { border-color: var(--accent2); background: rgba(255,60,172,0.1); color: var(--accent2); }
-  .answer-btn:disabled { cursor: default; }
-
-  .answer-letter {
-    display: inline-block;
-    width: 22px;
-    height: 22px;
-    background: var(--bg3);
-    border-radius: 4px;
-    text-align: center;
-    line-height: 22px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    margin-right: 0.5rem;
-    color: var(--muted);
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-  .answer-btn.correct .answer-letter { background: var(--accent); color: #000; }
-  .answer-btn.wrong .answer-letter { background: var(--accent2); color: #000; }
-
-  /* === TIMER === */
-  .timer-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-  .timer-bar {
-    width: 120px;
-    height: 3px;
-    background: var(--bg3);
-    border-radius: 99px;
-    overflow: hidden;
-  }
-  .timer-fill {
-    height: 100%;
-    background: var(--accent3);
-    border-radius: 99px;
-    transition: width 1s linear, background 1s;
-  }
-  .timer-fill.danger { background: var(--accent2); }
-  #timer-num { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--accent3); min-width: 2ch; }
-  #timer-num.danger { color: var(--accent2); }
 
   /* === FEEDBACK === */
   .feedback-overlay {
@@ -373,14 +312,16 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s;
+    background: rgba(10,10,15,0.8);
   }
   .feedback-overlay.show { opacity: 1; }
   .feedback-text {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
-    font-size: clamp(3rem, 12vw, 7rem);
     text-transform: uppercase;
     letter-spacing: -0.02em;
+    text-align: center;
+    padding: 0 1rem;
     animation: feedbackPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .feedback-text.correct { color: var(--accent); }
@@ -389,25 +330,6 @@
     from { transform: scale(0.5) rotate(-5deg); opacity: 0; }
     to { transform: scale(1) rotate(0deg); opacity: 1; }
   }
-
-  /* === STREAK === */
-  .streak-badge {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    background: var(--accent);
-    color: #000;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: 99px;
-    z-index: 10;
-    transition: all 0.3s;
-    transform: scale(0);
-    letter-spacing: 0.05em;
-  }
-  .streak-badge.visible { transform: scale(1); }
 
   /* ==================== RESULT ==================== */
   .result-score-big {
@@ -483,8 +405,6 @@
     transition: border-color 0.2s;
   }
   .board-row:first-child { border-color: var(--accent); background: rgba(200,255,0,0.05); }
-  .board-row:nth-child(2) { border-color: rgba(255,255,255,0.15); }
-  .board-row:nth-child(3) { border-color: rgba(200,150,50,0.3); }
   .board-rank {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
@@ -505,22 +425,18 @@
   }
   .board-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 3rem; }
 
-  /* confetti canvas */
   #confetti-canvas {
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 200;
   }
-
 </style>
 </head>
 <body>
 <div class="blob blob1"></div>
 <div class="blob blob2"></div>
 <canvas id="confetti-canvas"></canvas>
-
-<div class="streak-badge" id="streak-badge">🔥 STREAK x<span id="streak-num">0</span></div>
 
 <div id="app">
 
@@ -563,10 +479,6 @@
         <div class="game-player" id="g-player">Player</div>
         <div class="game-score" id="g-score">0 pts</div>
       </div>
-      <div class="timer-wrap">
-        <span id="timer-num">20</span>
-        <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
-      </div>
     </div>
 
     <div class="game-progress-bar">
@@ -599,14 +511,6 @@
         <div class="stat-val" id="r-correct">0</div>
         <div class="stat-lbl">правильно</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-val" id="r-streak">0</div>
-        <div class="stat-lbl">макс. серия</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-val" id="r-time">0s</div>
-        <div class="stat-lbl">средн. время</div>
-      </div>
     </div>
     <div class="btn-row">
       <button class="btn-start" onclick="playAgain()">Ещё раз</button>
@@ -633,14 +537,30 @@
 
 <script>
 // ===================================================
-//  ДАННЫЕ: треки по категориям
-//  Формат: { src, answer, options[4], hint }
-//  src = путь к файлу относительно index.html
-//  Чтобы добавить треки — просто добавь объекты в массивы ниже!
+// БАЗА ДАННЫХ ТРЕКОВ
+// Замените ссылки на свои реальные mp3-файлы
 // ===================================================
 const TRACKS = {
-// === НАСТРОЙКИ СТИЛЯ SONGLASS (Шаги времени в секундах) ===
-const TIMESTEPS = [1, 2, 3, 5, 10, 20]; // 6 попыток, с каждым шагом доступно больше трека
+  games: [
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', answer: 'Witcher 3' },
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', answer: 'Skyrim' },
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3', answer: 'Minecraft' }
+  ],
+  music: [
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3', answer: 'Blinding Lights' },
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3', answer: 'Believer' }
+  ],
+  movies: [
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3', answer: 'Interstellar' },
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3', answer: 'Inception' }
+  ],
+  cartoons: [
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3', answer: 'Shrek' },
+    { src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3', answer: 'The Lion King' }
+  ]
+};
+
+const TIMESTEPS = [1, 2, 3, 5, 10, 20]; // Секунды для шагов Songless
 
 // === STATE ===
 let state = {
@@ -651,20 +571,22 @@ let state = {
   score: 0,
   correct: 0,
   playing: false,
-  // Новые переменные для механики Songless:
-  currentStep: 0,      // Номер текущей попытки (0 из 5)
-  trackGuessed: false, // Угадал ли на текущем треке
-  playTimeout: null    // Таймер для остановки аудио
+  currentStep: 0,      
+  trackGuessed: false 
 };
 
 const audio = document.getElementById('audio-player');
 
-// Обновление таймера остановки трека
+// Контроль времени проигрывания шага
 audio.addEventListener('timeupdate', () => {
   const maxPlayTime = TIMESTEPS[state.currentStep];
   if (audio.currentTime >= maxPlayTime) {
     stopTrack();
   }
+});
+
+audio.addEventListener('ended', () => {
+  stopTrack();
 });
 
 // === WAVEFORM ===
@@ -700,8 +622,8 @@ function togglePlay() {
     stopTrack();
   } else {
     if (audio.src) {
-      audio.currentTime = 0; // Всегда запускаем сначала
-      audio.play().catch(() => {});
+      audio.currentTime = 0; 
+      audio.play().catch((err) => console.log("Ошибка воспроизведения:", err));
       state.playing = true;
       setPlayIcon(true);
       document.querySelectorAll('.wave-bar').forEach(b => b.classList.add('playing'));
@@ -743,7 +665,12 @@ function startGame() {
   state.player = name;
   const allTracks = [...TRACKS[state.category]];
 
-  // Перемешиваем треки
+  if(allTracks.length === 0) {
+    alert("В этой категории пока нет треков!");
+    return;
+  }
+
+  // Перемешивание
   for (let i = allTracks.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [allTracks[i], allTracks[j]] = [allTracks[j], allTracks[i]];
@@ -752,9 +679,6 @@ function startGame() {
   state.current = 0;
   state.score = 0;
   state.correct = 0;
-
-  // Прячем стандартный таймер (в Songless время завязано на шаги, а не на тикающие секунды)
-  document.querySelector('.timer-wrap').style.display = 'none';
 
   showScreen('screen-game');
   loadTrack();
@@ -774,6 +698,7 @@ function loadTrack() {
 
   audio.pause();
   audio.src = track.src;
+  audio.load();
   state.playing = false;
   setPlayIcon(false);
   
@@ -781,22 +706,20 @@ function loadTrack() {
   updateSonglessUI();
 }
 
-// Обновление интерфейса под текущий шаг (инпут ввода и кнопка пропуска)
 function updateSonglessUI() {
   const maxTime = TIMESTEPS[state.currentStep];
   document.getElementById('play-hint').textContent = `Доступно: ${maxTime} сек. (Попытка ${state.currentStep + 1} из ${TIMESTEPS.length})`;
 
   const grid = document.getElementById('answers-grid');
-  // Перестраиваем сетку под текстовое поле ввода в стиле Songless
   grid.removeAttribute('style'); 
   grid.style.display = 'flex';
   grid.style.flexDirection = 'column';
   grid.style.gap = '10px';
 
   grid.innerHTML = `
-    <input type="text" id="guess-input" class="name-input" style="width: 100%; max-width: 500px;" placeholder="Введите название трека..." autocomplete="off">
+    <input type="text" id="guess-input" class="name-input" style="width: 100%; max-width: 500px;" placeholder="Введите название..." autocomplete="off">
     <div style="display: flex; gap: 10px; width: 100%; max-width: 500px;">
-      <button class="btn-outline" id="btn-skip" style="flex: 1;">Пропустить (+сек)</button>
+      <button class="btn-outline" id="btn-skip" style="flex: 1;">Пропустить</button>
       <button class="btn-start" id="btn-submit" style="padding: 0.8rem 2rem; font-size: 0.85rem;">Ответить</button>
     </div>
   `;
@@ -806,22 +729,27 @@ function updateSonglessUI() {
     const val = document.getElementById('guess-input').value.trim();
     if(val) handleGuess(val);
   });
+
+  // Отправка по Enter
+  document.getElementById('guess-input').addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') {
+      const val = document.getElementById('guess-input').value.trim();
+      if(val) handleGuess(val);
+    }
+  });
 }
 
 function handleGuess(userAnswer) {
   const track = state.queue[state.current];
   stopTrack();
 
-  // Если игрок ввёл ответ (не пропустил)
   if (userAnswer !== false) {
-    // Сравниваем текст (без учёта регистра и лишних пробелов)
     if (userAnswer.toLowerCase() === track.answer.toLowerCase()) {
       state.trackGuessed = true;
     }
   }
 
   if (state.trackGuessed) {
-    // Рассчитываем очки: чем раньше угадал, тем больше бонус
     const pts = 500 - (state.currentStep * 70);
     state.score += pts;
     state.correct++;
@@ -829,17 +757,14 @@ function handleGuess(userAnswer) {
     document.getElementById('g-score').textContent = state.score + ' pts';
     setTimeout(nextTrack, 2000);
   } else {
-    // Если не угадал или пропустил
     state.currentStep++;
     
-    // Если попытки закончились
     if (state.currentStep >= TIMESTEPS.length) {
       showFeedback('НЕ УГАДАЛ! Это: ' + track.answer, false);
       setTimeout(nextTrack, 3000);
     } else {
-      // Переходим к следующему шагу времени
       showFeedback('НЕПРАВИЛЬНО! Время увеличено', false);
-      updateSonglessUI();
+      setTimeout(updateSonglessUI, 1500);
     }
   }
 }
@@ -857,7 +782,7 @@ function showFeedback(text, correct) {
   const overlay = document.getElementById('feedback-overlay');
   const el = document.getElementById('feedback-text');
   el.textContent = text;
-  el.style.fontSize = 'clamp(1.5rem, 5vw, 3.5rem)'; // Уменьшил шрифт, чтобы длинные названия влезали
+  el.style.fontSize = 'clamp(1.5rem, 5vw, 2.5rem)'; 
   el.className = 'feedback-text ' + (correct ? 'correct' : 'wrong');
   overlay.classList.add('show');
   setTimeout(() => overlay.classList.remove('show'), 1500);
@@ -872,10 +797,11 @@ function endGame() {
   document.getElementById('r-score').textContent = state.score;
   document.getElementById('r-correct').textContent = `${state.correct}/${total}`;
   
-  // Упрощаем блок результатов под Songless
-  document.getElementById('r-streak').parentElement.style.display = 'none';
-  document.getElementById('r-time').parentElement.style.display = 'none';
   document.getElementById('r-verdict').textContent = state.correct > (total / 2) ? "Отличный слух!" : "Надо потренироваться...";
+
+  if(state.correct === total && total > 0) {
+    spawnConfetti();
+  }
 
   saveScore();
   showScreen('screen-result');
@@ -909,7 +835,7 @@ function showBoard() {
     list.innerHTML = scores.slice(0,15).map((s, i) => `
       <div class="board-row">
         <div class="board-rank">${i === 0 ? '👑' : i+1}</div>
-        <div>
+        <div style="flex: 1;">
           <div class="board-name">${escHtml(s.name)}</div>
           <div class="board-cat">${catIcons[s.category]||''} ${s.category} · ${s.correct}/${s.total} угадано</div>
         </div>
@@ -939,446 +865,41 @@ function playAgain() {
   startGame();
 }
 
-// === CONFETTI FIX ===
-function spawnConfetti() {
-  const canvas = document.getElementById('confetti-canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  ctx.fillStyle = '#c8ff00';
-  for(let i=0; i<100; i++) {
-    ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 5, 5);
-  }
-  setTimeout(() => ctx.clearRect(0,0,canvas.width,canvas.height), 3000);
-}
-</script>
-</body>
-</html>
-
-const VERDICTS = [
-  [0, 30, "ну...хоть попробовал 😅"],
-  [31, 50, "средненько, тренируйся 🙂"],
-  [51, 70, "неплохо! ты что-то знаешь 👀"],
-  [71, 90, "красавчик, серьёзная игра 🔥"],
-  [91, 100, "ЛЕГЕНДА. ТЫ ВООБЩЕ КТО 🏆"]
-];
-
-// === STATE ===
-let state = {
-  player: '',
-  category: null,
-  queue: [],
-  current: 0,
-  score: 0,
-  streak: 0,
-  maxStreak: 0,
-  correct: 0,
-  times: [],
-  answered: false,
-  timerInterval: null,
-  timeLeft: 20,
-  startTime: 0,
-  playing: false,
-};
-
-// === AUDIO ===
-const audio = document.getElementById('audio-player');
-audio.addEventListener('ended', () => {
-  setPlayIcon(false);
-  state.playing = false;
-  document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
-});
-
-// === WAVEFORM ===
-function buildWaveform() {
-  const wf = document.getElementById('waveform');
-  wf.innerHTML = '';
-  const count = 40;
-  for (let i = 0; i < count; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'wave-bar';
-    const hMin = 6 + Math.random() * 10;
-    const hMax = 20 + Math.random() * 55;
-    bar.style.setProperty('--h-min', hMin + 'px');
-    bar.style.setProperty('--h-max', hMax + 'px');
-    bar.style.height = hMin + 'px';
-    bar.style.animationDelay = (Math.random() * 1.2) + 's';
-    bar.style.animationDuration = (0.5 + Math.random() * 0.8) + 's';
-    wf.appendChild(bar);
-  }
-}
-
-function setPlayIcon(playing) {
-  const icon = document.getElementById('play-icon');
-  if (playing) {
-    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-  } else {
-    icon.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
-  }
-}
-
-function togglePlay() {
-  if (state.playing) {
-    audio.pause();
-    state.playing = false;
-    setPlayIcon(false);
-    document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
-  } else {
-    if (audio.src) {
-      audio.play().catch(() => {});
-      state.playing = true;
-      setPlayIcon(true);
-      document.querySelectorAll('.wave-bar').forEach(b => b.classList.add('playing'));
-    }
-  }
-}
-
-// === CATEGORY SELECT ===
-document.getElementById('cat-grid').addEventListener('click', e => {
-  const card = e.target.closest('.cat-card');
-  if (!card) return;
-  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  state.category = card.dataset.cat;
-  checkStartReady();
-});
-
-document.getElementById('player-name').addEventListener('input', checkStartReady);
-
-function checkStartReady() {
-  const name = document.getElementById('player-name').value.trim();
-  document.getElementById('btn-start').disabled = !(name && state.category);
-}
-
-document.getElementById('btn-start').addEventListener('click', startGame);
-
-// === GAME LOGIC ===
-function startGame() {
-  const name = document.getElementById('player-name').value.trim();
-  if (!name || !state.category) return;
-
-  state.player = name;
-  const allTracks = [...TRACKS[state.category]];
-
-  // Shuffle and pick up to 10
-  for (let i = allTracks.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [allTracks[i], allTracks[j]] = [allTracks[j], allTracks[i]];
-  }
-  state.queue = allTracks.slice(0, Math.min(10, allTracks.length));
-  state.current = 0;
-  state.score = 0;
-  state.streak = 0;
-  state.maxStreak = 0;
-  state.correct = 0;
-  state.times = [];
-  state.playing = false;
-
-  showScreen('screen-game');
-  loadTrack();
-}
-
-function loadTrack() {
-  const track = state.queue[state.current];
-  const total = state.queue.length;
-
-  document.getElementById('g-player').textContent = state.player.toUpperCase();
-  document.getElementById('g-score').textContent = state.score + ' pts';
-  document.getElementById('track-num').textContent = `ТРЕК ${state.current + 1} / ${total}`;
-  document.getElementById('progress-fill').style.width = ((state.current / total) * 100) + '%';
-
-  // Audio
-  audio.pause();
-  audio.src = track.src;
-  state.playing = false;
-  setPlayIcon(false);
-  document.getElementById('play-hint').textContent = `${track.hint || '🎵'} нажми чтобы послушать`;
-  document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
-
-  buildWaveform();
-
-  // Shuffle answer options
-  const opts = [...track.options];
-  for (let i = opts.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [opts[i], opts[j]] = [opts[j], opts[i]];
-  }
-
-  const grid = document.getElementById('answers-grid');
-  grid.innerHTML = '';
-  const labels = ['A', 'B', 'C', 'D'];
-  opts.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'answer-btn';
-    btn.innerHTML = `<span class="answer-letter">${labels[i]}</span>${opt}`;
-    btn.addEventListener('click', () => pickAnswer(opt, track.answer, btn));
-    grid.appendChild(btn);
-  });
-
-  state.answered = false;
-  state.timeLeft = 20;
-  state.startTime = Date.now();
-  startTimer();
-}
-
-function startTimer() {
-  clearInterval(state.timerInterval);
-  updateTimerUI();
-  state.timerInterval = setInterval(() => {
-    state.timeLeft--;
-    updateTimerUI();
-    if (state.timeLeft <= 0) {
-      clearInterval(state.timerInterval);
-      if (!state.answered) timeUp();
-    }
-  }, 1000);
-}
-
-function updateTimerUI() {
-  const el = document.getElementById('timer-num');
-  const fill = document.getElementById('timer-fill');
-  el.textContent = state.timeLeft;
-  fill.style.width = (state.timeLeft / 20 * 100) + '%';
-  const danger = state.timeLeft <= 5;
-  el.classList.toggle('danger', danger);
-  fill.classList.toggle('danger', danger);
-}
-
-function timeUp() {
-  state.answered = true;
-  state.streak = 0;
-  updateStreak();
-
-  const track = state.queue[state.current];
-  // Reveal correct
-  document.querySelectorAll('.answer-btn').forEach(btn => {
-    btn.disabled = true;
-    const txt = btn.textContent.slice(1).trim();
-    if (txt === track.answer) btn.classList.add('correct');
-  });
-
-  showFeedback('ВРЕМЯ!', false);
-  setTimeout(nextTrack, 2000);
-}
-
-function pickAnswer(picked, correct, btn) {
-  if (state.answered) return;
-  state.answered = true;
-  clearInterval(state.timerInterval);
-
-  const elapsed = (Date.now() - state.startTime) / 1000;
-  state.times.push(elapsed);
-
-  const isCorrect = picked === correct;
-
-  // Disable all, highlight
-  document.querySelectorAll('.answer-btn').forEach(b => {
-    b.disabled = true;
-    const txt = b.textContent.slice(1).trim();
-    if (txt === correct) b.classList.add('correct');
-    else if (b === btn && !isCorrect) b.classList.add('wrong');
-  });
-
-  if (isCorrect) {
-    state.correct++;
-    // Points: base 100, bonus for time left
-    const timeBonus = Math.floor(state.timeLeft * 5);
-    const streakBonus = state.streak * 10;
-    const pts = 100 + timeBonus + streakBonus;
-    state.score += pts;
-    state.streak++;
-    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
-    showFeedback('+' + pts, true);
-  } else {
-    state.streak = 0;
-    showFeedback('НЕТ', false);
-  }
-
-  updateStreak();
-  document.getElementById('g-score').textContent = state.score + ' pts';
-
-  setTimeout(nextTrack, 1800);
-}
-
-function nextTrack() {
-  audio.pause();
-  state.playing = false;
-  state.current++;
-  if (state.current >= state.queue.length) {
-    endGame();
-  } else {
-    loadTrack();
-  }
-}
-
-function updateStreak() {
-  const badge = document.getElementById('streak-badge');
-  document.getElementById('streak-num').textContent = state.streak;
-  if (state.streak >= 2) {
-    badge.classList.add('visible');
-  } else {
-    badge.classList.remove('visible');
-  }
-}
-
-function showFeedback(text, correct) {
-  const overlay = document.getElementById('feedback-overlay');
-  const el = document.getElementById('feedback-text');
-  el.textContent = text;
-  el.className = 'feedback-text ' + (correct ? 'correct' : 'wrong');
-  overlay.classList.add('show');
-  setTimeout(() => overlay.classList.remove('show'), 800);
-}
-
-// === END GAME ===
-function endGame() {
-  clearInterval(state.timerInterval);
-  audio.pause();
-  document.getElementById('streak-badge').classList.remove('visible');
-  document.getElementById('progress-fill').style.width = '100%';
-
-  const total = state.queue.length;
-  const pct = Math.round((state.correct / total) * 100);
-
-  document.getElementById('r-score').textContent = state.score;
-  document.getElementById('r-correct').textContent = `${state.correct}/${total}`;
-  document.getElementById('r-streak').textContent = state.maxStreak;
-  const avgTime = state.times.length
-    ? (state.times.reduce((a,b)=>a+b,0)/state.times.length).toFixed(1)
-    : '—';
-  document.getElementById('r-time').textContent = avgTime + 's';
-
-  const verdict = VERDICTS.find(([lo, hi]) => pct >= lo && pct <= hi);
-  document.getElementById('r-verdict').textContent = verdict ? verdict[2] : '';
-
-  // Save to leaderboard
-  saveScore();
-
-  if (pct >= 80) spawnConfetti();
-
-  showScreen('screen-result');
-}
-
-// === LEADERBOARD (localStorage) ===
-function saveScore() {
-  const key = 'earworm_scores';
-  const scores = JSON.parse(localStorage.getItem(key) || '[]');
-  scores.push({
-    name: state.player,
-    score: state.score,
-    correct: state.correct,
-    total: state.queue.length,
-    category: state.category,
-    date: Date.now()
-  });
-  scores.sort((a,b) => b.score - a.score);
-  localStorage.setItem(key, JSON.stringify(scores.slice(0, 50)));
-}
-
-function showBoard() {
-  const key = 'earworm_scores';
-  const scores = JSON.parse(localStorage.getItem(key) || '[]');
-  const list = document.getElementById('board-list');
-  const catIcons = { games:'🎮', music:'🎵', movies:'🎬', cartoons:'🎨' };
-
-  if (!scores.length) {
-    list.innerHTML = '<div class="board-empty">Пока нет результатов.<br>Стань первым!</div>';
-  } else {
-    list.innerHTML = scores.slice(0,15).map((s, i) => `
-      <div class="board-row">
-        <div class="board-rank">${i === 0 ? '👑' : i+1}</div>
-        <div>
-          <div class="board-name">${escHtml(s.name)}</div>
-          <div class="board-cat">${catIcons[s.category]||''} ${s.category} · ${s.correct}/${s.total} правильно</div>
-        </div>
-        <div class="board-pts">${s.score}</div>
-      </div>
-    `).join('');
-  }
-  showScreen('screen-board');
-}
-
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// === NAVIGATION ===
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function goHome() {
-  clearInterval(state.timerInterval);
-  audio.pause();
-  document.getElementById('streak-badge').classList.remove('visible');
-  showScreen('screen-home');
-}
-
-function playAgain() {
-  startGame();
-}
-
 // === CONFETTI ===
 function spawnConfetti() {
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
-  const colors = ['#c8ff00','#ff3cac','#00e5ff','#fff','#ffdd00'];
-  const pieces = Array.from({length: 120}, () => ({
-    x: Math.random() * canvas.width,
-    y: -10,
-    w: 6 + Math.random() * 8,
-    h: 10 + Math.random() * 6,
-    r: Math.random() * Math.PI * 2,
-    dr: (Math.random() - 0.5) * 0.2,
-    vy: 2 + Math.random() * 4,
-    vx: (Math.random() - 0.5) * 3,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    alpha: 1
-  }));
-
-  let frame;
+  
+  let particles = [];
+  for(let i=0; i<100; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 6 + 4,
+      d: Math.random() * canvas.height,
+      color: ["#c8ff00", "#ff3cac", "#00e5ff", "#f0f0f0"][Math.floor(Math.random() * 4)]
+    });
+  }
+  
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let alive = false;
-    pieces.forEach(p => {
-      if (p.y < canvas.height + 20) {
-        alive = true;
-        p.y += p.vy;
-        p.x += p.vx;
-        p.r += p.dr;
-        if (p.y > canvas.height * 0.7) p.alpha -= 0.01;
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.r);
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-        ctx.restore();
-      }
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2, true);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      p.y += Math.random() * 4 + 2;
     });
-    if (alive) frame = requestAnimationFrame(draw);
-    else ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
-  draw();
-  setTimeout(() => { cancelAnimationFrame(frame); ctx.clearRect(0,0,canvas.width,canvas.height); }, 4000);
+  
+  let timer = setInterval(draw, 20);
+  setTimeout(() => {
+    clearInterval(timer);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }, 4000);
 }
-
-// Keyboard shortcuts
-document.addEventListener('keydown', e => {
-  if (document.getElementById('screen-game').classList.contains('active') && !state.answered) {
-    const map = {'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3};
-    const idx = map[e.key.toLowerCase()];
-    if (idx !== undefined) {
-      const btns = document.querySelectorAll('.answer-btn');
-      if (btns[idx]) btns[idx].click();
-    }
-    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-  }
-});
 </script>
 </body>
 </html>
