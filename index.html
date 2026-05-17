@@ -10,13 +10,15 @@
 
 <style>
   :root {
-    --bg: #06060c;
-    --neon: #ffaa00;
-    --neon-blue: #00e5ff;
-    --neon-red: #ff3366;
-    --card: #111122;
-    --text: #ffffff;
-    --border: rgba(255,255,255,0.08);
+    --bg: #121214;
+    --card: #1a1a1e;
+    --card-inner: #222226;
+    --neon: #ff6600; /* Яркий оранжевый */
+    --neon-muted: #cc5200;
+    --text: #e0e0e6;
+    --text-dark: #a0a0aa;
+    --border: rgba(255, 102, 0, 0.15);
+    --border-light: rgba(255, 255, 255, 0.05);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   
@@ -29,18 +31,18 @@
   body::before {
     content: ''; position: fixed; inset: 0;
     background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px; z-index: 0; opacity: 0.2;
+    background-size: 40px 40px; z-index: 0; opacity: 0.15;
     pointer-events: none;
   }
 
   .window {
     position: relative; z-index: 10; background: var(--card);
-    padding: 2rem; border-radius: 24px; border: 1px solid var(--border);
-    width: 100%; max-width: 500px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    padding: 2rem; border-radius: 20px; border: 1px solid rgba(255, 102, 0, 0.25);
+    width: 100%; max-width: 500px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.8);
   }
 
-  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 15px rgba(255,170,0,0.2); }
-  h2 { font-family: 'Orbitron', sans-serif; }
+  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 15px rgba(255,102,0,0.3); }
+  h2 { font-family: 'Orbitron', sans-serif; color: var(--neon); }
 
   .btn {
     background: transparent; border: 2px solid var(--neon); color: #fff;
@@ -48,47 +50,57 @@
     font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
   }
   .btn:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
-  .btn:disabled { border-color: #444; color: #444; cursor: not-allowed; box-shadow: none !important; background: transparent !important; }
-
-  .btn-blue { border-color: var(--neon-blue); color: #fff; }
-  .btn-blue:hover:not(:disabled) { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
   
-  .btn-red { border-color: var(--neon-red); color: #fff; }
-  .btn-red:hover:not(:disabled) { background: var(--neon-red); color: #000; box-shadow: 0 0 15px var(--neon-red); }
+  /* Фикс отображения заблокированной кнопки */
+  .btn:disabled { 
+    border-color: #3a3a3e !important; 
+    color: #6a6a72 !important; 
+    cursor: not-allowed; 
+    box-shadow: none !important; 
+    background: #222226 !important; 
+  }
+
+  .btn-blue { border-color: #888; color: #fff; }
+  .btn-blue:hover:not(:disabled) { background: #fff; color: #000; box-shadow: 0 0 15px #fff; }
+  
+  .btn-red { border-color: #ff3333; color: #fff; }
+  .btn-red:hover:not(:disabled) { background: #ff3333; color: #000; box-shadow: 0 0 15px #ff3333; }
 
   .input-field, .select-field {
-    width: 100%; padding: 1rem; background: #16162a; border: 1px solid var(--border);
+    width: 100%; padding: 1rem; background: var(--card-inner); border: 1px solid var(--border);
     color: #fff; border-radius: 12px; font-family: inherit; text-align: center; font-size: 1.1rem; margin-bottom: 1rem; outline: none;
+    transition: border-color 0.2s;
   }
+  .input-field:focus { border-color: var(--neon); }
   .select-field { text-align-last: center; appearance: none; cursor: pointer; }
 
   .screen { display: none; }
   .screen.active { display: block; }
 
-  .bunker-info { background: #090914; padding: 1rem; border-radius: 12px; text-align: left; font-size: 0.85rem; border-left: 4px solid var(--neon); margin-bottom: 1.5rem; }
-  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.03); text-align: left; align-items: center; }
-  .char-label { color: #888; font-size: 0.8rem; text-transform: uppercase; }
+  .bunker-info { background: #0b0b0d; padding: 1rem; border-radius: 12px; text-align: left; font-size: 0.85rem; border-left: 4px solid var(--neon); margin-bottom: 1.5rem; border-top: 1px solid var(--border-light); border-right: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); }
+  .char-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid var(--border-light); text-align: left; align-items: center; }
+  .char-label { color: var(--text-dark); font-size: 0.8rem; text-transform: uppercase; }
   .char-val { font-weight: bold; color: #fff; text-align: right; max-width: 65%; font-size: 0.9rem; }
-  .char-val.hidden { color: var(--neon-red); font-style: italic; font-weight: normal; }
+  .char-val.hidden { color: #ff3333; font-style: italic; font-weight: normal; }
 
   .action-card-box {
-    background: linear-gradient(135deg, #1a1135 0%, #0d0822 100%);
-    border: 1px solid var(--neon-blue); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
+    background: linear-gradient(135deg, #222226 0%, #141416 100%);
+    border: 1px solid var(--neon); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;
+    box-shadow: 0 0 15px rgba(255, 102, 0, 0.05);
   }
   
   .game-log {
-    background: #000; color: #00ff66; font-size: 0.75rem; font-family: 'Space Mono', monospace;
-    padding: 0.5rem; border-radius: 8px; max-height: 90px; overflow-y: auto; text-align: left; margin-bottom: 1rem; border: 1px solid #113311;
+    background: #000; color: #ff8800; font-size: 0.75rem; font-family: 'Space Mono', monospace;
+    padding: 0.5rem; border-radius: 8px; max-height: 90px; overflow-y: auto; text-align: left; margin-bottom: 1rem; border: 1px solid #331a00;
   }
 
   /* Блок Голосования */
   .vote-box {
-    background: #1a0a15; border: 1px solid var(--neon-red); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left;
+    background: #261414; border: 1px solid #ff3333; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: left;
   }
   .vote-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.8rem; }
-  .btn-vote-user { background: #11050e; border: 1px solid #551122; color: #fff; padding: 0.6rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; }
-  .btn-vote-user:hover:not(:disabled) { background: var(--neon-red); border-color: #fff; }
+  .btn-vote-user { background: #160b0b; border: 1px solid #551111; color: #fff; padding: 0.6rem; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.85rem; }
+  .btn-vote-user:hover:not(:disabled) { background: #ff3333; border-color: #fff; color: #000; }
   .btn-vote-user:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
@@ -98,11 +110,11 @@
     <!-- ЭКРАН ПОДКЛЮЧЕНИЯ -->
     <div id="scr-connect" class="screen active">
       <h1>CyberBunker</h1>
-      <div id="net-status" style="color: #666; margin-bottom: 1.5rem; font-size: 0.85rem;">Инициализация протоколов...</div>
+      <div id="net-status" style="color: var(--text-dark); margin-bottom: 1.5rem; font-size: 0.85rem;">Инициализация протоколов...</div>
       
       <input type="text" id="player-name" class="input-field" placeholder="Твой ник..." maxlength="12">
       
-      <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.3rem; text-align: left;">КОЛИЧЕСТВО МЕСТ В БУНКЕРЕ (ДЛЯ ХОСТА):</div>
+      <div style="color: var(--text-dark); font-size: 0.8rem; margin-bottom: 0.3rem; text-align: left;">КОЛИЧЕСТВО МЕСТ В БУНКЕРЕ (ДЛЯ ХОСТА):</div>
       <select id="max-players-select" class="select-field">
         <option value="2">2 Игрока</option>
         <option value="3" selected>3 Игрока</option>
@@ -127,14 +139,14 @@
       <div style="font-size: 0.9rem; margin-bottom: 1rem;">Код шлюза: <b id="lobby-code" style="color:var(--neon); font-size: 1.4rem;">-</b></div>
       
       <div style="text-align: left; margin-bottom: 1.5rem;">
-        <div style="color:#888; font-size:0.8rem; margin-bottom: 0.5rem; font-weight: bold;">
+        <div style="color:var(--text-dark); font-size:0.8rem; margin-bottom: 0.5rem; font-weight: bold;">
           СПИСОК ВЫЖИВАЮЩИХ (<span id="lobby-count">0</span>/<span id="lobby-max">0</span>):
         </div>
         <ul id="player-list" style="list-style: none; color: var(--neon); font-size: 1.1rem; line-height: 1.6;"></ul>
       </div>
       
       <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;" disabled>Ожидание игроков...</button>
-      <div id="client-wait-msg" style="color:#888; font-size:0.85rem; display:none;">Хост проверяет шлюзы... Ожидайте старта.</div>
+      <div id="client-wait-msg" style="color:var(--text-dark); font-size:0.85rem; display:none;">Хост проверяет шлюзы... Ожидайте старта.</div>
     </div>
 
     <!-- ЭКРАН ИГРЫ -->
@@ -157,17 +169,17 @@
 
       <!-- Интерактивное Голосование -->
       <div class="vote-box" id="vote-area" style="display: none;">
-        <div style="font-weight:bold; color:var(--neon-red); font-size:0.85rem; text-transform:uppercase; text-align:center;">🗳️ ВРЕМЯ ИЗГНАНИЯ 🗳️</div>
+        <div style="font-weight:bold; color:#ff3333; font-size:0.85rem; text-transform:uppercase; text-align:center;">🗳️ ВРЕМЯ ИЗГНАНИЯ 🗳️</div>
         <div style="color:#bbb; font-size:0.75rem; text-align:center; margin-top:0.2rem;" id="vote-instruction">Выберите, кого выкинуть на поверхность:</div>
         <div class="vote-btn-grid" id="vote-grid"></div>
       </div>
 
       <!-- Карты Действий -->
       <div class="action-card-box" id="action-card-area">
-        <div style="font-weight:bold; color:var(--neon-blue); font-size:0.8rem; margin-bottom:0.3rem; text-transform:uppercase;">Спецкарта действия:</div>
+        <div style="font-weight:bold; color:var(--neon); font-size:0.8rem; margin-bottom:0.3rem; text-transform:uppercase;">Спецкарта действия:</div>
         <div id="action-card-name" style="font-weight:bold; margin-bottom:0.3rem; color:#fff;">...</div>
         <div id="action-card-desc" style="color:#ccc; font-size:0.8rem; margin-bottom:0.8rem;">...</div>
-        <button class="btn btn-blue" id="btn-use-card" onclick="useActionCard()" style="padding:0.5rem; font-size:0.8rem; margin:0;">Активировать Карту</button>
+        <button class="btn" id="btn-use-card" onclick="useActionCard()" style="padding:0.5rem; font-size:0.8rem; margin:0;">Активировать Карту</button>
       </div>
 
       <button class="btn" id="btn-action" onclick="nextRoundAction()" style="display:none;">Открыть следующие данные</button>
@@ -175,7 +187,6 @@
   </div>
 
 <script>
-  // ОГРОМНЫЕ БАЗЫ ДАННЫХ ХАРАКТЕРИСТИК (v3.0)
   const DISASTERS = [
     { name: "Ядерная зима", desc: "Температура упала до -65°C. Земля покрыта льдом. В бункере идеальный ядерный реактор, но гидропоника вместит строго половину прибывших." },
     { name: "Кибер-Восстание ИИ", desc: "Боевые дроны зачищают поверхность. Бункер полностью заблокирован и невидим для радаров, но запасы чистой воды на исходе." },
@@ -245,7 +256,6 @@
   let disasterObj = {};
   let isCardUsed = false;
   
-  // Переменные голосования
   let votesReceived = {};
   let hasVoted = false;
   let immunePlayers = [];
@@ -263,7 +273,7 @@
     }
   }
 
-  // Конфигурация для глобального WebRTC-подключения через NAT (STUN-серверы)
+  /* ГЛОБАЛЬНЫЙ ФИКС СЕТИ: Добавлен TURN-сервер от OpenRelay для гарантированного обхода строгого NAT домашних роутеров */
   const peerConfig = {
     config: {
       iceServers: [
@@ -272,12 +282,13 @@
         { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun3.l.google.com:19302' },
         { urls: 'stun:stun4.l.google.com:19302' },
-        { urls: 'stun:stun.services.mozilla.com' }
+        { urls: 'stun:openrelay.metered.ca:80' },
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelay', credential: 'openrelay' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelay', credential: 'openrelay' }
       ]
     }
   };
 
-  // Инициализация сети
   const shortId = Math.floor(100000 + Math.random() * 900000).toString();
   peer = new Peer(shortId, peerConfig);
   
@@ -289,6 +300,7 @@
   });
 
   peer.on('error', err => {
+    console.error(err);
     alert("Ошибка узла связи PeerJS! Перезагрузите страницу.");
   });
 
@@ -302,6 +314,11 @@
     allPlayersNames.push(myName);
     updateLobbyUI();
     setScreen('scr-lobby');
+
+    // Кнопка видна хосту сразу, но заблокирована до полного сбора лобби
+    const sBtn = document.getElementById('btn-start-game');
+    sBtn.style.display = 'block';
+    sBtn.disabled = true;
 
     peer.on('connection', connection => {
       connection.on('open', () => {
@@ -321,13 +338,11 @@
           broadcast({type: 'sync-lobby', players: allPlayersNames, max: maxPlayers});
           
           if(allPlayersNames.length >= maxPlayers) {
-            const sBtn = document.getElementById('btn-start-game');
             sBtn.disabled = false;
             sBtn.textContent = "Загерметизировать шлюз и начать";
           }
         }
         
-        // Трансляция активации карт
         if(data.type === 'card-activated-broadcast') {
           if(data.cardId === 'immunity') immunePlayers.push(data.from);
           broadcast(data);
@@ -336,7 +351,6 @@
           if(data.cardId === 'expose_one') { currentRound = Math.max(currentRound, 3); broadcast({type: 'force-next-round', round: currentRound}); }
         }
 
-        // Сбор голосов на стороне хоста
         if(data.type === 'submit-vote') {
           votesReceived[data.from] = data.target;
           checkVotesCompleteness();
@@ -348,7 +362,8 @@
         allPlayersNames = [myName, ...clients.map(c => c.name)];
         updateLobbyUI();
         broadcast({type: 'sync-lobby', players: allPlayersNames, max: maxPlayers});
-        document.getElementById('btn-start-game').disabled = true;
+        sBtn.disabled = true;
+        sBtn.textContent = "Ожидание игроков...";
       });
     });
   }
@@ -414,7 +429,6 @@
 
   function broadcast(data) { clients.forEach(c => c.conn.send(data)); }
 
-  // Старт (Хост)
   function generateBunkerSession() {
     if(allPlayersNames.length < maxPlayers) return alert("Недостаточно людей для герметизации!");
     
@@ -464,7 +478,7 @@
     else rTitle.textContent = `РАУНД ${Math.floor(currentRound)}: Анализ Био-карт`;
 
     box.innerHTML = `
-      <div class="char-row"><span class="char-label">Профессия:</span><span class="char-val" style="color:var(--neon-blue);">${myDossier.prof}</span></div>
+      <div class="char-row"><span class="char-label">Профессия:</span><span class="char-val" style="color: #ff8800;">${myDossier.prof}</span></div>
       <div class="char-row"><span class="char-label">Биология:</span><span class="char-val">${myDossier.bio}</span></div>
       
       <div class="char-row"><span class="char-label">Здоровье:</span>
@@ -492,7 +506,6 @@
     }
   }
 
-  // Карты Действий
   function useActionCard() {
     if(isCardUsed) return;
     isCardUsed = true;
@@ -515,7 +528,6 @@
     else { conn.send(netEv); logMessage(msg); }
   }
 
-  // ЛОГИКА ИНТЕРАКТИВНОГО ГОЛОСОВАНИЯ
   function showVotingUI() {
     hasVoted = false;
     document.getElementById('vote-area').style.display = 'block';
@@ -536,7 +548,6 @@
     if(hasVoted) return;
     hasVoted = true;
     
-    // Блокируем кнопки
     document.querySelectorAll('.btn-vote-user').forEach(b => b.disabled = true);
     document.getElementById('vote-instruction').textContent = `Ваш голос против ${target} зафиксирован.`;
 
@@ -550,7 +561,6 @@
 
   function checkVotesCompleteness() {
     if(Object.keys(votesReceived).length === allPlayersNames.length) {
-      // Все проголосовали - считаем результаты
       let voteCounts = {};
       allPlayersNames.forEach(p => voteCounts[p] = 0);
 
@@ -559,7 +569,6 @@
         voteCounts[target]++;
       }
 
-      // Находим лидера по голосам, проверяя иммунитет
       let maxVotes = -1;
       let loser = "Никто (Ничья)";
       
@@ -580,13 +589,12 @@
       for(let p in voteCounts) { resultText += `[${p}: ${voteCounts[p]} гол.] `; }
       resultText += ` -> ВЕРДИКТ: Из бункера изгоняется: ${loser.toUpperCase()}!`;
 
-      // Рассылаем результаты и сбрасываем состояние
       broadcast({type: 'voting-results', msg: resultText});
       logMessage(resultText);
       document.getElementById('vote-area').style.display = 'none';
       alert(resultText);
       
-      votesReceived = {}; // Сброс
+      votesReceived = {};
     }
   }
 
