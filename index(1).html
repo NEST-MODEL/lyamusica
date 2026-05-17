@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EarWorm — угадай трек</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --card: #16161f;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.14);
+    --accent: #c8ff00;
+    --accent2: #ff3cac;
+    --accent3: #00e5ff;
+    --text: #f0f0f0;
+    --muted: #6b6b7a;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === NOISE OVERLAY === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* === GLOW BLOBS === */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    animation: blobmove 8s ease-in-out infinite alternate;
+  }
+  .blob1 { width: 600px; height: 600px; background: #c8ff00; top: -200px; left: -200px; }
+  .blob2 { width: 500px; height: 500px; background: #ff3cac; bottom: -150px; right: -150px; animation-delay: -4s; }
+
+  @keyframes blobmove {
+    from { transform: translate(0,0) scale(1); }
+    to { transform: translate(40px, 30px) scale(1.08); }
+  }
+
+  /* === LAYOUT === */
+  #app { position: relative; z-index: 1; }
+
+  /* ==================== SCREENS ==================== */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; }
+
+  /* ==================== HOME ==================== */
+  .home-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3rem, 10vw, 7rem);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+  .home-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+  }
+
+  .name-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .name-input {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+  .name-input:focus { border-color: var(--accent); }
+  .name-input::placeholder { color: var(--muted); }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 600px) {
+    .categories-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .cat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .cat-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .cat-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+  .cat-card:hover::after { opacity: 0.04; }
+  .cat-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .cat-card.selected::after { opacity: 0.08; }
+
+  .cat-icon { font-size: 2.2rem; margin-bottom: 0.5rem; display: block; }
+  .cat-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .btn-start {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 1rem 3rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-start:hover { transform: scale(1.04); box-shadow: 0 0 30px rgba(200,255,0,0.4); }
+  .btn-start:active { transform: scale(0.98); }
+  .btn-start:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-board {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.2s;
+  }
+  .btn-board:hover { border-color: var(--border2); color: var(--text); }
+
+  /* ==================== GAME ==================== */
+  .game-header {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .game-player { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .game-score { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  .game-progress-bar {
+    width: 100%;
+    max-width: 700px;
+    height: 3px;
+    background: var(--bg3);
+    border-radius: 99px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+  }
+  .game-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  .track-num {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  /* === WAVEFORM VISUALIZER === */
+  .waveform-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 2rem;
+  }
+  .waveform-bg {
+    width: 100%;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    justify-content: center;
+  }
+  .wave-bar {
+    width: 4px;
+    border-radius: 99px;
+    background: var(--border2);
+    transition: background 0.3s;
+    animation: waveIdle 1.2s ease-in-out infinite alternate;
+  }
+  .wave-bar.playing {
+    background: var(--accent);
+    animation: wavePulse 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes waveIdle {
+    from { height: 8px; }
+    to { height: 14px; }
+  }
+  @keyframes wavePulse {
+    from { height: var(--h-min, 10px); opacity: 0.8; }
+    to { height: var(--h-max, 60px); opacity: 1; }
+  }
+
+  /* === PLAYER CONTROLS === */
+  .player-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    width: 100%;
+    max-width: 500px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .play-btn {
+    width: 64px;
+    height: 64px;
+    background: var(--accent);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .play-btn:hover { transform: scale(1.08); box-shadow: 0 0 30px rgba(200,255,0,0.5); }
+  .play-btn svg { width: 26px; height: 26px; fill: #000; }
+  .play-hint { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; }
+
+  /* === ANSWERS GRID === */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 1.5rem;
+  }
+  .answer-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    padding: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .answer-btn:hover:not(:disabled) { border-color: var(--border2); background: var(--bg3); }
+  .answer-btn.correct { border-color: var(--accent); background: rgba(200,255,0,0.1); color: var(--accent); }
+  .answer-btn.wrong { border-color: var(--accent2); background: rgba(255,60,172,0.1); color: var(--accent2); }
+  .answer-btn:disabled { cursor: default; }
+
+  .answer-letter {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    background: var(--bg3);
+    border-radius: 4px;
+    text-align: center;
+    line-height: 22px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    color: var(--muted);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .answer-btn.correct .answer-letter { background: var(--accent); color: #000; }
+  .answer-btn.wrong .answer-letter { background: var(--accent2); color: #000; }
+
+  /* === TIMER === */
+  .timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .timer-bar {
+    width: 120px;
+    height: 3px;
+    background: var(--bg3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--accent3);
+    border-radius: 99px;
+    transition: width 1s linear, background 1s;
+  }
+  .timer-fill.danger { background: var(--accent2); }
+  #timer-num { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--accent3); min-width: 2ch; }
+  #timer-num.danger { color: var(--accent2); }
+
+  /* === FEEDBACK === */
+  .feedback-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .feedback-overlay.show { opacity: 1; }
+  .feedback-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3rem, 12vw, 7rem);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    animation: feedbackPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .feedback-text.correct { color: var(--accent); }
+  .feedback-text.wrong { color: var(--accent2); }
+  @keyframes feedbackPop {
+    from { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  /* === STREAK === */
+  .streak-badge {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: var(--accent);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 99px;
+    z-index: 10;
+    transition: all 0.3s;
+    transform: scale(0);
+    letter-spacing: 0.05em;
+  }
+  .streak-badge.visible { transform: scale(1); }
+
+  /* ==================== RESULT ==================== */
+  .result-score-big {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(5rem, 18vw, 10rem);
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.04em;
+    margin-bottom: 0.5rem;
+  }
+  .result-label { font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .result-verdict {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .result-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat-item { text-align: center; }
+  .stat-val { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text); }
+  .stat-lbl { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 0.2rem; }
+
+  .btn-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ==================== LEADERBOARD ==================== */
+  .board-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 8vw, 4rem);
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  .board-title span { color: var(--accent); }
+
+  .board-list { width: 100%; max-width: 500px; }
+  .board-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .board-row:first-child { border-color: var(--accent); background: rgba(200,255,0,0.05); }
+  .board-row:nth-child(2) { border-color: rgba(255,255,255,0.15); }
+  .board-row:nth-child(3) { border-color: rgba(200,150,50,0.3); }
+  .board-rank {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    width: 2rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .board-row:first-child .board-rank { color: var(--accent); }
+  .board-name { flex: 1; font-size: 0.9rem; }
+  .board-cat { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .board-pts {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--accent);
+  }
+  .board-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 3rem; }
+
+  /* confetti canvas */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+</style>
+</head>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<div class="streak-badge" id="streak-badge">🔥 STREAK x<span id="streak-num">0</span></div>
+
+<div id="app">
+
+  <!-- ===== HOME ===== -->
+  <div class="screen active" id="screen-home">
+    <div class="home-logo">EarWorm</div>
+    <div class="home-sub">угадай трек · соревнуйся с друзьями</div>
+
+    <div class="name-row">
+      <input class="name-input" id="player-name" placeholder="твой ник..." maxlength="20" />
+    </div>
+
+    <div class="categories-grid" id="cat-grid">
+      <div class="cat-card" data-cat="games">
+        <span class="cat-icon">🎮</span>
+        <div class="cat-name">Игры</div>
+      </div>
+      <div class="cat-card" data-cat="music">
+        <span class="cat-icon">🎵</span>
+        <div class="cat-name">Музыка</div>
+      </div>
+      <div class="cat-card" data-cat="movies">
+        <span class="cat-icon">🎬</span>
+        <div class="cat-name">Фильмы</div>
+      </div>
+      <div class="cat-card" data-cat="cartoons">
+        <span class="cat-icon">🎨</span>
+        <div class="cat-name">Мультики</div>
+      </div>
+    </div>
+
+    <button class="btn-start" id="btn-start" disabled>Начать игру</button>
+    <button class="btn-board" onclick="showBoard()">🏆 Лидерборд</button>
+  </div>
+
+  <!-- ===== GAME ===== -->
+  <div class="screen" id="screen-game">
+    <div class="game-header">
+      <div>
+        <div class="game-player" id="g-player">Player</div>
+        <div class="game-score" id="g-score">0 pts</div>
+      </div>
+      <div class="timer-wrap">
+        <span id="timer-num">20</span>
+        <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="game-progress-bar">
+      <div class="game-progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="track-num" id="track-num">ТРЕК 1 / 10</div>
+
+    <div class="waveform-wrap">
+      <div class="waveform-bg" id="waveform"></div>
+    </div>
+
+    <div class="player-wrap">
+      <button class="play-btn" id="play-btn" onclick="togglePlay()">
+        <svg viewBox="0 0 24 24" id="play-icon"><polygon points="6,3 20,12 6,21"/></svg>
+      </button>
+      <div class="play-hint" id="play-hint">нажми чтобы послушать</div>
+    </div>
+
+    <div class="answers-grid" id="answers-grid"></div>
+  </div>
+
+  <!-- ===== RESULT ===== -->
+  <div class="screen" id="screen-result">
+    <div class="result-label">итог</div>
+    <div class="result-score-big" id="r-score">0</div>
+    <div class="result-verdict" id="r-verdict">неплохо!</div>
+    <div class="result-stats">
+      <div class="stat-item">
+        <div class="stat-val" id="r-correct">0</div>
+        <div class="stat-lbl">правильно</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" id="r-streak">0</div>
+        <div class="stat-lbl">макс. серия</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" id="r-time">0s</div>
+        <div class="stat-lbl">средн. время</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-start" onclick="playAgain()">Ещё раз</button>
+      <button class="btn-outline" onclick="showBoard()">Лидерборд</button>
+      <button class="btn-outline" onclick="goHome()">Домой</button>
+    </div>
+  </div>
+
+  <!-- ===== LEADERBOARD ===== -->
+  <div class="screen" id="screen-board">
+    <div class="board-title">Лидер<span>борд</span></div>
+    <div class="board-list" id="board-list"></div>
+    <br>
+    <button class="btn-outline" onclick="goHome()">← Назад</button>
+  </div>
+
+</div>
+
+<div class="feedback-overlay" id="feedback-overlay">
+  <div class="feedback-text" id="feedback-text"></div>
+</div>
+
+<audio id="audio-player" preload="none"></audio>
+
+<script>
+// ===================================================
+//  ДАННЫЕ: треки по категориям
+//  Формат: { src, answer, options[4], hint }
+//  src = путь к файлу относительно index.html
+//  Чтобы добавить треки — просто добавь объекты в массивы ниже!
+// ===================================================
+const TRACKS = {
+  games: [
+    {
+      src: "audio/games/zelda_theme.mp3",
+      answer: "The Legend of Zelda",
+      options: ["The Legend of Zelda", "Dark Souls", "Final Fantasy VII", "Chrono Trigger"],
+      hint: "🗡️"
+    },
+    {
+      src: "audio/games/mario_theme.mp3",
+      answer: "Super Mario Bros",
+      options: ["Super Mario Bros", "Donkey Kong", "Kirby", "Sonic the Hedgehog"],
+      hint: "🍄"
+    },
+    {
+      src: "audio/games/tetris_theme.mp3",
+      answer: "Tetris",
+      options: ["Tetris", "Pac-Man", "Space Invaders", "Pong"],
+      hint: "🟦"
+    },
+    {
+      src: "audio/games/minecraft_theme.mp3",
+      answer: "Minecraft",
+      options: ["Minecraft", "Terraria", "Stardew Valley", "Roblox"],
+      hint: "⛏️"
+    },
+    {
+      src: "audio/games/undertale_theme.mp3",
+      answer: "Undertale",
+      options: ["Undertale", "Deltarune", "Hollow Knight", "Celeste"],
+      hint: "💛"
+    },
+  ],
+  music: [
+    {
+      src: "audio/music/track1.mp3",
+      answer: "Bohemian Rhapsody",
+      options: ["Bohemian Rhapsody", "Stairway to Heaven", "Hotel California", "Comfortably Numb"],
+      hint: "🎸"
+    },
+    {
+      src: "audio/music/track2.mp3",
+      answer: "Smells Like Teen Spirit",
+      options: ["Smells Like Teen Spirit", "Come As You Are", "Heart-Shaped Box", "In Bloom"],
+      hint: "🎤"
+    },
+    {
+      src: "audio/music/track3.mp3",
+      answer: "Lose Yourself",
+      options: ["Lose Yourself", "Without Me", "Slim Shady", "Rap God"],
+      hint: "🎵"
+    },
+  ],
+  movies: [
+    {
+      src: "audio/movies/imperial_march.mp3",
+      answer: "Star Wars",
+      options: ["Star Wars", "Indiana Jones", "Jurassic Park", "E.T."],
+      hint: "🌌"
+    },
+    {
+      src: "audio/movies/godfather.mp3",
+      answer: "The Godfather",
+      options: ["The Godfather", "Scarface", "Goodfellas", "Casino"],
+      hint: "🎻"
+    },
+    {
+      src: "audio/movies/pirates.mp3",
+      answer: "Pirates of the Caribbean",
+      options: ["Pirates of the Caribbean", "Master and Commander", "Waterworld", "Hook"],
+      hint: "⚓"
+    },
+  ],
+  cartoons: [
+    {
+      src: "audio/cartoons/lion_king.mp3",
+      answer: "Король Лев",
+      options: ["Король Лев", "Тарзан", "Мулан", "Покахонтас"],
+      hint: "🦁"
+    },
+    {
+      src: "audio/cartoons/simpsons.mp3",
+      answer: "Симпсоны",
+      options: ["Симпсоны", "Гриффины", "Американский папаша", "Разгильдяи"],
+      hint: "🍩"
+    },
+    {
+      src: "audio/cartoons/spongebob.mp3",
+      answer: "Губка Боб",
+      options: ["Губка Боб", "Патрик", "Сэнди", "Осьминог"],
+      hint: "🧽"
+    },
+  ]
+};
+
+const VERDICTS = [
+  [0, 30, "ну...хоть попробовал 😅"],
+  [31, 50, "средненько, тренируйся 🙂"],
+  [51, 70, "неплохо! ты что-то знаешь 👀"],
+  [71, 90, "красавчик, серьёзная игра 🔥"],
+  [91, 100, "ЛЕГЕНДА. ТЫ ВООБЩЕ КТО 🏆"]
+];
+
+// === STATE ===
+let state = {
+  player: '',
+  category: null,
+  queue: [],
+  current: 0,
+  score: 0,
+  streak: 0,
+  maxStreak: 0,
+  correct: 0,
+  times: [],
+  answered: false,
+  timerInterval: null,
+  timeLeft: 20,
+  startTime: 0,
+  playing: false,
+};
+
+// === AUDIO ===
+const audio = document.getElementById('audio-player');
+audio.addEventListener('ended', () => {
+  setPlayIcon(false);
+  state.playing = false;
+  document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
+});
+
+// === WAVEFORM ===
+function buildWaveform() {
+  const wf = document.getElementById('waveform');
+  wf.innerHTML = '';
+  const count = 40;
+  for (let i = 0; i < count; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    const hMin = 6 + Math.random() * 10;
+    const hMax = 20 + Math.random() * 55;
+    bar.style.setProperty('--h-min', hMin + 'px');
+    bar.style.setProperty('--h-max', hMax + 'px');
+    bar.style.height = hMin + 'px';
+    bar.style.animationDelay = (Math.random() * 1.2) + 's';
+    bar.style.animationDuration = (0.5 + Math.random() * 0.8) + 's';
+    wf.appendChild(bar);
+  }
+}
+
+function setPlayIcon(playing) {
+  const icon = document.getElementById('play-icon');
+  if (playing) {
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+  } else {
+    icon.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
+  }
+}
+
+function togglePlay() {
+  if (state.playing) {
+    audio.pause();
+    state.playing = false;
+    setPlayIcon(false);
+    document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
+  } else {
+    if (audio.src) {
+      audio.play().catch(() => {});
+      state.playing = true;
+      setPlayIcon(true);
+      document.querySelectorAll('.wave-bar').forEach(b => b.classList.add('playing'));
+    }
+  }
+}
+
+// === CATEGORY SELECT ===
+document.getElementById('cat-grid').addEventListener('click', e => {
+  const card = e.target.closest('.cat-card');
+  if (!card) return;
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  state.category = card.dataset.cat;
+  checkStartReady();
+});
+
+document.getElementById('player-name').addEventListener('input', checkStartReady);
+
+function checkStartReady() {
+  const name = document.getElementById('player-name').value.trim();
+  document.getElementById('btn-start').disabled = !(name && state.category);
+}
+
+document.getElementById('btn-start').addEventListener('click', startGame);
+
+// === GAME LOGIC ===
+function startGame() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name || !state.category) return;
+
+  state.player = name;
+  const allTracks = [...TRACKS[state.category]];
+
+  // Shuffle and pick up to 10
+  for (let i = allTracks.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allTracks[i], allTracks[j]] = [allTracks[j], allTracks[i]];
+  }
+  state.queue = allTracks.slice(0, Math.min(10, allTracks.length));
+  state.current = 0;
+  state.score = 0;
+  state.streak = 0;
+  state.maxStreak = 0;
+  state.correct = 0;
+  state.times = [];
+  state.playing = false;
+
+  showScreen('screen-game');
+  loadTrack();
+}
+
+function loadTrack() {
+  const track = state.queue[state.current];
+  const total = state.queue.length;
+
+  document.getElementById('g-player').textContent = state.player.toUpperCase();
+  document.getElementById('g-score').textContent = state.score + ' pts';
+  document.getElementById('track-num').textContent = `ТРЕК ${state.current + 1} / ${total}`;
+  document.getElementById('progress-fill').style.width = ((state.current / total) * 100) + '%';
+
+  // Audio
+  audio.pause();
+  audio.src = track.src;
+  state.playing = false;
+  setPlayIcon(false);
+  document.getElementById('play-hint').textContent = `${track.hint || '🎵'} нажми чтобы послушать`;
+  document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('playing'));
+
+  buildWaveform();
+
+  // Shuffle answer options
+  const opts = [...track.options];
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = '';
+  const labels = ['A', 'B', 'C', 'D'];
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<span class="answer-letter">${labels[i]}</span>${opt}`;
+    btn.addEventListener('click', () => pickAnswer(opt, track.answer, btn));
+    grid.appendChild(btn);
+  });
+
+  state.answered = false;
+  state.timeLeft = 20;
+  state.startTime = Date.now();
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(state.timerInterval);
+  updateTimerUI();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerUI();
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      if (!state.answered) timeUp();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const el = document.getElementById('timer-num');
+  const fill = document.getElementById('timer-fill');
+  el.textContent = state.timeLeft;
+  fill.style.width = (state.timeLeft / 20 * 100) + '%';
+  const danger = state.timeLeft <= 5;
+  el.classList.toggle('danger', danger);
+  fill.classList.toggle('danger', danger);
+}
+
+function timeUp() {
+  state.answered = true;
+  state.streak = 0;
+  updateStreak();
+
+  const track = state.queue[state.current];
+  // Reveal correct
+  document.querySelectorAll('.answer-btn').forEach(btn => {
+    btn.disabled = true;
+    const txt = btn.textContent.slice(1).trim();
+    if (txt === track.answer) btn.classList.add('correct');
+  });
+
+  showFeedback('ВРЕМЯ!', false);
+  setTimeout(nextTrack, 2000);
+}
+
+function pickAnswer(picked, correct, btn) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(state.timerInterval);
+
+  const elapsed = (Date.now() - state.startTime) / 1000;
+  state.times.push(elapsed);
+
+  const isCorrect = picked === correct;
+
+  // Disable all, highlight
+  document.querySelectorAll('.answer-btn').forEach(b => {
+    b.disabled = true;
+    const txt = b.textContent.slice(1).trim();
+    if (txt === correct) b.classList.add('correct');
+    else if (b === btn && !isCorrect) b.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    state.correct++;
+    // Points: base 100, bonus for time left
+    const timeBonus = Math.floor(state.timeLeft * 5);
+    const streakBonus = state.streak * 10;
+    const pts = 100 + timeBonus + streakBonus;
+    state.score += pts;
+    state.streak++;
+    if (state.streak > state.maxStreak) state.maxStreak = state.streak;
+    showFeedback('+' + pts, true);
+  } else {
+    state.streak = 0;
+    showFeedback('НЕТ', false);
+  }
+
+  updateStreak();
+  document.getElementById('g-score').textContent = state.score + ' pts';
+
+  setTimeout(nextTrack, 1800);
+}
+
+function nextTrack() {
+  audio.pause();
+  state.playing = false;
+  state.current++;
+  if (state.current >= state.queue.length) {
+    endGame();
+  } else {
+    loadTrack();
+  }
+}
+
+function updateStreak() {
+  const badge = document.getElementById('streak-badge');
+  document.getElementById('streak-num').textContent = state.streak;
+  if (state.streak >= 2) {
+    badge.classList.add('visible');
+  } else {
+    badge.classList.remove('visible');
+  }
+}
+
+function showFeedback(text, correct) {
+  const overlay = document.getElementById('feedback-overlay');
+  const el = document.getElementById('feedback-text');
+  el.textContent = text;
+  el.className = 'feedback-text ' + (correct ? 'correct' : 'wrong');
+  overlay.classList.add('show');
+  setTimeout(() => overlay.classList.remove('show'), 800);
+}
+
+// === END GAME ===
+function endGame() {
+  clearInterval(state.timerInterval);
+  audio.pause();
+  document.getElementById('streak-badge').classList.remove('visible');
+  document.getElementById('progress-fill').style.width = '100%';
+
+  const total = state.queue.length;
+  const pct = Math.round((state.correct / total) * 100);
+
+  document.getElementById('r-score').textContent = state.score;
+  document.getElementById('r-correct').textContent = `${state.correct}/${total}`;
+  document.getElementById('r-streak').textContent = state.maxStreak;
+  const avgTime = state.times.length
+    ? (state.times.reduce((a,b)=>a+b,0)/state.times.length).toFixed(1)
+    : '—';
+  document.getElementById('r-time').textContent = avgTime + 's';
+
+  const verdict = VERDICTS.find(([lo, hi]) => pct >= lo && pct <= hi);
+  document.getElementById('r-verdict').textContent = verdict ? verdict[2] : '';
+
+  // Save to leaderboard
+  saveScore();
+
+  if (pct >= 80) spawnConfetti();
+
+  showScreen('screen-result');
+}
+
+// === LEADERBOARD (localStorage) ===
+function saveScore() {
+  const key = 'earworm_scores';
+  const scores = JSON.parse(localStorage.getItem(key) || '[]');
+  scores.push({
+    name: state.player,
+    score: state.score,
+    correct: state.correct,
+    total: state.queue.length,
+    category: state.category,
+    date: Date.now()
+  });
+  scores.sort((a,b) => b.score - a.score);
+  localStorage.setItem(key, JSON.stringify(scores.slice(0, 50)));
+}
+
+function showBoard() {
+  const key = 'earworm_scores';
+  const scores = JSON.parse(localStorage.getItem(key) || '[]');
+  const list = document.getElementById('board-list');
+  const catIcons = { games:'🎮', music:'🎵', movies:'🎬', cartoons:'🎨' };
+
+  if (!scores.length) {
+    list.innerHTML = '<div class="board-empty">Пока нет результатов.<br>Стань первым!</div>';
+  } else {
+    list.innerHTML = scores.slice(0,15).map((s, i) => `
+      <div class="board-row">
+        <div class="board-rank">${i === 0 ? '👑' : i+1}</div>
+        <div>
+          <div class="board-name">${escHtml(s.name)}</div>
+          <div class="board-cat">${catIcons[s.category]||''} ${s.category} · ${s.correct}/${s.total} правильно</div>
+        </div>
+        <div class="board-pts">${s.score}</div>
+      </div>
+    `).join('');
+  }
+  showScreen('screen-board');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// === NAVIGATION ===
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  clearInterval(state.timerInterval);
+  audio.pause();
+  document.getElementById('streak-badge').classList.remove('visible');
+  showScreen('screen-home');
+}
+
+function playAgain() {
+  startGame();
+}
+
+// === CONFETTI ===
+function spawnConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#c8ff00','#ff3cac','#00e5ff','#fff','#ffdd00'];
+  const pieces = Array.from({length: 120}, () => ({
+    x: Math.random() * canvas.width,
+    y: -10,
+    w: 6 + Math.random() * 8,
+    h: 10 + Math.random() * 6,
+    r: Math.random() * Math.PI * 2,
+    dr: (Math.random() - 0.5) * 0.2,
+    vy: 2 + Math.random() * 4,
+    vx: (Math.random() - 0.5) * 3,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    alpha: 1
+  }));
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    pieces.forEach(p => {
+      if (p.y < canvas.height + 20) {
+        alive = true;
+        p.y += p.vy;
+        p.x += p.vx;
+        p.r += p.dr;
+        if (p.y > canvas.height * 0.7) p.alpha -= 0.01;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.r);
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      }
+    });
+    if (alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+  setTimeout(() => { cancelAnimationFrame(frame); ctx.clearRect(0,0,canvas.width,canvas.height); }, 4000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (document.getElementById('screen-game').classList.contains('active') && !state.answered) {
+    const map = {'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3};
+    const idx = map[e.key.toLowerCase()];
+    if (idx !== undefined) {
+      const btns = document.querySelectorAll('.answer-btn');
+      if (btns[idx]) btns[idx].click();
+    }
+    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  }
+});
+</script>
+</body>
+</html>
