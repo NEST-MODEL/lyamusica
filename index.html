@@ -10,22 +10,22 @@
 
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #121218;
-    --surface-card: #1a1a24;
+    --bg: #07070a;
+    --surface: #0f0f15;
+    --surface-card: #151522;
     --accent: #ff5500;
-    --accent-glow: rgba(255, 85, 0, 0.3);
-    --grey-dark: #242430;
-    --grey-light: #4a4a5a;
-    --text: #e6e6ee;
-    --text-muted: #808090;
-    --border: rgba(255, 85, 0, 0.2);
+    --accent-glow: rgba(255, 85, 0, 0.4);
+    --grey-dark: #20202c;
+    --grey-light: #3a3a4e;
+    --text: #f0f0f5;
+    --text-muted: #76768a;
+    --border: rgba(255, 85, 0, 0.25);
     
-    /* Состояния систем */
+    /* Цвета систем жизнеобеспечения */
     --sys-good: #00ff66;
-    --sys-good-glow: rgba(0, 255, 102, 0.2);
+    --sys-good-glow: rgba(0, 255, 102, 0.3);
     --sys-bad: #ff2233;
-    --sys-bad-glow: rgba(255, 34, 51, 0.2);
+    --sys-bad-glow: rgba(255, 34, 51, 0.3);
   }
 
   * {
@@ -38,10 +38,9 @@
   body {
     background-color: var(--bg);
     background-image: 
-      radial-gradient(circle at 50% 30%, rgba(255, 85, 0, 0.08), transparent 70%),
-      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
-      linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-    background-size: 100% 100%, 100% 4px, 6px 100%;
+      radial-gradient(circle at 50% 15%, rgba(255, 85, 0, 0.12), transparent 60%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+    background-size: 100% 100%, 100% 4px;
     color: var(--text);
     font-family: 'Space Mono', monospace;
     min-height: 100vh;
@@ -53,26 +52,32 @@
 
   header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     width: 100%;
     max-width: 1000px;
   }
 
   .main-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 900;
     color: var(--accent);
-    text-shadow: 0 0 10px var(--accent-glow);
-    letter-spacing: 3px;
+    text-shadow: 0 0 15px var(--accent-glow), 0 0 30px rgba(255, 85, 0, 0.1);
+    letter-spacing: 5px;
     margin-bottom: 5px;
+    animation: pulseGlow 3s infinite alternate;
+  }
+
+  @keyframes pulseGlow {
+    from { text-shadow: 0 0 12px var(--accent-glow); }
+    to { text-shadow: 0 0 22px rgba(255, 85, 0, 0.6); }
   }
 
   .sub-title {
     font-size: 0.8rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
   }
 
   .container {
@@ -81,45 +86,58 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    padding: 24px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
   }
 
-  /* Сетки и адаптивность */
+  .container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  /* Сетки интерфейса */
   .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
   }
 
   @media (max-width: 768px) {
     body { padding: 10px; }
-    .main-title { font-size: 1.6rem; }
-    .grid-2 { grid-template-columns: 1fr; }
-    .container { padding: 15px; }
-    .btn { width: 100%; padding: 14px !important; font-size: 1rem !important; }
-    input[type="text"], select { font-size: 16px !important; } /* Защита от зума на iOS */
+    .main-title { font-size: 1.8rem; letter-spacing: 2px; }
+    .grid-2 { grid-template-columns: 1fr; gap: 15px; }
+    .container { padding: 16px; }
+    .btn { width: 100%; padding: 15px !important; font-size: 1rem !important; }
+    input[type="text"] { font-size: 16px !important; padding: 14px !important; }
+    .network-status-box { font-size: 0.8rem !important; }
   }
 
   .card {
     background: var(--surface-card);
     border: 1px solid var(--grey-dark);
     border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
   }
 
   .card-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--accent);
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--grey-dark);
+    padding-bottom: 8px;
     text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
   }
 
-  /* Формы и элементы управления */
+  /* Поля ввода и формы */
   .form-group {
     margin-bottom: 15px;
   }
@@ -128,32 +146,73 @@
     display: block;
     font-size: 0.75rem;
     color: var(--text-muted);
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
-  input[type="text"], select {
+  input[type="text"] {
     width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--grey-dark);
+    background: #09090d;
+    border: 1px solid var(--grey-light);
     color: var(--text);
     padding: 12px;
     border-radius: 6px;
     font-family: inherit;
+    font-size: 0.95rem;
     transition: all 0.3s ease;
   }
 
-  input[type="text"]:focus, select:focus {
+  input[type="text"]:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 8px var(--accent-glow);
+    box-shadow: 0 0 10px var(--accent-glow);
   }
 
+  /* Информационные плашки онлайна */
+  .network-status-box {
+    background: #09090d;
+    border-left: 3px solid var(--accent);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    display: inline-block;
+  }
+
+  .status-dot.online { background: var(--sys-good); box-shadow: 0 0 8px var(--sys-good-glow); }
+  .status-dot.connecting { background: #ffaa00; animation: blink 1s infinite; }
+  .status-dot.error { background: var(--sys-bad); box-shadow: 0 0 8px var(--sys-bad-glow); }
+
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* Кнопки */
   .btn {
     background: var(--grey-dark);
     color: var(--text);
     border: 1px solid var(--grey-light);
-    padding: 10px 20px;
+    padding: 12px 20px;
     font-family: inherit;
     font-weight: bold;
     text-transform: uppercase;
@@ -164,13 +223,15 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
   }
 
   .btn:hover {
     background: var(--accent);
     border-color: var(--accent);
     color: #000;
-    box-shadow: 0 0 12px var(--accent-glow);
+    box-shadow: 0 0 15px var(--accent-glow);
   }
 
   .btn-accent {
@@ -180,10 +241,15 @@
   }
 
   .btn-accent:hover {
-    background: #ff7722;
+    background: #ff7324;
   }
 
-  /* Динамические бары систем жизнеобеспечения */
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  /* Жизнеобеспечение GUI */
   .system-status {
     display: flex;
     flex-direction: column;
@@ -191,10 +257,11 @@
   }
 
   .sys-item {
-    background: var(--bg);
-    padding: 10px;
+    background: #09090d;
+    padding: 12px;
     border-radius: 6px;
     border-left: 4px solid var(--sys-good);
+    transition: border-color 0.4s ease;
   }
 
   .sys-item.critical {
@@ -204,14 +271,15 @@
   .sys-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.8rem;
-    margin-bottom: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    font-weight: bold;
   }
 
   .sys-bar-bg {
     background: var(--grey-dark);
-    height: 8px;
-    border-radius: 4px;
+    height: 10px;
+    border-radius: 5px;
     overflow: hidden;
   }
 
@@ -219,22 +287,22 @@
     height: 100%;
     width: 100%;
     background: var(--sys-good);
-    box-shadow: 0 0 8px var(--sys-good-glow);
-    transition: width 0.5s ease, background-color 0.5s ease;
+    box-shadow: 0 0 10px var(--sys-good-glow);
+    transition: width 0.4s ease, background-color 0.4s ease;
   }
 
   .critical .sys-bar-fill {
     background: var(--sys-bad);
-    box-shadow: 0 0 8px var(--sys-bad-glow);
+    box-shadow: 0 0 10px var(--sys-bad-glow);
   }
 
-  /* Игровые логи и списки игроков */
+  /* Списки и Логи */
   .terminal-log {
-    background: var(--bg);
+    background: #09090d;
     border: 1px solid var(--grey-dark);
-    height: 150px;
+    height: 160px;
     overflow-y: auto;
-    padding: 10px;
+    padding: 12px;
     font-size: 0.8rem;
     border-radius: 6px;
     color: var(--text-muted);
@@ -242,100 +310,136 @@
 
   .log-entry {
     margin-bottom: 6px;
-    line-height: 1.4;
+    line-height: 1.5;
   }
 
-  .log-entry.important {
-    color: var(--accent);
-  }
+  .log-entry.important { color: var(--accent); font-weight: bold; }
+  .log-entry.sys-msg { color: var(--sys-good); }
+  .log-entry.error-msg { color: var(--sys-bad); }
 
   .player-list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 10px;
-    background: var(--bg);
+    padding: 10px 14px;
+    background: #09090d;
     border-radius: 6px;
-    margin-bottom: 6px;
-    font-size: 0.85rem;
-    border: 1px solid transparent;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    border: 1px solid var(--grey-dark);
   }
 
   .player-list-item.active {
-    border-color: var(--border);
+    border-color: var(--accent);
+    background: rgba(255, 85, 0, 0.03);
   }
 
-  /* Экран окончания игры */
+  .role-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    background: var(--grey-light);
+    color: var(--text);
+  }
+  .role-badge.host { background: var(--accent); color: #000; }
+
+  /* Карточка персонажа */
+  .char-prop {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    background: #09090d;
+    border-radius: 4px;
+  }
+  .char-prop b { color: var(--accent); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;}
+
+  /* Экран Смерти */
   .game-over-screen {
     text-align: center;
-    padding: 30px 10px;
+    padding: 40px 10px;
   }
 
   .game-over-title {
     font-family: 'Orbitron', sans-serif;
     color: var(--sys-bad);
-    font-size: 1.8rem;
-    margin-bottom: 15px;
-    text-shadow: 0 0 10px var(--sys-bad-glow);
+    font-size: 2.2rem;
+    margin-bottom: 20px;
+    text-shadow: 0 0 15px var(--sys-bad-glow);
   }
 
   /* Скроллбар */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--bg);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--grey-dark);
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--accent);
-  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #09090d; }
+  ::-webkit-scrollbar-thumb { background: var(--grey-dark); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
   <div class="main-title">THE BUNKER V.2</div>
-  <div class="sub-title">Система тактического жизнеобеспечения</div>
+  <div class="sub-title">Командный тактический симулятор выживания</div>
 </header>
 
 <div class="container" id="main-window">
+  
   <div id="auth-screen" class="grid-2">
+    
     <div class="card">
-      <div class="card-title">Создать сессию (Хост)</div>
+      <div class="card-title">1. Создать новый Бункер</div>
       <div class="form-group">
-        <label>Имя Смотрителя</label>
-        <input type="text" id="host-name-input" placeholder="Командир...">
+        <label>Имя Создателя / Смотрителя</label>
+        <input type="text" id="host-name-input" placeholder="Введите ваш ник...">
       </div>
-      <button class="btn btn-accent" onclick="initSession('host')">Инициализировать Бункер</button>
-      <div style="margin-top: 15px; font-size: 0.75rem; color: var(--text-muted);" id="host-peer-id"></div>
+      <button class="btn btn-accent" onclick="startNetwork('host')">Инициализировать Сервер</button>
+      
+      <div id="host-net-box" style="display:none; margin-top:15px;">
+        <div class="network-status-box">
+          <div>
+            <span>Статус: </span>
+            <span class="status-indicator" id="host-status-indicator"><span class="status-dot connecting"></span>Связь...</span>
+          </div>
+        </div>
+        <div id="host-code-display" style="display:none; background:#000; padding:12px; border-radius:6px; border:1px solid var(--grey-light); text-align:center;">
+          <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Код доступа для друзей:</div>
+          <div id="bunker-code-text" style="font-size:1.2rem; font-weight:bold; color:var(--text); letter-spacing:1px; margin-bottom:8px;">-----</div>
+          <button class="btn btn-sm" onclick="copyBunkerCode()">Скопировать код</button>
+        </div>
+      </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Подключиться к терминалу</div>
+      <div class="card-title">2. Подключиться к другу</div>
       <div class="form-group">
         <label>Имя выжившего</label>
-        <input type="text" id="client-name-input" placeholder="Выживший...">
+        <input type="text" id="client-name-input" placeholder="Введите ваш ник...">
       </div>
       <div class="form-group">
-        <label>Идентификатор Бункера (Peer ID)</label>
-        <input type="text" id="client-target-id" placeholder="Вставьте ID хоста...">
+        <label>Код доступа (ID Бункера)</label>
+        <input type="text" id="client-target-id" placeholder="Вставьте скопированный код хоста...">
       </div>
-      <button class="btn" onclick="initSession('client')">Установить соединение</button>
+      <button class="btn" onclick="startNetwork('client')">Войти в шлюз</button>
+      
+      <div id="client-net-box" style="display:none; margin-top:15px;">
+        <div class="network-status-box">
+          <div>
+            <span>Коннект: </span>
+            <span class="status-indicator" id="client-status-indicator"><span class="status-dot connecting"></span>Поиск...</span>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
 
   <div id="game-screen" style="display: none;" class="grid-2">
     <div>
       <div class="card">
-        <div class="card-title">Статус систем жизнеобеспечения</div>
+        <div class="card-title">Системы Жизнеобеспечения</div>
         <div class="system-status">
           <div class="sys-item" id="sys-o2-container">
             <div class="sys-header">
-              <span>Регенерация O₂</span>
+              <span>Генерация Кислорода (O₂)</span>
               <span id="status-o2-val">100%</span>
             </div>
             <div class="sys-bar-bg">
@@ -344,7 +448,7 @@
           </div>
           <div class="sys-item" id="sys-power-container">
             <div class="sys-header">
-              <span>Ядро питания</span>
+              <span>Энергоядро Реактора</span>
               <span id="status-power-val">100%</span>
             </div>
             <div class="sys-bar-bg">
@@ -353,7 +457,7 @@
           </div>
           <div class="sys-item" id="sys-water-container">
             <div class="sys-header">
-              <span>Фильтрация H₂O</span>
+              <span>Очистка Воды (H₂O)</span>
               <span id="status-water-val">100%</span>
             </div>
             <div class="sys-bar-bg">
@@ -363,71 +467,70 @@
         </div>
         
         <div id="host-controls" style="display: none; margin-top: 15px; border-top: 1px solid var(--grey-dark); padding-top: 15px;">
-          <label>Управление ресурсами (Хост)</label>
-          <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
-            <button class="btn" onclick="modifyResource('o2', -15)">- O₂</button>
-            <button class="btn" onclick="modifyResource('o2', 15)">+ O₂</button>
-            <button class="btn" onclick="modifyResource('power', -15)">- Энерг</button>
-            <button class="btn" onclick="modifyResource('power', 15)">+ Энерг</button>
+          <label>Консоль Управления Ресурсами (HOST)</label>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px;">
+            <button class="btn btn-sm" onclick="modifyResource('o2', -15)">- Кислород</button>
+            <button class="btn btn-sm" onclick="modifyResource('o2', 15)">+ Кислород</button>
+            <button class="btn btn-sm" onclick="modifyResource('power', -15)">- Энергия</button>
+            <button class="btn btn-sm" onclick="modifyResource('power', 15)">+ Энергия</button>
+            <button class="btn btn-sm" onclick="modifyResource('water', -15)">- Вода</button>
+            <button class="btn btn-sm" onclick="modifyResource('water', 15)">+ Вода</button>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">Ваш профиль выжившего</div>
-        <div id="character-card-data" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted);">
-          Генерация данных...
-        </div>
+      <div class="card" style="margin-top:15px;">
+        <div class="card-title">Ваше дело выжившего</div>
+        <div id="character-card-data">
+          </div>
       </div>
     </div>
 
     <div>
       <div class="card">
-        <div class="card-title">Выжившие в сети</div>
+        <div class="card-title">Экипаж Бункера (<span id="player-count">1</span>)</div>
         <div id="players-list">
           </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">Журнал терминала</div>
+      <div class="card" style="margin-top:15px;">
+        <div class="card-title">Системные логи</div>
         <div class="terminal-log" id="terminal-log">
-          <div class="log-entry">Система готова к запуску...</div>
+          <div class="log-entry sys-msg">Система инициализирована. Ожидание сети...</div>
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
   let peer = null;
-  let conn = null; 
+  let connections = []; // Для хоста: массив всех подключений клиентов
+  let conn = null;        // Для клиента: соединение с хостом
   let myRole = ''; 
   let myName = '';
-  let connections = []; 
   let activePlayers = [];
+  let generatedCode = '';
 
-  // Состояние ресурсов
-  let resources = {
-    o2: 100,
-    power: 100,
-    water: 100
-  };
+  let resources = { o2: 100, power: 100, water: 100 };
 
-  // Базовые списки характеристик для игры в Бункер
-  const professions = ["Врач", "Инженер", "Агроном", "Ученый", "Военный", "Повар", "Строитель", "Программист"];
-  const HealthStates = ["Идеальное здоровье", "Легкое недомогание", "Хроническая аллергия", "Снижен иммунитет", "Травма ноги"];
-  const LuggageItems = ["Аптечка", "Набор инструментов", "Запас семян", "Охотничий нож", "Книга по выживанию", "Фонарик"];
+  // Датасеты игры
+  const professions = ["Врач-хирург", "Инженер-ядерщик", "Агроном био-ферм", "Ученый-генетик", "Военный связист", "Шеф-повар", "Техник по вентиляции", "Робототехник", "Строитель систем защиты", "Психолог криминалист"];
+  const healthStates = ["Абсолютно здоров", "Легкая астма", "Хроническая аллергия", "Ослабленный иммунитет", "Старая травма колена", "Проблемы со зрением (-3)", "Ранняя стадия диабета"];
+  const luggageItems = ["Профессиональная аптечка", "Тяжелый набор инструментов", "Пакет редких семян", "Армейский нож", "Электронная книга выживания", "Мощный прожектор", "Рация дальнего действия", "Фильтр очистки воды"];
 
-  let myCharacter = {
-    prof: '',
-    health: '',
-    luggage: ''
-  };
+  let myCharacter = { prof: '', health: '', luggage: '' };
 
-  function logToTerminal(text, isImportant = false) {
+  function logToTerminal(text, type = 'normal') {
     const logBox = document.getElementById('terminal-log');
+    if (!logBox) return;
     const entry = document.createElement('div');
-    entry.className = `log-entry ${isImportant ? 'important' : ''}`;
+    entry.className = 'log-entry';
+    if(type === 'important') entry.className += ' important';
+    if(type === 'sys') entry.className += ' sys-msg';
+    if(type === 'error') entry.className += ' error-msg';
+    
     entry.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
     logBox.appendChild(entry);
     logBox.scrollTop = logBox.scrollHeight;
@@ -435,25 +538,19 @@
 
   function generateCharacter() {
     myCharacter.prof = professions[Math.floor(Math.random() * professions.length)];
-    myCharacter.health = HealthStates[Math.floor(Math.random() * HealthStates.length)];
-    myCharacter.luggage = LuggageItems[Math.floor(Math.random() * LuggageItems.length)];
+    myCharacter.health = healthStates[Math.floor(Math.random() * healthStates.length)];
+    myCharacter.luggage = luggageItems[Math.floor(Math.random() * luggageItems.length)];
     
-    renderCharacter();
-  }
-
-  function renderCharacter() {
     const box = document.getElementById('character-card-data');
     box.innerHTML = `
-      <div><b>Профессия:</b> <span style="color:var(--text);">${myCharacter.prof}</span></div>
-      <div><b>Здоровье:</b> <span style="color:var(--text);">${myCharacter.health}</span></div>
-      <div><b>Багаж:</b> <span style="color:var(--text);">${myCharacter.luggage}</span></div>
+      <div class="char-prop"><b>Профессия игрока</b> <span>${myCharacter.prof}</span></div>
+      <div class="char-prop"><b>Состояние здоровья</b> <span>${myCharacter.health}</span></div>
+      <div class="char-prop"><b>Личный багаж</b> <span>${myCharacter.luggage}</span></div>
     `;
   }
 
   function updateSystemBars() {
-    // Обновление шкал и динамическая смена цвета в зависимости от уровня ресурса (< 40% - критический)
-    const resourcesList = ['o2', 'power', 'water'];
-    resourcesList.forEach(res => {
+    ['o2', 'power', 'water'].forEach(res => {
       const val = resources[res];
       const bar = document.getElementById(`status-${res}-bar`);
       const text = document.getElementById(`status-${res}-val`);
@@ -477,74 +574,113 @@
     resources[type] = Math.max(0, Math.min(100, resources[type] + amount));
     updateSystemBars();
     broadcast({ type: 'sync-resources', data: resources });
-    logToTerminal(`Ресурсы изменены: ${type.toUpperCase()} -> ${resources[type]}%`);
+    logToTerminal(`Параметры изменены Смотрителен: ${type.toUpperCase()} теперь ${resources[type]}%`, 'important');
     checkGameOverStatus();
   }
 
-  function initSession(role) {
+  // ================= СЕТЕВОЙ МОДУЛЬ (НОВЫЙ, СТАБИЛЬНЫЙ) =================
+  function setStatusIndicator(elementId, status, text) {
+    const el = document.getElementById(elementId);
+    if(!el) return;
+    el.innerHTML = `<span class="status-dot ${status}"></span>${text}`;
+  }
+
+  function startNetwork(role) {
     myRole = role;
+    
     if(role === 'host') {
       myName = document.getElementById('host-name-input').value.trim() || 'Смотритель';
+      document.getElementById('host-net-box').style.display = 'block';
+      setStatusIndicator('host-status-indicator', 'connecting', 'Подключение к вышке...');
+
+      // Запуск P2P сервера
       peer = new Peer();
-      
+
       peer.on('open', (id) => {
-        document.getElementById('host-peer-id').innerText = `ID сессии терминала: ${id}`;
-        logToTerminal(`Бункер создан. Ожидание сигналов выживших...`);
-        transitionToGame();
+        generatedCode = id;
+        document.getElementById('bunker-code-text').innerText = id;
+        document.getElementById('host-code-display').style.display = 'block';
+        setStatusIndicator('host-status-indicator', 'online', 'Бункер онлайн');
+        logToTerminal(`Сервер запущен. Код бункера сгенерирован успешно!`, 'sys');
         
-        activePlayers.push({ id: 'Host', name: myName, role: 'host' });
-        renderPlayersList();
+        activePlayers = [{ id: 'Host', name: myName, role: 'host' }];
+        generateCharacter();
+        setTimeout(transitionToGame, 1000);
       });
 
-      peer.on('connection', (connEx) => {
-        connections.push(connEx);
-        setupReceiver(connEx);
+      peer.on('connection', (clientConn) => {
+        connections.push(clientConn);
+        setupHostReceiver(clientConn);
+      });
+
+      peer.on('error', (err) => {
+        setStatusIndicator('host-status-indicator', 'error', 'Сбой сети');
+        logToTerminal(`Ошибка сети хоста: ${err.type}`, 'error');
+        alert('Ошибка PeerJS сервера. Попробуйте еще раз.');
       });
 
     } else {
+      // КЛИЕНТ
       myName = document.getElementById('client-name-input').value.trim() || 'Выживший';
       const targetId = document.getElementById('client-target-id').value.trim();
       
       if(!targetId) {
-        alert('Введите ID терминала хоста!');
+        alert('Пожалуйста, введите код доступа хоста!');
         return;
       }
 
+      document.getElementById('client-net-box').style.display = 'block';
+      setStatusIndicator('client-status-indicator', 'connecting', 'Взлом шлюза...');
+
       peer = new Peer();
+
       peer.on('open', () => {
-        conn = peer.connect(targetId);
-        setupReceiver(conn);
-        conn.on('open', () => {
-          logToTerminal(`Успешное сопряжение с шлюзом бункера.`);
-          conn.send({ type: 'join-request', name: myName });
-          transitionToGame();
-        });
+        conn = peer.connect(targetId, { reliable: true });
+        setupClientReceiver(conn);
+      });
+
+      peer.on('error', (err) => {
+        setStatusIndicator('client-status-indicator', 'error', 'Ошибка кода');
+        logToTerminal(`Не удалось подключиться: неверный код или сервер выключен.`, 'error');
       });
     }
-    generateCharacter();
   }
 
-  function transitionToGame() {
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('game-screen').style.display = 'flex';
-    if(myRole === 'host') {
-      document.getElementById('host-controls').style.display = 'block';
-    }
-    updateSystemBars();
+  // Настройка приема данных на ХОСТЕ
+  function setupHostReceiver(c) {
+    c.on('open', () => {
+      // Ждем запрос на авторизацию от зашедшего клиента
+    });
+
+    c.on('data', (payload) => {
+      if(payload.type === 'join-request') {
+        activePlayers.push({ id: c.peer, name: payload.name, role: 'client' });
+        logToTerminal(`Выживший "${payload.name}" успешно преодолел шлюз гермодвери.`, 'sys');
+        
+        // Синхронизируем всех
+        broadcast({ type: 'sync-players', data: activePlayers });
+        broadcast({ type: 'sync-resources', data: resources });
+      }
+    });
+
+    c.on('close', () => {
+      activePlayers = activePlayers.filter(p => p.id !== c.peer);
+      logToTerminal(`Связь с одним из выживших потеряна (Вылетел/Вышел).`, 'error');
+      broadcast({ type: 'sync-players', data: activePlayers });
+    });
   }
 
-  function setupReceiver(c) {
+  // Настройка приема данных на КЛИЕНТЕ
+  function setupClientReceiver(c) {
+    c.on('open', () => {
+      setStatusIndicator('client-status-indicator', 'online', 'Шлюз открыт');
+      c.send({ type: 'join-request', name: myName });
+      generateCharacter();
+      setTimeout(transitionToGame, 800);
+    });
+
     c.on('data', (payload) => {
       switch(payload.type) {
-        case 'join-request':
-          if(myRole === 'host') {
-            activePlayers.push({ id: c.peer, name: payload.name, role: 'client' });
-            logToTerminal(`Выживший ${payload.name} зашел в шлюз.`);
-            renderPlayersList();
-            broadcast({ type: 'sync-players', data: activePlayers });
-            broadcast({ type: 'sync-resources', data: resources });
-          }
-          break;
         case 'sync-players':
           activePlayers = payload.data;
           renderPlayersList();
@@ -558,6 +694,11 @@
           break;
       }
     });
+
+    c.on('close', () => {
+      setStatusIndicator('client-status-indicator', 'error', 'Сервер отключен');
+      logToTerminal(`Соединение со Смотрителе Бункера разорвано!`, 'error');
+    });
   }
 
   function broadcast(data) {
@@ -566,15 +707,42 @@
     });
   }
 
+  function copyBunkerCode() {
+    if(!generatedCode) return;
+    navigator.clipboard.writeText(generatedCode).then(() => {
+      alert('Код бункера скопирован! Отправь его друзьям.');
+    }).catch(err => {
+      // Фолбэк если запрещены разрешения браузера
+      alert(`Ваш код: ${generatedCode}`);
+    });
+  }
+
+  function transitionToGame() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    if(myRole === 'host') {
+      document.getElementById('host-controls').style.display = 'block';
+    }
+    updateSystemBars();
+    renderPlayersList();
+  }
+
   function renderPlayersList() {
     const list = document.getElementById('players-list');
+    const countSpan = document.getElementById('player-count');
+    if(!list) return;
+    
     list.innerHTML = '';
+    countSpan.innerText = activePlayers.length;
+
     activePlayers.forEach(p => {
       const div = document.createElement('div');
       div.className = `player-list-item ${p.name === myName ? 'active' : ''}`;
+      
+      const isHost = p.role === 'host';
       div.innerHTML = `
-        <span>${p.name} <small style="color:var(--text-muted);">[${p.role.toUpperCase()}]</small></span>
-        <span style="color:var(--sys-good);">● ONLINE</span>
+        <span style="font-weight:700;">${p.name} <span class="role-badge ${isHost ? 'host' : ''}">${isHost ? 'СМОТРИТЕЛЬ' : 'ЖИТЕЛЬ'}</span></span>
+        <span style="color:var(--sys-good); font-size:0.8rem;">● СВЯЗЬ</span>
       `;
       list.appendChild(div);
     });
@@ -582,8 +750,8 @@
 
   function checkGameOverStatus() {
     if(myRole !== 'host') return;
-    if(resources.o2 <= 0 || resources.power <= 0) {
-      let finalMsg = `Критический сбой систем. Жизнеобеспечение бункера остановлено полностью.`;
+    if(resources.o2 <= 0 || resources.power <= 0 || resources.water <= 0) {
+      let finalMsg = `Критический коллапс. Все системы жизнеобеспечения отключены. Гермозатворы декомпрессированы. Выживание невозможно.`;
       showGameOverScreen("НИКТО", finalMsg);
       broadcast({ type: 'game-over-screen', winner: "НИКТО", msg: finalMsg });
     }
@@ -594,9 +762,9 @@
     mainWindow.innerHTML = `
       <div class="game-over-screen">
         <h1 class="game-over-title">🔒 БУНКЕР ЗАПЕЧАТАН</h1>
-        <div class="card" style="text-align: left; max-width: 500px; margin: 0 auto 20px;">
-          <b style="color:var(--accent);">Отчет главного терминала:</b><br>
-          <span style="color:var(--text-muted); font-size:0.9rem;">${message}</span>
+        <div class="card" style="text-align: left; max-width: 550px; margin: 0 auto 25px; border-color:var(--sys-bad);">
+          <b style="color:var(--accent); font-size:0.85rem;">ЛОГ СИСТЕМЫ БЕЗОПАСНОСТИ:</b><br>
+          <span style="color:var(--text-muted); font-size:0.9rem; line-height:1.6; display:inline-block; margin-top:5px;">${message}</span>
         </div>
         <button class="btn btn-accent" onclick="window.location.reload()">Перезапустить Терминал</button>
       </div>
