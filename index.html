@@ -120,13 +120,13 @@
   }
   .form-group { margin-bottom: 20px; }
   label { display: block; font-size: 0.75rem; color: var(--grey-text); margin-bottom: 8px; text-transform: uppercase; }
-  input[type="text"] {
+  input[type="text"], select {
     width: 100%; background: #07070b; border: 1px solid var(--grey-border);
     color: var(--white); padding: 14px; border-radius: 6px; font-family: inherit; font-size: 16px;
   }
   input[type="text"]:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 10px var(--orange-glow); }
 
-  /* ИГРОВОЙ ИНТЕРФЕЙС (ОСНОВНОЙ КЛИЕНТ/ХОСТ) */
+  /* ИГРОВОЙ ИНТЕРФЕЙС */
   .game-layout {
     display: grid;
     grid-template-columns: 1fr 320px;
@@ -167,7 +167,6 @@
   .flask-title { font-size: 0.75rem; color: var(--grey-text); text-transform: uppercase; }
   .flask-val { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
   
-  /* Визуал колбы */
   .flask-glass {
     width: 32px;
     height: 90px;
@@ -203,28 +202,38 @@
   /* КАРТЫ ДЕЙСТВИЙ */
   .action-cards-box { margin-top: 15px; }
   .action-deck { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  
   .action-mini-card {
-    background: #1a110b; border: 1px solid #4a2510; border-radius: 4px; padding: 8px 12px; font-size: 0.75rem; color: #ffaa66;
+    background: #1a110b; border: 1px solid #4a2510; border-radius: 6px; padding: 10px 14px; font-size: 0.8rem; 
+    color: #ffaa66; font-family: inherit; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
   }
+  .action-mini-card:hover { border-color: var(--orange); background: #261810; }
   .action-mini-card.cancel { background: #0b1a13; border-color: #104a2b; color: #66ffaa; }
+  .action-mini-card.cancel:hover { border-color: var(--neon-green); background: #11261c; }
 
-  /* СПИСОК ИГРОКОВ ТЕРМИНАЛА */
-  .terminal-box { background: #08080f; border: 1px solid var(--grey-border); border-radius: 6px; padding: 12px; height: 160px; overflow-y: auto; font-size: 0.8rem; }
+  /* СПИСОК ИГРОКОВ И ЖУРНАЛ СУПЕР-ТЕРМИНАЛА */
+  .terminal-box { background: #08080f; border: 1px solid var(--grey-border); border-radius: 6px; padding: 12px; height: 150px; overflow-y: auto; font-size: 0.8rem; }
+  .log-line { margin-bottom: 4px; line-height: 1.4; border-bottom: 1px dashed rgba(255,255,255,0.03); padding-bottom: 2px; }
   .player-row {
     display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-card); margin-bottom: 6px; border-radius: 4px;
   }
   .player-row.exiled { opacity: 0.3; text-decoration: line-through; border-left: 3px solid var(--neon-red); }
 
-  /* МУЛЬТИ-АДАПТИВНОСТЬ ПОД МОБИЛКИ */
+  /* МУЛЬТИ-АДАПТИВНОСТЬ ПОД ТЕЛЕФОНЫ */
   @media (max-width: 850px) {
-    body { padding: 10px; }
-    .menu-logo { font-size: 2.3rem; }
+    body { padding: 8px; align-items: flex-start; }
+    .screen { max-width: 100%; }
+    .menu-logo { font-size: 2.2rem; letter-spacing: 3px; }
+    .menu-version { margin-bottom: 30px; font-size: 0.75rem; }
     .network-grid { grid-template-columns: 1fr; gap: 15px; }
-    .game-layout { grid-template-columns: 1fr; }
-    .character-sheet { grid-template-columns: 1fr; }
-    .gui-sidebar { order: -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .flask-container { padding: 10px; flex-direction: column; text-align: center; }
-    .flask-glass { height: 60px; width: 24px; }
+    .game-layout { grid-template-columns: 1fr; gap: 15px; }
+    .character-sheet { grid-template-columns: 1fr; gap: 8px; }
+    .gui-sidebar { order: -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .flask-container { padding: 8px; flex-direction: column; text-align: center; gap: 6px; }
+    .flask-glass { height: 55px; width: 22px; }
+    .flask-val { font-size: 0.9rem; }
+    .btn { width: 100%; padding: 14px 20px; font-size: 0.9rem; }
+    .action-mini-card { width: 100%; text-align: center; }
   }
 </style>
 </head>
@@ -232,8 +241,8 @@
 
   <div id="scr-menu" class="screen">
     <div class="menu-logo">THE BUNKER V.2</div>
-    <div class="menu-version">Тактическая игра Выживания.</div>
-    <button class="btn btn-accent" onclick="navigate('scr-menu', 'scr-network')">Создать бункер</button>
+    <div class="menu-version">Тактический Терминал Жизнеобеспечения</div>
+    <button class="btn btn-accent" onclick="navigate('scr-menu', 'scr-network')">Запустить Терминал</button>
   </div>
 
   <div id="scr-network" class="screen hidden">
@@ -246,10 +255,10 @@
         </div>
         <div class="form-group">
           <label>Количество участников</label>
-          <select id="sel-player-limit" style="width:100%; background:#07070b; border:1px solid var(--grey-border); color:#fff; padding:14px; border-radius:6px; font-family:inherit;">
+          <select id="sel-player-limit">
             <option value="2">2 Игрока (1 выживший)</option>
             <option value="4">4 Игрока (2 выживших)</option>
-            <option value="6">6 Игрока (3 выживших)</option>
+            <option value="6">6 Игроков (3 выживших)</option>
             <option value="8">8 Игроков (4 выживших)</option>
             <option value="10">10 Игроков (5 выживших)</option>
           </select>
@@ -257,8 +266,8 @@
         <button class="btn" onclick="initP2P('host')">Занять Бункер</button>
         
         <div id="host-share-zone" style="display:none; margin-top:15px; background:#000; padding:12px; border-radius:6px; text-align:center;">
-          <label>Передай этот код выжившим:</label>
-          <div id="bunker-code-txt" style="font-family:'Orbitron',sans-serif; font-size:1.3rem; color:var(--orange); font-weight:bold; letter-spacing:1px; margin:5px 0 10px;">-----</div>
+          <label>Передай этот цифровой код выжившим:</label>
+          <div id="bunker-code-txt" style="font-family:'Orbitron',sans-serif; font-size:1.8rem; color:var(--orange); font-weight:bold; letter-spacing:3px; margin:5px 0 10px;">-----</div>
           <button class="btn btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('bunker-code-txt').innerText); alert('Код скопирован!');">Копировать</button>
         </div>
       </div>
@@ -270,8 +279,8 @@
           <input type="text" id="inp-client-name" placeholder="Ваш позывной...">
         </div>
         <div class="form-group">
-          <label>Секретный код Бункера</label>
-          <input type="text" id="inp-target-id" placeholder="Вставьте ID хоста...">
+          <label>Цифровой код Бункера</label>
+          <input type="text" id="inp-target-id" placeholder="5 цифр кода...">
         </div>
         <button class="btn" onclick="initP2P('client')">Открыть Шлюз</button>
       </div>
@@ -294,20 +303,30 @@
             <span id="my-name-badge" style="font-size:0.8rem; color:var(--grey-text);">---</span>
           </div>
           
-          <div class="character-sheet" id="char-sheet-box">
-            </div>
+          <div class="character-sheet" id="char-sheet-box"></div>
 
           <div class="action-cards-box">
-            <label>Ваши оперативные карты действий:</label>
-            <div class="action-deck" id="action-deck-box">
-              </div>
+            <label>Ваши оперативные карты действий (Клик для активации):</label>
+            <div class="action-deck" id="action-deck-box"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px; border-color: #302015;">
+          <div class="panel-title" style="color: #ffaa66; font-size: 0.95rem;">📟 Журнал Действий Бункера</div>
+          <div class="terminal-box" id="action-log-box" style="color: #ffcc99; background: #05050a; height: 130px;">
+            <div>[Система]: Ожидание тактических маневров экипажа...</div>
+          </div>
+          <div id="cancel-zone" style="display:none; margin-top: 10px;">
+            <button class="btn btn-sm" style="border-color: var(--neon-green); color: var(--neon-green); width: 100%;" onclick="triggerCancelDefensive()">🛡 Сбросить карту отмены и заблокировать атаку!</button>
+          </div>
+          <div id="host-resolve-zone" style="display:none; margin-top: 10px;">
+            <button class="btn btn-sm" style="border-color: var(--orange); color: var(--orange); width: 100%;" onclick="hostResolveAction()">Принять и завершить действие карт</button>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-title">Мониторинг Экипажа Убежища (<span id="total-surv-count">0</span>)</div>
-          <div class="terminal-box" id="players-terminal-list">
-            </div>
+          <div class="terminal-box" id="players-terminal-list"></div>
         </div>
       </div>
 
@@ -321,7 +340,7 @@
         </div>
 
         <div class="flask-container" id="flask-power-box">
-          <div class="flask-glass"><div class="flask-liquid" id="f-liq-power" style="height:100%; background:amber;"></div></div>
+          <div class="flask-glass"><div class="flask-liquid" id="f-liq-power" style="height:100%;"></div></div>
           <div class="flask-info">
             <div class="flask-title">Ядро питания</div>
             <div class="flask-val" id="f-txt-power">100%</div>
@@ -343,8 +362,8 @@
   let peer = null, conn = null, connections = [];
   let myRole = '', myName = '', gameConfig = null;
   let activePlayers = [];
+  let myCards = []; 
 
-  // БАЗЫ ДАННЫХ ХАРАКТЕРИСТИК ДЛЯ ИГРЫ
   const genders = ["Мужчина, 23 года", "Мужчина, 45 лет", "Мужчина, 31 год", "Женщина, 19 лет", "Женщина, 28 лет", "Женщина, 38 лет", "Мужчина, 60 лет", "Женщина, 52 года"];
   const professions = ["Врач-хирург", "Инженер ядерных систем", "Агроном био-плантаций", "Слесарь вентиляции", "Физик-радиобиолог", "Военный связист", "Программист ИИ", "Охранник-кинолог", "Шеф-повар", "Психолог МЧС"];
   const healthBad = ["Туберкулёз (Заразно)", "Открытая лёгочная инфекция (Заразно)", "Тяжелая форма астмы (Испорчен воздух)", "Хроническая пневмония (Заразно)"];
@@ -355,7 +374,6 @@
   const baggages = ["Армейская аптечка", "Набор прецизионных инструментов", "Фляга чистого спирта (5л)", "Запас семян пшеницы", "Дробовик с 3 патронами", "Защищенный ноутбук", "Газовый резак"];
   const secrets = ["Шпион враждебной группировки", "Бесплоден", "Скрывает запасы еды", "Гениальный изобретатель", "Знает пароль от оружейной комнаты бункера"];
 
-  // КАТАСТРОФЫ И ИХ ВЛИЯНИЕ НА ТЕМПЕРАТУРУ
   const disasters = [
     { title: "Ядерная зима", temp: "-45°C", style: "cold", desc: "Планета скована многовековым льдом и радиационной пылью." },
     { title: "Солнечная супер-вспышка", temp: "+65°C", style: "danger", desc: "Атмосфера выжжена радиацией, поверхность — сплошная пустыня." },
@@ -372,7 +390,6 @@
 
   const actionCardsPool = ["Украсть багаж соседа", "Узнать секрет на выбор", "Сменить профессию", "Убить чужого питомца", "Изолировать игрока"];
 
-  // Переключение экранов с анимацией
   function navigate(fromId, toId) {
     const fromEl = document.getElementById(fromId);
     const toEl = document.getElementById(toId);
@@ -383,9 +400,7 @@
     }, 300);
   }
 
-  // Генерация уникального персонажа (Все 8 пунктов)
   function createCharacterData() {
-    // Шанс получить легочную болезнь (для проверки кислорода)
     const isSick = Math.random() < 0.35;
     const health = isSick ? healthBad[Math.floor(Math.random() * healthBad.length)] : healthNormal[Math.floor(Math.random() * healthNormal.length)];
     
@@ -401,6 +416,26 @@
       isAirPolluter: isSick,
       kicked: false
     };
+  }
+
+  function renderActionDeck() {
+    const deckBox = document.getElementById('action-deck-box');
+    if(!deckBox) return;
+
+    if(myCards.length === 0) {
+      myCards = [
+        actionCardsPool[Math.floor(Math.random() * actionCardsPool.length)],
+        actionCardsPool[Math.floor(Math.random() * actionCardsPool.length)],
+        "ОТМЕНА ДЕЙСТВИЯ"
+      ];
+    }
+
+    deckBox.innerHTML = myCards.map((card, idx) => {
+      if (card === "ОТМЕНА ДЕЙСТВИЯ") {
+        return `<button class="action-mini-card cancel" onclick="triggerCancelDefensive()">🛡 Снаряжено: ${card}</button>`;
+      }
+      return `<button class="action-mini-card" onclick="useActionCard(${idx})">⚡ Использовать: ${card}</button>`;
+    }).join('');
   }
 
   function renderCharacter(char) {
@@ -423,33 +458,31 @@
       </div>
     `).join('');
 
-    // Генерация карт действий (2 обычные + 1 отмена)
-    const deckBox = document.getElementById('action-deck-box');
-    deckBox.innerHTML = `
-      <div class="action-mini-card">⚡ Карта: ${actionCardsPool[Math.floor(Math.random()*actionCardsPool.length)]}</div>
-      <div class="action-mini-card">⚡ Карта: ${actionCardsPool[Math.floor(Math.random()*actionCardsPool.length)]}</div>
-      <div class="action-mini-card cancel">🛡 Карта: ОТМЕНА ДЕЙСТВИЯ</div>
-    `;
+    renderActionDeck();
   }
 
-  // ОНЛАЙН СЕТЬ (P2P PEERJS)
+  // СЕТЕВАЯ ИНИЦИАЛИЗАЦИЯ И КОРОТКИЕ КОДЫ ИЗ 5 ЦИФР
   function initP2P(role) {
     myRole = role;
     if(role === 'host') {
       myName = document.getElementById('inp-host-name').value.trim() || 'Смотритель';
       const maxP = parseInt(document.getElementById('sel-player-limit').value);
       
-      // Сбор конфига бункера хостом
       const disaster = disasters[Math.floor(Math.random() * disasters.length)];
       gameConfig = {
         disaster: disaster,
         condition: bunkerConditions[Math.floor(Math.random() * bunkerConditions.length)],
         energy: [50, 75, 100][Math.floor(Math.random() * 3)],
         maxPlayers: maxP,
-        targetSurvivors: Math.max(1, Math.floor(maxP / 2))
+        targetSurvivors: Math.max(1, Math.floor(maxP / 2)),
+        actionLog: ["[Система]: Сеть развернута. Командный терминал бункера готов."],
+        latestAction: null
       };
 
-      peer = new Peer();
+      // Генерируем удобный 5-значный ID
+      const shortId = Math.floor(10000 + Math.random() * 90000).toString();
+      peer = new Peer(shortId);
+
       peer.on('open', (id) => {
         document.getElementById('bunker-code-txt').innerText = id;
         document.getElementById('host-share-zone').style.display = 'block';
@@ -461,7 +494,6 @@
         applyWorldConfig(gameConfig);
         checkOxygenStatus();
         
-        // Автоматический переход в игру для хоста
         setTimeout(() => navigate('scr-network', 'scr-game'), 4000);
       });
 
@@ -475,10 +507,9 @@
       });
 
     } else {
-      // КЛИЕНТ
       myName = document.getElementById('inp-client-name').value.trim() || 'Выживший';
       const tId = document.getElementById('inp-target-id').value.trim();
-      if(!tId) return alert('Введите код бункера!');
+      if(!tId) return alert('Введите цифровой код бункера!');
 
       peer = new Peer();
       peer.on('open', () => {
@@ -496,9 +527,15 @@
       if(pack.type === 'join') {
         let clientChar = createCharacterData();
         activePlayers.push({ id: c.peer, name: pack.name, role: 'client', char: clientChar, kicked: false });
-        
+        gameConfig.actionLog.push(`[Вход]: Выживший ${pack.name} успешно подключился к шлюзу.`);
         c.send({ type: 'init-game', char: clientChar, config: gameConfig });
         syncAll();
+      }
+      if(pack.type === 'play-card') {
+        handlePlayCardEvent(pack.player, pack.card);
+      }
+      if(pack.type === 'cancel-card') {
+        handleCancelCardEvent(pack.canceler, pack.targetActionId);
       }
     });
     c.on('close', () => {
@@ -514,10 +551,15 @@
         applyWorldConfig(pack.config);
         gameConfig = pack.config;
         document.getElementById('my-name-badge').innerText = myName;
+        renderActionLog();
         navigate('scr-network', 'scr-game');
       }
       if(pack.type === 'sync') {
         activePlayers = pack.players;
+        if(pack.config) {
+          gameConfig = pack.config;
+          renderActionLog();
+        }
         renderPlayersTerminal();
         checkOxygenStatus();
       }
@@ -531,16 +573,91 @@
     });
   }
 
+  // ОБРАБОТЧИКИ ИГРОВЫХ КАРТ И СИСТЕМА ОТМЕНЫ
+  function handlePlayCardEvent(player, card) {
+    const actId = Math.floor(Math.random() * 100000);
+    gameConfig.latestAction = { id: actId, player: player, card: card };
+    gameConfig.actionLog.push(`[🔥 КАРТА]: Игрок "${player}" задействовал: "${card}"! Ожидание ответа...`);
+    syncAll();
+  }
+
+  function handleCancelCardEvent(canceler, targetActionId) {
+    if(gameConfig.latestAction && gameConfig.latestAction.id === targetActionId) {
+      gameConfig.actionLog.push(`[🛡 ОТМЕНА]: Блокировка! Вспышка щита! Игрок "${canceler}" применил карту Отмены против "${gameConfig.latestAction.player}". Обе карты сгорели!`);
+      gameConfig.latestAction = null;
+      syncAll();
+    }
+  }
+
+  function useActionCard(idx) {
+    const card = myCards[idx];
+    myCards.splice(idx, 1);
+    renderActionDeck();
+
+    if(myRole === 'host') {
+      handlePlayCardEvent(myName, card);
+    } else {
+      if(conn && conn.open) {
+        conn.send({ type: 'play-card', player: myName, card: card });
+      }
+    }
+  }
+
+  function triggerCancelDefensive() {
+    const idx = myCards.indexOf("ОТМЕНА ДЕЙСТВИЯ");
+    if(idx === -1 || !gameConfig.latestAction) return;
+
+    myCards.splice(idx, 1);
+    renderActionDeck();
+
+    const targetId = gameConfig.latestAction.id;
+    if(myRole === 'host') {
+      handleCancelCardEvent(myName, targetId);
+    } else {
+      if(conn && conn.open) {
+        conn.send({ type: 'cancel-card', canceler: myName, targetActionId: targetId });
+      }
+    }
+  }
+
+  function hostResolveAction() {
+    if(myRole !== 'host' || !gameConfig.latestAction) return;
+    gameConfig.actionLog.push(`[Система]: Действие карты "${gameConfig.latestAction.card}" от игрока ${gameConfig.latestAction.player} вступает в силу.`);
+    gameConfig.latestAction = null;
+    syncAll();
+  }
+
+  function renderActionLog() {
+    const logBox = document.getElementById('action-log-box');
+    if(!logBox || !gameConfig || !gameConfig.actionLog) return;
+
+    logBox.innerHTML = gameConfig.actionLog.map(line => `<div class="log-line">${line}</div>`).join('');
+    logBox.scrollTop = logBox.scrollHeight;
+
+    // Проверка кнопок противодействия
+    const cancelZone = document.getElementById('cancel-zone');
+    const hostZone = document.getElementById('host-resolve-zone');
+    const hasCancelCard = myCards.includes("ОТМЕНА ДЕЙСТВИЯ");
+
+    if(gameConfig.latestAction) {
+      cancelZone.style.display = hasCancelCard ? 'block' : 'none';
+      hostZone.style.display = (myRole === 'host') ? 'block' : 'none';
+    } else {
+      cancelZone.style.display = 'none';
+      hostZone.style.display = 'none';
+    }
+  }
+
   function syncAll() {
     renderPlayersTerminal();
     checkOxygenStatus();
+    renderActionLog();
     connections.forEach(c => {
-      if(c.open) c.send({ type: 'sync', players: activePlayers });
+      if(c.open) c.send({ type: 'sync', players: activePlayers, config: gameConfig });
     });
     
-    // Проверка лимита выживших для завершения
     const remaining = activePlayers.filter(p => !p.kicked).length;
-    if(remaining === gameConfig.targetSurvivors) {
+    if(gameConfig && remaining === gameConfig.targetSurvivors) {
       let msg = `Шлюзовые двери намертво запечатаны. Выжившие внутри: ` + activePlayers.filter(p => !p.kicked).map(p => p.name).join(', ') + `. Ресурсов хватит для построения нового общества!`;
       connections.forEach(c => c.open && c.send({ type: 'game-end', msg: msg }));
       showGameOver(msg);
@@ -551,23 +668,19 @@
     document.getElementById('world-disaster-text').innerText = `КАТАСТРОФА: ${cfg.disaster.title} (${cfg.disaster.desc})`;
     document.getElementById('bunker-condition-text').innerText = `Особые условия: ${cfg.condition}`;
     
-    // Температура
     document.getElementById('f-txt-temp').innerText = cfg.disaster.temp;
     const tempBox = document.getElementById('flask-temp-box');
     tempBox.className = "flask-container " + cfg.disaster.style;
     document.getElementById('f-liq-temp').style.height = cfg.disaster.style === 'cold' ? '25%' : '85%';
 
-    // Энергия
     document.getElementById('f-txt-power').innerText = cfg.energy + "%";
     document.getElementById('f-liq-power').style.height = cfg.energy + "%";
     document.getElementById('f-liq-power').style.background = "#ffaa00";
   }
 
-  // ДИНАМИЧЕСКИЙ РАСЧЕТ КИСЛОРОДА НА ОСНОВЕ ОСТАВШИХСЯ ЖИВЫХ ИГРОКОВ
   function checkOxygenStatus() {
-    // Проверяем только тех игроков, которые ЕЩЕ НЕ изгнаны
     const alivePlayers = activePlayers.filter(p => !p.kicked);
-    const hasInfected = alivePlayers.some(p => p.char.isAirPolluter);
+    const hasInfected = alivePlayers.some(p => p.char && p.char.isAirPolluter);
 
     const o2Box = document.getElementById('flask-o2-box');
     const o2Liq = document.getElementById('f-liq-o2');
@@ -605,6 +718,7 @@
     const target = activePlayers.find(p => p.id === id);
     if(target) {
       target.kicked = true;
+      gameConfig.actionLog.push(`[ИЗГНАНИЕ]: Смотритель выбросил игрока "${target.name}" наружу на съедение стихии!`);
       syncAll();
     }
   }
