@@ -3,1365 +3,606 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CyberBunker Terminal v6.0</title>
+<title>THE BUNKER V.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <style>
   :root {
-    --bg: #050508;
-    --card: rgba(18, 18, 24, 0.85);
-    --card-inner: #111116;
-    --neon: #ff5500;
-    --neon-muted: #993300;
-    --neon-green: #00cc66;
-    --neon-green-glow: #00fa9a;
-    --text: #e2e2e9;
-    --text-dark: #646473;
+    --bg: #0a0a0f;
+    --surface: #121218;
+    --surface-card: #1a1a24;
+    --accent: #ff5500;
+    --accent-glow: rgba(255, 85, 0, 0.3);
+    --grey-dark: #242430;
+    --grey-light: #4a4a5a;
+    --text: #e6e6ee;
+    --text-muted: #808090;
     --border: rgba(255, 85, 0, 0.2);
-    --glass: rgba(10, 10, 14, 0.88);
+    
+    /* Состояния систем */
+    --sys-good: #00ff66;
+    --sys-good-glow: rgba(0, 255, 102, 0.2);
+    --sys-bad: #ff2233;
+    --sys-bad-glow: rgba(255, 34, 51, 0.2);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-
-  @keyframes flicker {
-    0%, 100% { opacity: 1; }
-    41% { opacity: 0.95; }
-    42% { opacity: 0.2; }
-    43% { opacity: 0.95; }
-    60% { opacity: 0.9; }
-    61% { opacity: 0.3; }
-    62% { opacity: 0.9; }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
   }
-  @keyframes pulse-warn {
-    0%, 100% { border-color: rgba(255, 85, 0, 0.2); }
-    50% { border-color: #ff3333; box-shadow: 0 0 15px rgba(255,51,51,0.3); }
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes pipe-flow {
-    0% { stroke-dashoffset: 200; }
-    100% { stroke-dashoffset: 0; }
-  }
-  @keyframes sector-pulse {
-    0%, 100% { opacity: 0.12; }
-    50% { opacity: 0.25; }
-  }
-  @keyframes radar-sweep {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  @keyframes blink-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-  @keyframes threat-in {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  @keyframes threat-out {
-    from { transform: translateY(0); opacity: 1; }
-    to { transform: translateY(-20px); opacity: 0; }
-  }
-  @keyframes danger-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
   body {
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image: 
+      radial-gradient(circle at 50% 30%, rgba(255, 85, 0, 0.08), transparent 70%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+      linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 100%, 100% 4px, 6px 100%;
     color: var(--text);
     font-family: 'Space Mono', monospace;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: 15px;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  /* ── ЖИВОЙ ФОН БУНКЕРА ── */
-  #bunker-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  #bunker-bg svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  .bg-sector {
-    animation: sector-pulse 4s ease-in-out infinite;
-  }
-  .bg-sector:nth-child(2) { animation-delay: 1.2s; }
-  .bg-sector:nth-child(3) { animation-delay: 2.5s; }
-  .bg-sector:nth-child(4) { animation-delay: 0.7s; }
-
-  .pipe-anim {
-    stroke-dasharray: 12 6;
-    animation: pipe-flow 2.5s linear infinite;
-  }
-  .pipe-anim-slow {
-    stroke-dasharray: 8 10;
-    animation: pipe-flow 5s linear infinite;
-  }
-  .pipe-anim-rev {
-    stroke-dasharray: 12 6;
-    animation: pipe-flow 3s linear infinite reverse;
-  }
-
-  .radar-group {
-    transform-origin: 88% 18%;
-    animation: radar-sweep 5s linear infinite;
-  }
-
-  /* ── THREAT ALERT ── */
-  #threat-alert {
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 999;
-    background: rgba(5, 0, 0, 0.97);
-    border: 1px solid #ff2200;
-    border-radius: 8px;
-    padding: 0.6rem 1.4rem;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.75rem;
-    color: #ff4422;
-    letter-spacing: 1.5px;
-    display: none;
-    text-align: center;
-    min-width: 320px;
-    box-shadow: 0 0 20px rgba(255,34,0,0.3);
-  }
-  #threat-alert.show {
-    display: block;
-    animation: threat-in 0.3s ease;
-  }
-  #threat-alert.hiding {
-    animation: threat-out 0.3s ease forwards;
-  }
-  #threat-alert .threat-icon { font-size: 1rem; margin-right: 6px; }
-
-  /* ── ДЕТЕКТОР ЛЖИ ── */
-  #lie-detector-panel {
-    display: none;
-    background: #07020e;
-    border: 1px solid #8800ff;
-    border-radius: 8px;
-    padding: 0.8rem;
-    margin-bottom: 0.8rem;
-    text-align: center;
-  }
-  #lie-detector-panel.active { display: block; }
-  .lie-title { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: #aa44ff; letter-spacing: 2px; margin-bottom: 0.5rem; }
-  .lie-target-select { width: 100%; padding: 0.4rem; background: #100820; border: 1px solid #4400aa; color: #fff; border-radius: 6px; font-family: inherit; margin-bottom: 0.5rem; text-align: center; }
-  .btn-lie { background: transparent; border: 1px solid #8800ff; color: #cc88ff; padding: 0.4rem 0.8rem; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; cursor: pointer; transition: all 0.2s; }
-  .btn-lie:hover { background: #8800ff; color: #fff; }
-  #lie-result { font-size: 0.75rem; margin-top: 0.5rem; min-height: 1rem; font-weight: bold; }
-
-  /* ── SABOTEUR SYSTEM ── */
-  #saboteur-panel {
-    display: none;
-    background: #0a0005;
-    border: 1px solid #ff0066;
-    border-radius: 8px;
-    padding: 0.8rem;
-    margin-bottom: 0.8rem;
-  }
-  #saboteur-panel.active { display: block; }
-  .saboteur-title { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: #ff0066; letter-spacing: 2px; margin-bottom: 0.4rem; text-align: center; }
-  .saboteur-desc { font-size: 0.68rem; color: #aa4466; margin-bottom: 0.5rem; text-align: center; line-height: 1.3; }
-  .btn-sab { background: transparent; border: 1px solid #ff0066; color: #ff4488; padding: 0.35rem; width: 100%; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 0.62rem; cursor: pointer; transition: all 0.2s; margin-top: 0.3rem; }
-  .btn-sab:hover:not(:disabled) { background: #ff0066; color: #fff; }
-  .btn-sab:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  /* ── ОСТАЛЬНОЙ ДИЗАЙН БЕЗ ИЗМЕНЕНИЙ ── */
-  .main-container {
-    display: grid;
-    grid-template-columns: 280px 1fr 310px;
-    gap: 20px;
-    width: 100%;
-    max-width: 1350px;
-    z-index: 10;
-    position: relative;
-  }
-  .status-panel {
-    background: var(--glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.2rem;
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
-    height: fit-content;
+    align-items: center;
   }
-  .panel-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.85rem;
-    color: var(--neon);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 0.5rem;
+
+  header {
     text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 1000px;
+  }
+
+  .main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
     font-weight: 900;
+    color: var(--accent);
+    text-shadow: 0 0 10px var(--accent-glow);
+    letter-spacing: 3px;
+    margin-bottom: 5px;
   }
-  .sys-metric { display: flex; flex-direction: column; gap: 0.5rem; }
-  .metric-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-  .metric-label { display: flex; align-items: center; gap: 5px; color: var(--text-dark); }
-  .metric-val { color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; transition: color 0.5s; }
-  .flask-wrap {
-    position: relative; height: 28px; border-radius: 20px; background: #08080c;
-    border: 1px solid rgba(255,255,255,0.05); overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.7);
+
+  .sub-title {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
   }
-  .flask-wrap::after {
-    content: ''; position: absolute; inset: 0;
-    background-image: repeating-linear-gradient(90deg, transparent, transparent calc(10% - 1px), rgba(255,255,255,0.03) calc(10% - 1px), rgba(255,255,255,0.03) 10%);
-    pointer-events: none; z-index: 2;
-  }
-  .flask-fill {
-    position: absolute; top: 0; left: 0; height: 100%; width: 0%; border-radius: 20px;
-    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.8s ease; background: #1c1c22;
-  }
-  .flask-fill::after {
-    content: ''; position: absolute; top: 2px; left: 8px; right: 8px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 10px;
-  }
-  .flask-label {
-    position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.25);
-    letter-spacing: 1px; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: color 0.5s;
-  }
-  .flask-fill.good    { background: linear-gradient(90deg, #00994d, var(--neon-green)); }
-  .flask-fill.warn    { background: linear-gradient(90deg, #b35300, var(--neon)); }
-  .flask-fill.danger  { background: linear-gradient(90deg, #990000, #ff2222); animation: danger-pulse 1s infinite; }
-  .flask-fill.cold    { background: linear-gradient(90deg, #0055ab, #00aaff); }
-  .flask-fill.hot     { background: linear-gradient(90deg, #b32d00, #ff4400); }
-  .flask-fill.idle    { background: #15151a; }
-  .map-panel {
-    background: var(--glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+
+  .container {
+    width: 100%;
+    max-width: 1000px;
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
-    height: fit-content;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
   }
-  .map-blueprint {
-    background: #040406; border: 1px dashed var(--border); border-radius: 8px; padding: 0.8rem;
-    font-size: 0.75rem; color: var(--neon-green); min-height: 320px; display: flex; flex-direction: column; gap: 0.6rem; overflow-y: auto;
+
+  /* Сетки и адаптивность */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
-  .map-bunker-graphic { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
-  .bunker-floor-block {
-    background: rgba(0, 204, 102, 0.02); border: 1px solid rgba(0, 204, 102, 0.15); border-radius: 6px; padding: 10px; position: relative; display: flex; flex-direction: column; gap: 4px;
+
+  @media (max-width: 768px) {
+    body { padding: 10px; }
+    .main-title { font-size: 1.6rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .container { padding: 15px; }
+    .btn { width: 100%; padding: 14px !important; font-size: 1rem !important; }
+    input[type="text"], select { font-size: 16px !important; } /* Защита от зума на iOS */
+  }
+
+  .card {
+    background: var(--surface-card);
+    border: 1px solid var(--grey-dark);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  /* Формы и элементы управления */
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+
+  input[type="text"], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--grey-dark);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 6px;
+    font-family: inherit;
     transition: all 0.3s ease;
   }
-  .bunker-floor-block::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--neon-green); border-radius: 3px 0 0 3px; }
-  .bunker-floor-block.sealed { background: rgba(255, 51, 51, 0.02); border-color: rgba(255, 51, 51, 0.2); opacity: 0.5; }
-  .bunker-floor-block.sealed::before { background: #ff3333; }
-  .floor-header { display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 0.65rem; font-weight: 900; }
-  .floor-title { color: #fff; font-size: 0.75rem; font-family: 'Space Mono', monospace; font-weight: bold; }
-  .floor-status-text { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; }
-  .window {
-    background: var(--glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 1.8rem;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+
+  input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  .btn {
+    background: var(--grey-dark);
+    color: var(--text);
+    border: 1px solid var(--grey-light);
+    padding: 10px 20px;
+    font-family: inherit;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+
+  .btn-accent:hover {
+    background: #ff7722;
+  }
+
+  /* Динамические бары систем жизнеобеспечения */
+  .system-status {
     display: flex;
     flex-direction: column;
+    gap: 12px;
   }
-  .low-energy-flicker { animation: flicker 3.5s infinite; }
-  .critical-alert { animation: pulse-warn 1.2s infinite !important; }
-  h1 { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; margin-bottom: 1.2rem; text-transform: uppercase; letter-spacing: 2px; color: var(--neon); text-shadow: 0 0 10px rgba(255,102,0,0.2); text-align: center; }
-  h2 { font-family: 'Orbitron', sans-serif; color: var(--neon); text-align: center; }
-  .btn {
-    background: transparent; border: 2px solid var(--neon); color: #fff; padding: 0.8rem; width: 100%; border-radius: 8px;
-    font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.8rem; cursor: pointer; transition: all 0.2s;
-  }
-  .btn:hover:not(:disabled) { background: var(--neon); color: #000; box-shadow: 0 0 12px var(--neon); }
-  .btn:disabled { border-color: #242428 !important; color: #4e4e54 !important; cursor: not-allowed; background: #121215 !important; box-shadow: none !important; }
-  .btn-blue { border-color: #d1d1d6; }
-  .btn-blue:hover:not(:disabled) { background: #fff; color: #000; box-shadow: 0 0 12px #fff; }
-  .btn-red { border-color: #ff3333; }
-  .btn-red:hover:not(:disabled) { background: #ff3333; color: #000; box-shadow: 0 0 12px #ff3333; }
-  .input-field, .select-field {
-    width: 100%; padding: 0.8rem; background: var(--card-inner); border: 1px solid var(--border);
-    color: #fff; border-radius: 8px; font-family: inherit; text-align: center; font-size: 0.95rem; margin-bottom: 0.8rem; outline: none;
-  }
-  .input-field:focus { border-color: var(--neon); }
-  .select-field { text-align-last: center; appearance: none; cursor: pointer; }
-  .screen { display: none; }
-  .screen.active { display: block; }
-  .bunker-info { background: #070709; padding: 0.9rem; border-radius: 8px; text-align: left; font-size: 0.8rem; border-left: 4px solid var(--neon); margin-bottom: 1rem; border: 1px solid rgba(255,102,0,0.05); }
-  .dossier-grid { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
-  .char-row { display: flex; justify-content: space-between; padding: 0.55rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.01); border-radius: 6px; text-align: left; align-items: center; }
-  .char-label { color: var(--text-dark); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
-  .char-val { font-weight: bold; color: #fff; text-align: right; max-width: 65%; font-size: 0.8rem; }
-  .char-status { font-size: 0.65rem; padding: 2px 5px; border-radius: 4px; background: #032112; color: var(--neon-green); margin-right: 6px; border: 1px solid rgba(0,204,102,0.2); }
-  .action-card-box { background: linear-gradient(135deg, #16161a 0%, #0d0d0f 100%); border: 1px solid var(--border); padding: 0.9rem; border-radius: 8px; margin-bottom: 1rem; text-align: left; }
-  .game-log { background: #000; color: #ff5500; font-size: 0.7rem; padding: 0.5rem; border-radius: 6px; max-height: 80px; overflow-y: auto; text-align: left; margin-bottom: 0.8rem; border: 1px solid #1a0b00; }
-  .vote-box { background: #1c0e0e; border: 1px solid #ff3333; border-radius: 8px; padding: 0.9rem; margin-bottom: 1rem; text-align: left; }
-  .vote-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.6rem; }
-  .btn-vote-user { background: #100808; border: 1px solid #3d1111; color: #fff; padding: 0.4rem; border-radius: 5px; cursor: pointer; font-family: inherit; font-size: 0.75rem; }
-  .btn-vote-user:hover:not(:disabled) { background: #ff3333; color: #000; }
-  .conn-status { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; margin-bottom: 1rem; padding: 0.5rem 0.8rem; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); justify-content: center; }
-  .conn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #444; }
-  .conn-dot.connecting { background: #ffaa00; animation: blink-dot 1s infinite; }
-  .conn-dot.online { background: var(--neon-green); }
-  .conn-dot.error { background: #ff3333; }
-  .id-copy-box { display: flex; align-items: center; gap: 8px; background: #0a0a0c; border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; margin-bottom: 0.8rem; cursor: pointer; transition: border-color 0.2s; }
-  .id-copy-box:hover { border-color: var(--neon); }
-  .id-copy-box span { color: var(--neon); font-size: 1.1rem; font-family: 'Orbitron', sans-serif; flex: 1; text-align: center; letter-spacing: 3px; }
-  .id-copy-box small { color: var(--text-dark); font-size: 0.6rem; white-space: nowrap; }
-  .copy-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px); background: var(--neon); color: #000; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; padding: 0.5rem 1.2rem; border-radius: 20px; font-weight: bold; transition: transform 0.3s ease; z-index: 999; }
-  .copy-toast.show { transform: translateX(-50%) translateY(0); }
-  .player-pill { display: flex; align-items: center; gap: 8px; padding: 0.45rem 0.7rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.85rem; }
-  .player-pill .pill-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); }
-  .player-pill .pill-dot.host-dot { background: var(--neon); }
-  .spinner { width: 18px; height: 18px; border: 2px solid #222; border-top-color: var(--neon); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
 
-  @media(max-width: 1024px) {
-    .main-container { grid-template-columns: 1fr; gap: 15px; }
-    .status-panel { flex-direction: row; justify-content: space-between; padding: 0.8rem; gap: 0.5rem; }
-    .sys-metric { flex: 1; }
-    .map-panel { order: 3; }
-    .panel-title { display: none; }
+  .sys-item {
+    background: var(--bg);
+    padding: 10px;
+    border-radius: 6px;
+    border-left: 4px solid var(--sys-good);
+  }
+
+  .sys-item.critical {
+    border-left-color: var(--sys-bad);
+  }
+
+  .sys-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+
+  .sys-bar-bg {
+    background: var(--grey-dark);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .sys-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--sys-good);
+    box-shadow: 0 0 8px var(--sys-good-glow);
+    transition: width 0.5s ease, background-color 0.5s ease;
+  }
+
+  .critical .sys-bar-fill {
+    background: var(--sys-bad);
+    box-shadow: 0 0 8px var(--sys-bad-glow);
+  }
+
+  /* Игровые логи и списки игроков */
+  .terminal-log {
+    background: var(--bg);
+    border: 1px solid var(--grey-dark);
+    height: 150px;
+    overflow-y: auto;
+    padding: 10px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    color: var(--text-muted);
+  }
+
+  .log-entry {
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .log-entry.important {
+    color: var(--accent);
+  }
+
+  .player-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+  }
+
+  .player-list-item.active {
+    border-color: var(--border);
+  }
+
+  /* Экран окончания игры */
+  .game-over-screen {
+    text-align: center;
+    padding: 30px 10px;
+  }
+
+  .game-over-title {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--sys-bad);
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px var(--sys-bad-glow);
+  }
+
+  /* Скроллбар */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--grey-dark);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
   }
 </style>
 </head>
 <body>
 
-<!-- ── ЖИВОЙ ФОН БУНКЕРА ── -->
-<div id="bunker-bg">
-  <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <!-- Тонкий сканлайн -->
-      <pattern id="scanlines" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
-        <rect x="0" y="0" width="1" height="1" fill="rgba(255,85,0,0.015)"/>
-      </pattern>
-      <!-- Решётка -->
-      <pattern id="grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-        <path d="M60 0H0V60" fill="none" stroke="rgba(255,85,0,0.04)" stroke-width="0.5"/>
-      </pattern>
-    </defs>
+<header>
+  <div class="main-title">THE BUNKER V.2</div>
+  <div class="sub-title">Система тактического жизнеобеспечения</div>
+</header>
 
-    <!-- Базовый фон -->
-    <rect width="1400" height="900" fill="#050508"/>
-    <!-- Решётка -->
-    <rect width="1400" height="900" fill="url(#grid)"/>
-    <!-- Сканлайны -->
-    <rect width="1400" height="900" fill="url(#scanlines)"/>
-
-    <!-- ── СХЕМА БУНКЕРА (ЛЕВАЯ СТОРОНА) ── -->
-    <!-- Внешний контур бункера -->
-    <rect x="60" y="80" width="440" height="760" rx="4" fill="none" stroke="rgba(255,85,0,0.08)" stroke-width="1.5"/>
-    <!-- Этажи -->
-    <line x1="60" y1="270" x2="500" y2="270" stroke="rgba(255,85,0,0.06)" stroke-width="1"/>
-    <line x1="60" y1="460" x2="500" y2="460" stroke="rgba(255,85,0,0.06)" stroke-width="1"/>
-    <line x1="60" y1="650" x2="500" y2="650" stroke="rgba(255,85,0,0.06)" stroke-width="1"/>
-
-    <!-- Секторы бункера с пульсацией -->
-    <rect class="bg-sector" x="70" y="90" width="420" height="170" rx="2" fill="rgba(0,204,102,0.04)" stroke="rgba(0,204,102,0.07)" stroke-width="0.5"/>
-    <rect class="bg-sector" x="70" y="280" width="420" height="170" rx="2" fill="rgba(255,85,0,0.03)" stroke="rgba(255,85,0,0.06)" stroke-width="0.5"/>
-    <rect class="bg-sector" x="70" y="470" width="420" height="170" rx="2" fill="rgba(0,100,255,0.03)" stroke="rgba(0,100,255,0.07)" stroke-width="0.5"/>
-    <rect class="bg-sector" x="70" y="660" width="420" height="170" rx="2" fill="rgba(180,0,255,0.03)" stroke="rgba(180,0,255,0.06)" stroke-width="0.5"/>
-
-    <!-- Подписи секторов -->
-    <text x="85" y="112" fill="rgba(0,204,102,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">КОМАНДНЫЙ ПУНКТ</text>
-    <text x="85" y="302" fill="rgba(255,85,0,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">РЕАКТОРНАЯ</text>
-    <text x="85" y="492" fill="rgba(0,120,255,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">ЖИЛОЙ БЛОК</text>
-    <text x="85" y="682" fill="rgba(180,0,255,0.2)" font-family="'Space Mono',monospace" font-size="8" letter-spacing="2">ЛАБОРАТОРИЯ</text>
-
-    <!-- Комнаты внутри этажей -->
-    <rect x="85" y="125" width="120" height="110" rx="2" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
-    <rect x="220" y="125" width="90" height="110" rx="2" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
-    <rect x="325" y="125" width="150" height="110" rx="2" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
-
-    <rect x="85" y="315" width="180" height="110" rx="2" fill="none" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
-    <rect x="280" y="315" width="195" height="110" rx="2" fill="none" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
-
-    <rect x="85" y="505" width="140" height="110" rx="2" fill="none" stroke="rgba(0,120,255,0.1)" stroke-width="0.8"/>
-    <rect x="240" y="505" width="100" height="110" rx="2" fill="none" stroke="rgba(0,120,255,0.1)" stroke-width="0.8"/>
-    <rect x="355" y="505" width="120" height="110" rx="2" fill="none" stroke="rgba(0,120,255,0.1)" stroke-width="0.8"/>
-
-    <rect x="85" y="695" width="165" height="110" rx="2" fill="none" stroke="rgba(180,0,255,0.1)" stroke-width="0.8"/>
-    <rect x="265" y="695" width="210" height="110" rx="2" fill="none" stroke="rgba(180,0,255,0.1)" stroke-width="0.8"/>
-
-    <!-- ── ТРУБОПРОВОДЫ (анимированные) ── -->
-    <!-- Вертикальные магистрали -->
-    <line x1="52" y1="80" x2="52" y2="840" stroke="rgba(0,204,102,0.15)" stroke-width="2"/>
-    <line x1="508" y1="80" x2="508" y2="840" stroke="rgba(255,85,0,0.1)" stroke-width="1.5"/>
-
-    <!-- Анимированные потоки по трубам -->
-    <line class="pipe-anim" x1="52" y1="0" x2="52" y2="900" stroke="rgba(0,204,102,0.3)" stroke-width="1.5"/>
-    <line class="pipe-anim-rev" x1="508" y1="0" x2="508" y2="900" stroke="rgba(255,85,0,0.25)" stroke-width="1.5"/>
-
-    <!-- Горизонтальные отводы -->
-    <line x1="52" y1="175" x2="85" y2="175" stroke="rgba(0,204,102,0.15)" stroke-width="1.5"/>
-    <line x1="52" y1="365" x2="85" y2="365" stroke="rgba(255,85,0,0.15)" stroke-width="1.5"/>
-    <line x1="52" y1="555" x2="85" y2="555" stroke="rgba(0,100,255,0.15)" stroke-width="1.5"/>
-    <line x1="52" y1="745" x2="85" y2="745" stroke="rgba(180,0,255,0.15)" stroke-width="1.5"/>
-
-    <!-- Дополнительные горизонтальные трубы -->
-    <line class="pipe-anim-slow" x1="60" y1="175" x2="508" y2="175" stroke="rgba(0,204,102,0.15)" stroke-width="1"/>
-    <line class="pipe-anim-slow" x1="60" y1="555" x2="508" y2="555" stroke="rgba(0,100,255,0.12)" stroke-width="1"/>
-
-    <!-- Вентиляционные узлы -->
-    <circle cx="52" cy="175" r="5" fill="none" stroke="rgba(0,204,102,0.3)" stroke-width="1"/>
-    <circle cx="52" cy="175" r="2" fill="rgba(0,204,102,0.5)"/>
-    <circle cx="52" cy="365" r="5" fill="none" stroke="rgba(255,85,0,0.3)" stroke-width="1"/>
-    <circle cx="52" cy="365" r="2" fill="rgba(255,85,0,0.5)"/>
-    <circle cx="52" cy="555" r="5" fill="none" stroke="rgba(0,100,255,0.3)" stroke-width="1"/>
-    <circle cx="52" cy="555" r="2" fill="rgba(0,100,255,0.5)"/>
-    <circle cx="52" cy="745" r="5" fill="none" stroke="rgba(180,0,255,0.3)" stroke-width="1"/>
-    <circle cx="52" cy="745" r="2" fill="rgba(180,0,255,0.5)"/>
-
-    <!-- ── ПРАВАЯ СТОРОНА: СХЕМА СИСТЕМ ── -->
-    <!-- Трубы справа -->
-    <line class="pipe-anim" x1="950" y1="0" x2="950" y2="900" stroke="rgba(255,85,0,0.1)" stroke-width="1.5"/>
-    <line class="pipe-anim-rev" x1="1350" y1="0" x2="1350" y2="900" stroke="rgba(0,204,102,0.1)" stroke-width="1.5"/>
-    <line class="pipe-anim-slow" x1="950" y1="300" x2="1350" y2="300" stroke="rgba(255,85,0,0.08)" stroke-width="1"/>
-    <line class="pipe-anim-slow" x1="950" y1="600" x2="1350" y2="600" stroke="rgba(0,204,102,0.08)" stroke-width="1"/>
-
-    <!-- ── РАДАР В ПРАВОМ ВЕРХНЕМ УГЛУ ── -->
-    <!-- Статичные кольца радара -->
-    <circle cx="1230" cy="160" r="120" fill="none" stroke="rgba(0,204,102,0.06)" stroke-width="1"/>
-    <circle cx="1230" cy="160" r="80" fill="none" stroke="rgba(0,204,102,0.08)" stroke-width="0.8"/>
-    <circle cx="1230" cy="160" r="40" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
-    <circle cx="1230" cy="160" r="8" fill="rgba(0,204,102,0.15)"/>
-    <!-- Крестик в центре -->
-    <line x1="1230" y1="30" x2="1230" y2="290" stroke="rgba(0,204,102,0.07)" stroke-width="0.8"/>
-    <line x1="1100" y1="160" x2="1360" y2="160" stroke="rgba(0,204,102,0.07)" stroke-width="0.8"/>
-    <!-- Вращающийся луч -->
-    <g class="radar-group">
-      <line x1="1230" y1="160" x2="1230" y2="42" stroke="rgba(0,204,102,0.4)" stroke-width="1.5"/>
-    </g>
-    <!-- Точки на радаре -->
-    <circle cx="1185" cy="130" r="3" fill="rgba(0,204,102,0.6)"/>
-    <circle cx="1260" cy="100" r="2" fill="rgba(255,85,0,0.7)"/>
-    <circle cx="1200" cy="195" r="2.5" fill="rgba(0,204,102,0.5)"/>
-    <text x="1230" y="296" fill="rgba(0,204,102,0.18)" font-family="'Space Mono',monospace" font-size="7" text-anchor="middle" letter-spacing="2">ПЕРИМЕТР</text>
-
-    <!-- ── НИЖНЯЯ ЦЕНТРАЛЬНАЯ СХЕМА ── -->
-    <!-- Схема цепи -->
-    <rect x="580" y="720" width="220" height="80" rx="3" fill="none" stroke="rgba(255,85,0,0.08)" stroke-width="1"/>
-    <rect x="620" y="740" width="60" height="40" rx="2" fill="rgba(255,85,0,0.03)" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
-    <rect x="700" y="740" width="60" height="40" rx="2" fill="rgba(255,85,0,0.03)" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
-    <line class="pipe-anim-slow" x1="580" y1="760" x2="620" y2="760" stroke="rgba(255,85,0,0.2)" stroke-width="1"/>
-    <line class="pipe-anim-slow" x1="680" y1="760" x2="700" y2="760" stroke="rgba(255,85,0,0.2)" stroke-width="1"/>
-    <line class="pipe-anim-slow" x1="760" y1="760" x2="800" y2="760" stroke="rgba(255,85,0,0.2)" stroke-width="1"/>
-
-    <!-- Текст схемы -->
-    <text x="700" y="715" fill="rgba(255,85,0,0.15)" font-family="'Space Mono',monospace" font-size="7" text-anchor="middle" letter-spacing="2">СИСТЕМА ПИТАНИЯ</text>
-
-    <!-- Декоративные узлы по всему фону -->
-    <circle cx="560" cy="400" r="3" fill="rgba(255,85,0,0.2)"/>
-    <circle cx="560" cy="400" r="8" fill="none" stroke="rgba(255,85,0,0.1)" stroke-width="0.8"/>
-    <circle cx="560" cy="400" r="14" fill="none" stroke="rgba(255,85,0,0.05)" stroke-width="0.8"/>
-
-    <circle cx="840" cy="250" r="3" fill="rgba(0,204,102,0.2)"/>
-    <circle cx="840" cy="250" r="8" fill="none" stroke="rgba(0,204,102,0.1)" stroke-width="0.8"/>
-    <circle cx="840" cy="250" r="14" fill="none" stroke="rgba(0,204,102,0.05)" stroke-width="0.8"/>
-
-    <!-- Биохазард символ (тонкий) слева внизу -->
-    <text x="280" y="870" fill="rgba(0,204,102,0.06)" font-family="'Orbitron',sans-serif" font-size="40" text-anchor="middle" letter-spacing="0">☣</text>
-    <!-- Ядерный символ справа -->
-    <text x="1150" y="870" fill="rgba(255,85,0,0.05)" font-family="'Orbitron',sans-serif" font-size="40" text-anchor="middle">☢</text>
-
-    <!-- Мигающий статус индикатор -->
-    <circle id="bg-status-dot" cx="1350" cy="30" r="4" fill="rgba(0,204,102,0.6)"/>
-    <text x="1338" y="52" fill="rgba(0,204,102,0.15)" font-family="'Space Mono',monospace" font-size="7" text-anchor="middle">ONLINE</text>
-  </svg>
-</div>
-
-<!-- Алерт угроз -->
-<div id="threat-alert">
-  <span class="threat-icon" id="threat-icon">⚠️</span>
-  <span id="threat-text">УТЕЧКА КИСЛОРОДА В СЕКТОРЕ B</span>
-</div>
-
-<div class="copy-toast" id="copy-toast">ID скопирован!</div>
-
-<div class="main-container" id="terminal-layout">
-
-  <div class="status-panel" id="bunker-status-panel">
-    <div class="panel-title">Системы Жизни</div>
-    <div class="sys-metric">
-      <div class="metric-header">
-        <span class="metric-label">☣️ Кислород</span>
-        <span class="metric-val" id="val-oxygen" style="color:var(--text-dark);">—</span>
+<div class="container" id="main-window">
+  <div id="auth-screen" class="grid-2">
+    <div class="card">
+      <div class="card-title">Создать сессию (Хост)</div>
+      <div class="form-group">
+        <label>Имя Смотрителя</label>
+        <input type="text" id="host-name-input" placeholder="Командир...">
       </div>
-      <div class="flask-wrap">
-        <div class="flask-fill idle" id="bar-oxygen" style="width:0%;"></div>
-        <div class="flask-label" id="lbl-oxygen">БУНКЕР НЕ АКТИВЕН</div>
-      </div>
+      <button class="btn btn-accent" onclick="initSession('host')">Инициализировать Бункер</button>
+      <div style="margin-top: 15px; font-size: 0.75rem; color: var(--text-muted);" id="host-peer-id"></div>
     </div>
-    <div class="sys-metric">
-      <div class="metric-header">
-        <span class="metric-label">⚡ Энергия</span>
-        <span class="metric-val" id="val-energy" style="color:var(--text-dark);">—</span>
+
+    <div class="card">
+      <div class="card-title">Подключиться к терминалу</div>
+      <div class="form-group">
+        <label>Имя выжившего</label>
+        <input type="text" id="client-name-input" placeholder="Выживший...">
       </div>
-      <div class="flask-wrap">
-        <div class="flask-fill idle" id="bar-energy" style="width:0%;"></div>
-        <div class="flask-label" id="lbl-energy">БУНКЕР НЕ АКТИВЕН</div>
+      <div class="form-group">
+        <label>Идентификатор Бункера (Peer ID)</label>
+        <input type="text" id="client-target-id" placeholder="Вставьте ID хоста...">
       </div>
-    </div>
-    <div class="sys-metric">
-      <div class="metric-header">
-        <span class="metric-label">🌡️ Климат</span>
-        <span class="metric-val" id="val-temp" style="color:var(--text-dark);">—</span>
-      </div>
-      <div class="flask-wrap">
-        <div class="flask-fill idle" id="bar-temp" style="width:0%;"></div>
-        <div class="flask-label" id="lbl-temp">БУНКЕР НЕ АКТИВЕН</div>
-      </div>
-    </div>
-    <div class="sys-metric">
-      <div class="metric-header">
-        <span class="metric-label">☢️ Радиация</span>
-        <span class="metric-val" id="val-rad" style="color:var(--text-dark);">—</span>
-      </div>
-      <div class="flask-wrap">
-        <div class="flask-fill idle" id="bar-rad" style="width:0%;"></div>
-        <div class="flask-label" id="lbl-rad">БУНКЕР НЕ АКТИВЕН</div>
-      </div>
+      <button class="btn" onclick="initSession('client')">Установить соединение</button>
     </div>
   </div>
 
-  <div class="window" id="main-window">
-
-    <div id="scr-connect" class="screen active">
-      <h1>CyberBunker</h1>
-      <div class="conn-status" id="conn-status-bar">
-        <div class="conn-dot connecting" id="conn-dot"></div>
-        <span id="conn-status-text">Инициализация каналов связи...</span>
-      </div>
-      <input type="text" id="player-name" class="input-field" placeholder="Позывной выжившего..." maxlength="14">
-      <div style="color:var(--text-dark);font-size:0.7rem;margin-bottom:0.3rem;text-align:left;font-weight:bold;">ОБЪЕМ ЖИЛОГО БЛОКА:</div>
-      <select id="max-players-select" class="select-field">
-        <option value="2" selected>2 Игрока</option>
-        <option value="3">3 Игрока</option>
-        <option value="4">4 Игрока</option>
-        <option value="5">5 Игроков</option>
-        <option value="6">6 Игроков</option>
-        <option value="7">7 Игроков</option>
-        <option value="8">8 Игроков</option>
-      </select>
-      <button class="btn" id="btn-create" onclick="createRoom()" disabled>⚡ Создать Узел Связи (Хост)</button>
-      <div style="margin:0.3rem 0;color:#222;text-align:center;font-size:0.8rem;">— ИЛИ —</div>
-      <input type="text" id="room-id" class="input-field" placeholder="Вставить ID хоста сюда...">
-      <button class="btn btn-blue" id="btn-join" onclick="joinRoom()" disabled>📡 Подключить терминал</button>
-    </div>
-
-    <div id="scr-lobby" class="screen">
-      <h1>Шлюзовая Камера</h1>
-      <div id="host-id-section" style="display:none;">
-        <div style="color:var(--text-dark);font-size:0.7rem;margin-bottom:0.4rem;text-align:center;">Отправь этот ID девушке / игрокам:</div>
-        <div class="id-copy-box" onclick="copyRoomId()" title="Нажми чтобы скопировать">
-          <span id="lobby-code">-</span>
-          <small>📋 Копировать</small>
+  <div id="game-screen" style="display: none;" class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">Статус систем жизнеобеспечения</div>
+        <div class="system-status">
+          <div class="sys-item" id="sys-o2-container">
+            <div class="sys-header">
+              <span>Регенерация O₂</span>
+              <span id="status-o2-val">100%</span>
+            </div>
+            <div class="sys-bar-bg">
+              <div class="sys-bar-fill" id="status-o2-bar" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div class="sys-item" id="sys-power-container">
+            <div class="sys-header">
+              <span>Ядро питания</span>
+              <span id="status-power-val">100%</span>
+            </div>
+            <div class="sys-bar-bg">
+              <div class="sys-bar-fill" id="status-power-bar" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div class="sys-item" id="sys-water-container">
+            <div class="sys-header">
+              <span>Фильтрация H₂O</span>
+              <span id="status-water-val">100%</span>
+            </div>
+            <div class="sys-bar-bg">
+              <div class="sys-bar-fill" id="status-water-bar" style="width: 100%;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="host-controls" style="display: none; margin-top: 15px; border-top: 1px solid var(--grey-dark); padding-top: 15px;">
+          <label>Управление ресурсами (Хост)</label>
+          <div style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap;">
+            <button class="btn" onclick="modifyResource('o2', -15)">- O₂</button>
+            <button class="btn" onclick="modifyResource('o2', 15)">+ O₂</button>
+            <button class="btn" onclick="modifyResource('power', -15)">- Энерг</button>
+            <button class="btn" onclick="modifyResource('power', 15)">+ Энерг</button>
+          </div>
         </div>
       </div>
-      <div class="conn-status" id="lobby-conn-status">
-        <div class="conn-dot online"></div>
-        <span id="lobby-conn-text">Канал открыт, ожидание игроков...</span>
-      </div>
-      <div style="text-align:left;margin-bottom:1.2rem;">
-        <div style="color:var(--text-dark);font-size:0.7rem;margin-bottom:0.5rem;font-weight:bold;">ПОДКЛЮЧЁННЫЕ (<span id="lobby-count">0</span>/<span id="lobby-max">0</span>):</div>
-        <div id="player-list" style="display:flex;flex-direction:column;gap:0.3rem;"></div>
-      </div>
-      <button class="btn" id="btn-start-game" onclick="generateBunkerSession()" style="display:none;" disabled>Проверка систем лобби...</button>
-      <div id="client-wait-msg" style="color:var(--text-dark);font-size:0.75rem;display:none;text-align:center;">
-        <span class="spinner"></span> Ожидайте команды хоста...
+
+      <div class="card">
+        <div class="card-title">Ваш профиль выжившего</div>
+        <div id="character-card-data" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted);">
+          Генерация данных...
+        </div>
       </div>
     </div>
 
-    <div id="scr-game" class="screen">
-      <h2 id="round-title" style="color:var(--neon-green-glow);font-size:0.9rem;margin-bottom:0.8rem;text-transform:uppercase;letter-spacing:1px;">ИГРОВОЙ СЕАНС АКТИВЕН</h2>
-      <div class="game-log" id="game-log">СБ: Инициализация протоколов завершена.</div>
-
-      <div class="bunker-info">
-        <div style="font-weight:bold;color:var(--neon);margin-bottom:0.1rem;font-size:0.75rem;">ТИП УГРОЗЫ:</div>
-        <div id="bunker-disaster" style="margin-bottom:0.3rem;font-weight:bold;color:#fff;font-size:0.9rem;">...</div>
-        <div id="bunker-desc" style="color:#888;line-height:1.3;font-size:0.75rem;">...</div>
+    <div>
+      <div class="card">
+        <div class="card-title">Выжившие в сети</div>
+        <div id="players-list">
+          </div>
       </div>
 
-      <div style="text-align:left;font-weight:bold;font-size:0.75rem;margin-bottom:0.3rem;color:var(--neon);letter-spacing:1px;">ВШИТЫЕ ДАННЫЕ ВАШЕГО ДОСЬЕ (ОТКРЫТЫ ВСЕ):</div>
-      <div class="dossier-grid" id="dossier-box"></div>
-
-      <!-- ── ДЕТЕКТОР ЛЖИ ── -->
-      <div id="lie-detector-panel">
-        <div class="lie-title">🔬 НЕЙРО-ДЕТЕКТОР ЛЖИ v2.3</div>
-        <div style="font-size:0.68rem;color:#7744aa;margin-bottom:0.5rem;text-align:center;line-height:1.3;">Сканирует биометрические паттерны подозреваемого. Результат: неопровержим.</div>
-        <select class="lie-target-select" id="lie-target-select"></select>
-        <button class="btn-lie" onclick="runLieDetector()">⚡ Запустить сканирование</button>
-        <div id="lie-result"></div>
+      <div class="card">
+        <div class="card-title">Журнал терминала</div>
+        <div class="terminal-log" id="terminal-log">
+          <div class="log-entry">Система готова к запуску...</div>
+        </div>
       </div>
-
-      <!-- ── СИСТЕМА САБОТАЖА ── -->
-      <div id="saboteur-panel">
-        <div class="saboteur-title">🔴 ПРОТОКОЛ САБОТАЖА</div>
-        <div class="saboteur-desc">Тайно выведи систему из строя. Никто не узнает кто это был.</div>
-        <select class="lie-target-select" id="sabotage-target-select" style="border-color:#550022;background:#100008;"></select>
-        <button class="btn-sab" id="btn-sabotage" onclick="executeSabotage()">Запустить саботаж</button>
-        <div id="sabotage-result" style="font-size:0.7rem;color:#ff4466;margin-top:0.4rem;min-height:0.8rem;"></div>
-      </div>
-
-      <div class="vote-box" id="vote-area" style="display:none;">
-        <div style="font-weight:bold;color:#ff3333;font-size:0.75rem;text-transform:uppercase;text-align:center;letter-spacing:1px;">🗳️ ГОЛОСОВАНИЕ ЗА ИЗГНАНИЕ 🗳️</div>
-        <div style="color:#aaa;font-size:0.7rem;text-align:center;margin-top:0.1rem;" id="vote-instruction">Выберите объект для депортации на поверхность:</div>
-        <div class="vote-btn-grid" id="vote-grid"></div>
-      </div>
-
-      <div class="action-card-box" id="action-card-area">
-        <div style="font-weight:bold;color:var(--neon);font-size:0.7rem;margin-bottom:0.1rem;text-transform:uppercase;">Спецкарта:</div>
-        <div id="action-card-name" style="font-weight:bold;margin-bottom:0.1rem;color:#fff;font-size:0.85rem;">...</div>
-        <div id="action-card-desc" style="color:#aaa;font-size:0.7rem;margin-bottom:0.6rem;line-height:1.25;">...</div>
-        <button class="btn" id="btn-use-card" onclick="useActionCard()" style="padding:0.35rem;font-size:0.7rem;margin:0;">Запустить исполнение карты</button>
-      </div>
-
-      <button class="btn btn-red" id="btn-action" onclick="startVotingSession()" style="display:none;">🚨 ЗАПУСТИТЬ ГОЛОСОВАНИЕ</button>
-    </div>
-
-  </div>
-
-  <div class="map-panel" id="bunker-map-panel">
-    <div class="panel-title">План-Схема Объекта</div>
-    <div style="font-size:0.75rem;color:var(--text-dark);text-align:center;" id="map-bunker-name">Ожидание генерации...</div>
-    <div class="map-blueprint" id="map-blueprint-box">
-      <div style="color:#333;text-align:center;margin-top:5rem;">Схема заблокирована до старта.</div>
     </div>
   </div>
-
 </div>
 
 <script>
-  // ─── ДАННЫЕ ИГРЫ ───────────────────────────────────────────────────────────
-  const DISASTERS = [
-    { name: "Ядерная зима", desc: "Температура на поверхности -70°C. Бункер оснащен реактором, но гидропонный сектор вместит строго ограниченное количество ртов." },
-    { name: "Кибер-Восстание Машин", desc: "Дроны зачищают biological виды. Вентиляционные шахты бункера уязвимы для мелких дронов-разведчиков." },
-    { name: "Грибная Спора Кордицепса", desc: "Заражение фауны. Воздух ядовит. Фильтры бункера требуют постоянной ручной механической чистки." },
-    { name: "Бункер-Инкубатор С-40", desc: "Особая модификация убежища. Встроенные криокамеры искусственного оплодотворения позволяют восстанавливать популяцию ЛЮБЫМ парам выживших." },
-    { name: "Техногенный Потоп", desc: "Грунтовые кипящие воды затапливают нижние ярусы. Требуется постоянный контроль давления насосов." }
-  ];
-  const PROFESSIONS = ["Инженер-электрик","Врач-реаниматолог","Биолог-генетик","Фермер-гидропоник","Слесарь-механик","Физик-ядерщик","Программист систем ИИ","Химик-технолог","Бывший военный тактик","Специалист по вентиляции","Психотерапевт ЧС","Охранник периметра","Профессиональный повар","Инженер очистных сооружений","Шахтер-взрывник","Архивариус"];
-  const HEALTH = ["Абсолютно здоров","Тяжелая хроническая астма","Порок сердца 2 степени","Грибковая инфекция легких","Аллергия на замкнутые пространства","Легкое радиационное облучение","Сахарный диабет (нужен инсулин)","Идеальный иммунитет","Частичная потеря слуха","Хроническая мигрень","Повреждение связок ноги"];
-  const HOBBIES = ["Ботаника и селекция комнатных мхов","Стрельба из лука","Ремонт микросхем на коленке","Самогоноварение и очистка жидкостей","Изучение психоанализа","Спортивный кроссфит","Игра на акустической гитаре","Карточный блеф и фокусы","Любительская радиотехника","Проектирование систем фильтрации"];
-  const BAGGAGE = ["Армейская аптечка с антибиотиками","Набор точных отверток и паяльник","Канистра очищенного бензина 15л","Запас консервированного пайка на месяц","Мощная ультрафиолетовая лампа","Справочник по ремонту систем жизнеобеспечения","Защитный костюм ОЗК","Охотничье ружье (2 патрона)","Портативный дозиметр-анализатор"];
-  const PHOBIAS = ["Никтофобия (Паника в темноте)","Клаустрофобия (Боязнь замкнутого пространства)","Мизофобия (Панический страх микробов)","Киберфобия (Страх перед ИИ и терминалами)","Гемофобия (Страх вида крови)","Охлофобия (Панический страх толпы)"];
-  const HABITS = ["Тяжелая никотиновая зависимость","Привычка громко разговаривать сам с собой","Маниакальная страсть к чистоте","Склонность к мелкому воровству вещей","Алкоголизм в начальной стадии","Постоянно грызет ногти и пластик","Абсолютно нет вредных привычек","Привычка экономить воду до абсурда"];
-  const GENDERS = ["Мужчина, цисгендер","Женщина, цисгендер","Мужчина, бесплоден","Женщина, бесплодна","Андрогин","Интерсекс"];
-  const ACTION_CARDS = [
-    { id:"counter", name:"⛔ Контр-протокол", desc:"Используется мгновенно, когда другой игрок активирует карту действия. Полностью отменяет её эффект." },
-    { id:"hack", name:"📡 Взлом архивов СБ", desc:"Позволяет вам мгновенно увидеть и раскрыть ВСЕ характеристики досье любого выбранного игрока." },
-    { id:"swap_all", name:"🌀 Квантовая рокировка", desc:"Вы меняетесь картой персонажа (досье) с любым выбранным игроком по вашему усмотрению." },
-    { id:"heal_card", name:"💉 Медицинская санация", desc:"Стирает ваше поле здоровья. Новое значение: 'Абсолютно здоров'." },
-    { id:"immunity_card", name:"🛡️ Протокол неприкосновенности", desc:"Дает вам абсолютный иммунитет от изгнания в текущем раунде голосования." }
-  ];
-  const BUNKER_TYPES = ["Военный форпост 'Эгида'","Научный комплекс 'Био-Ген'","Убежище корпорации 'Неон-Тек'","Глубоководный купол 'Атлант'","Шахтерский сектор 'Урал-3'"];
-  const BUNKER_ROOMS = ["Сектор СБ","Медицинский блок","Гидропоника","Жилые капсулы","Реакторная","Серверная ИИ","Оружейный склад","Фильтрационная станция","Кухня-столовая","Лаборатория ДНК"];
-
-  // ── УГРОЗЫ (случайные события) ──
-  const RANDOM_THREATS = [
-    { icon:"☣️", text:"КРИТИЧЕСКАЯ УТЕЧКА КИСЛОРОДА В СЕКТОРЕ B-3" },
-    { icon:"⚡", text:"ПЕРЕГРЕВ РЕАКТОРА — ОТКАЗ СИСТЕМЫ ОХЛАЖДЕНИЯ" },
-    { icon:"☢️", text:"РАДИАЦИОННЫЙ ВСПЛЕСК В НИЖНЕМ ЯРУСЕ" },
-    { icon:"🔴", text:"ОБНАРУЖЕН НЕСАНКЦИОНИРОВАННЫЙ ДОСТУП В СЕРВЕРНУЮ" },
-    { icon:"⚠️", text:"ДАВЛЕНИЕ В ВЕНТИЛЯЦИОННОЙ МАГИСТРАЛИ КРИТИЧЕСКОЕ" },
-    { icon:"🌡️", text:"СБОЙ КЛИМАТ-КОНТРОЛЯ — ТЕМПЕРАТУРА РАСТЁТ" },
-    { icon:"💀", text:"ДВИЖЕНИЕ ЗАФИКСИРОВАНО НА ВНЕШНЕМ ПЕРИМЕТРЕ" },
-    { icon:"🔊", text:"ТРЕВОГА: ОТКАЗ ФИЛЬТРОВ ОЧИСТКИ ВОДЫ" },
-    { icon:"⚙️", text:"НЕИСПРАВНОСТЬ ГЕНЕРАТОРА — ПЕРЕХОД НА РЕЗЕРВ" }
-  ];
-
-  // ── РЕЗУЛЬТАТЫ ДЕТЕКТОРА ЛЖИ ──
-  const LIE_RESULTS_GUILTY = [
-    "🔴 ЛОЖЬ ОБНАРУЖЕНА: Паттерн сердечного ритма нестабилен. Данный субъект скрывает критическую информацию.",
-    "🔴 АНОМАЛИЯ ЗАФИКСИРОВАНА: Нейронная активность аномальна. Субъект не говорит правды о своём прошлом.",
-    "🔴 ВЫБРОС КОРТИЗОЛА +340%: Физиологические маркеры стресса указывают на преднамеренный обман.",
-    "🔴 СБОЙ ПАТТЕРНА ДЫХАНИЯ: Биометрия не совпадает. Высокая вероятность сокрытия фактов: 94.7%",
-  ];
-  const LIE_RESULTS_CLEAR = [
-    "🟢 ЧИСТ: Биометрика в пределах нормы. Угроза обмана не обнаружена.",
-    "🟢 ВЕРИФИКАЦИЯ ПРОЙДЕНА: Субъект говорит правду. Коэффициент доверия: 91.2%",
-    "🟢 НОРМАЛЬНЫЕ ПОКАЗАТЕЛИ: Стресс-маркеры в допустимых пределах. Ложь не выявлена.",
-  ];
-
-  // ── САБОТАЖ ──
-  const SABOTAGE_EVENTS = [
-    "💧 Система водоснабжения: подача сокращена на 40%",
-    "💡 Освещение сектора C: аварийный режим",
-    "📡 Внешняя антенна: сигнал нарушен",
-    "🌡️ Климат-контроль: настройки сброшены",
-    "🔒 Дверь секции 3: заблокирована",
-    "⚙️ Насос давления: заглушен",
-  ];
-
-  // ─── СОСТОЯНИЕ ─────────────────────────────────────────────────────────────
-  let peer, conn, myName = "", myRole = "guest";
-  let maxPlayers = 2;
-  let clients = [];
-  let allPlayersNames = [];
-  let myDossier = {}, myActionCard = {};
-  let disasterObj = {};
-  let isCardUsed = false;
-  let serverDossiers = {};
+  let peer = null;
+  let conn = null; 
+  let myRole = ''; 
+  let myName = '';
+  let connections = []; 
   let activePlayers = [];
-  let generatedMapData = {};
-  let votesReceived = {};
-  let hasVoted = false;
-  let immunePlayers = [];
-  let myPeerId = "";
-  let gameActive = false;
-  let sabotageUsed = false;
-  let lieDetectorUsed = false;
-  let threatTimer = null;
 
-  const peerConfig = { config: { iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "turn:openrelay.metered.ca:80", username: "openrelay", credential: "openrelay" },
-    { urls: "turn:openrelay.metered.ca:443", username: "openrelay", credential: "openrelay" }
-  ], iceCandidatePoolSize: 12 }, debug: 0 };
+  // Состояние ресурсов
+  let resources = {
+    o2: 100,
+    power: 100,
+    water: 100
+  };
 
-  function initPeer() {
-    setConnStatus("connecting", "Инициализация каналов связи...");
-    const shortId = "CB" + Math.floor(100000 + Math.random() * 900000).toString();
-    peer = new Peer(shortId, peerConfig);
-    peer.on('open', id => {
-      myPeerId = id;
-      setConnStatus("online", "Каналы связи активны. Выберите режим:");
-      document.getElementById('btn-create').disabled = false;
-      document.getElementById('btn-join').disabled = false;
-      document.getElementById('lobby-code').textContent = id;
-      if(localStorage.getItem('bunker_nick')) {
-        document.getElementById('player-name').value = localStorage.getItem('bunker_nick');
-      }
-      resetMetrics();
-    });
-    peer.on('error', err => {
-      if(err.type === 'unavailable-id') { setTimeout(() => initPeer(), 500); return; }
-      if(err.type === 'peer-unavailable') {
-        setConnStatus("error", "Хост не найден. Проверьте ID узла.");
-        document.getElementById('btn-join').disabled = false;
-        document.getElementById('btn-join').textContent = "📡 Подключить терминал";
-        return;
-      }
-      setConnStatus("error", `Сбой сети: ${err.type}`);
-    });
-    peer.on('disconnected', () => {
-      setConnStatus("connecting", "Соединение потеряно. Переподключение...");
-      if(peer && !peer.destroyed) peer.reconnect();
-    });
+  // Базовые списки характеристик для игры в Бункер
+  const professions = ["Врач", "Инженер", "Агроном", "Ученый", "Военный", "Повар", "Строитель", "Программист"];
+  const HealthStates = ["Идеальное здоровье", "Легкое недомогание", "Хроническая аллергия", "Снижен иммунитет", "Травма ноги"];
+  const LuggageItems = ["Аптечка", "Набор инструментов", "Запас семян", "Охотничий нож", "Книга по выживанию", "Фонарик"];
+
+  let myCharacter = {
+    prof: '',
+    health: '',
+    luggage: ''
+  };
+
+  function logToTerminal(text, isImportant = false) {
+    const logBox = document.getElementById('terminal-log');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${isImportant ? 'important' : ''}`;
+    entry.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
   }
 
-  function setConnStatus(state, text) {
-    const dot = document.getElementById('conn-dot');
-    const txt = document.getElementById('conn-status-text');
-    if(dot) dot.className = 'conn-dot ' + state;
-    if(txt) txt.textContent = text;
-  }
-  initPeer();
-
-  function setScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+  function generateCharacter() {
+    myCharacter.prof = professions[Math.floor(Math.random() * professions.length)];
+    myCharacter.health = HealthStates[Math.floor(Math.random() * HealthStates.length)];
+    myCharacter.luggage = LuggageItems[Math.floor(Math.random() * LuggageItems.length)];
+    
+    renderCharacter();
   }
 
-  function logMessage(text) {
-    const logBox = document.getElementById('game-log');
-    if(logBox) {
-      const d = document.createElement('div');
-      d.textContent = '> ' + text;
-      logBox.appendChild(d);
-      logBox.scrollTop = logBox.scrollHeight;
-    }
+  function renderCharacter() {
+    const box = document.getElementById('character-card-data');
+    box.innerHTML = `
+      <div><b>Профессия:</b> <span style="color:var(--text);">${myCharacter.prof}</span></div>
+      <div><b>Здоровье:</b> <span style="color:var(--text);">${myCharacter.health}</span></div>
+      <div><b>Багаж:</b> <span style="color:var(--text);">${myCharacter.luggage}</span></div>
+    `;
   }
 
-  function copyRoomId() {
-    const code = document.getElementById('lobby-code').textContent;
-    navigator.clipboard.writeText(code).then(() => {
-      const toast = document.getElementById('copy-toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    });
-  }
-
-  function resetMetrics() {
-    updateMetricFill('bar-oxygen', 'lbl-oxygen', 0, 'idle', 'ОТКЛЮЧЕНО');
-    updateMetricFill('bar-energy', 'lbl-energy', 0, 'idle', 'ОТКЛЮЧЕНО');
-    updateMetricFill('bar-temp', 'lbl-temp', 0, 'idle', 'ОТКЛЮЧЕНО');
-    updateMetricFill('bar-rad', 'lbl-rad', 0, 'idle', 'ОТКЛЮЧЕНО');
-    document.getElementById('val-oxygen').textContent = '—';
-    document.getElementById('val-energy').textContent = '—';
-    document.getElementById('val-temp').textContent = '—';
-    document.getElementById('val-rad').textContent = '—';
-  }
-
-  function updateMetricFill(barId, lblId, val, mode, labelText) {
-    const bar = document.getElementById(barId);
-    const lbl = document.getElementById(lblId);
-    if(bar) {
-      bar.style.width = val + '%';
-      bar.className = `flask-fill ${mode}`;
-    }
-    if(lbl) {
-      lbl.textContent = labelText;
-      if(mode==='good' || mode==='cold' || mode==='hot') lbl.style.color = 'rgba(255,255,255,0.8)';
-      else if(mode==='warn' || mode==='danger') lbl.style.color = '#fff';
-      else lbl.style.color = 'rgba(255,255,255,0.25)';
-    }
-  }
-
-  // ─── СЛУЧАЙНЫЕ УГРОЗЫ (АТМОСФЕРА) ────────────────────────────────────────
-  function startThreatSystem() {
-    if(threatTimer) clearInterval(threatTimer);
-    // Первая угроза через 35 секунд, потом каждые 40-80 сек
-    function scheduleThreat() {
-      const delay = 35000 + Math.random() * 45000;
-      threatTimer = setTimeout(() => {
-        showRandomThreat();
-        scheduleThreat();
-      }, delay);
-    }
-    scheduleThreat();
-  }
-
-  function showRandomThreat() {
-    const t = RANDOM_THREATS[Math.floor(Math.random() * RANDOM_THREATS.length)];
-    const alert = document.getElementById('threat-alert');
-    document.getElementById('threat-icon').textContent = t.icon;
-    document.getElementById('threat-text').textContent = t.text;
-    alert.classList.remove('hiding');
-    alert.classList.add('show');
-
-    // Логируем угрозу
-    logMessage(`⚠️ СИСТЕМНАЯ ТРЕВОГА: ${t.text}`);
-
-    // Прячем через 6 сек
-    setTimeout(() => {
-      alert.classList.add('hiding');
-      setTimeout(() => {
-        alert.classList.remove('show');
-        alert.classList.remove('hiding');
-      }, 300);
-    }, 6000);
-  }
-
-  // ─── ДЕТЕКТОР ЛЖИ ────────────────────────────────────────────────────────
-  function initLieDetector() {
-    const panel = document.getElementById('lie-detector-panel');
-    const sel = document.getElementById('lie-target-select');
-    panel.classList.add('active');
-    sel.innerHTML = "";
-    activePlayers.filter(p => p !== myName).forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p; opt.textContent = p;
-      sel.appendChild(opt);
-    });
-    if(sel.options.length === 0) {
-      panel.classList.remove('active');
-    }
-  }
-
-  function runLieDetector() {
-    if(lieDetectorUsed) return;
-    const target = document.getElementById('lie-target-select').value;
-    if(!target) return;
-
-    const resultEl = document.getElementById('lie-result');
-    resultEl.textContent = '🔄 Сканирование биометрических данных...';
-    resultEl.style.color = '#888';
-
-    setTimeout(() => {
-      lieDetectorUsed = true;
-      const isGuilty = Math.random() > 0.45; // чаще виновен — больше драмы
-      const pool = isGuilty ? LIE_RESULTS_GUILTY : LIE_RESULTS_CLEAR;
-      const result = pool[Math.floor(Math.random() * pool.length)];
-      resultEl.textContent = `[${target}] — ${result}`;
-      resultEl.style.color = isGuilty ? '#ff4444' : '#00cc66';
-      logMessage(`Детектор ЛЖИ: субъект "${target}" — ${isGuilty ? 'ЛОЖЬ ОБНАРУЖЕНА' : 'ЧИСТ'}`);
-      document.querySelector('.btn-lie').disabled = true;
-      document.querySelector('.btn-lie').textContent = 'Использован';
-    }, 2200);
-  }
-
-  // ─── САБОТАЖ ─────────────────────────────────────────────────────────────
-  function initSabotagePanel() {
-    // Только хост получает саботаж (как секретное оружие ведущего)
-    if(myRole !== 'host') return;
-    const panel = document.getElementById('saboteur-panel');
-    const sel = document.getElementById('sabotage-target-select');
-    panel.classList.add('active');
-    // Заполняем список систем бункера
-    const systems = ["Система кислорода", "Энергетическая сеть", "Климат-контроль", "Радиационный щит"];
-    sel.innerHTML = "";
-    systems.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s; opt.textContent = s;
-      sel.appendChild(opt);
-    });
-  }
-
-  function executeSabotage() {
-    if(sabotageUsed) return;
-    const target = document.getElementById('sabotage-target-select').value;
-    const event = SABOTAGE_EVENTS[Math.floor(Math.random() * SABOTAGE_EVENTS.length)];
-    const resultEl = document.getElementById('sabotage-result');
-
-    sabotageUsed = true;
-    document.getElementById('btn-sabotage').disabled = true;
-    resultEl.textContent = `✅ Выполнено: ${event}`;
-
-    // Показываем угрозу на экране
-    const icons = ["🔴","⚠️","💀","⚙️"];
-    const icon = icons[Math.floor(Math.random() * icons.length)];
-    const alert = document.getElementById('threat-alert');
-    document.getElementById('threat-icon').textContent = icon;
-    document.getElementById('threat-text').textContent = `ХОСТ АКТИВИРОВАЛ: ${target.toUpperCase()} — СБОЙ СИСТЕМЫ`;
-    alert.classList.remove('hiding');
-    alert.classList.add('show');
-    setTimeout(() => {
-      alert.classList.add('hiding');
-      setTimeout(() => { alert.classList.remove('show'); alert.classList.remove('hiding'); }, 300);
-    }, 6000);
-
-    logMessage(`🔴 ХОСТ: Саботаж системы "${target}" активирован!`);
-    broadcast({ type: 'log-relay', msg: `🔴 ВНИМАНИЕ: Зафиксирован сбой системы "${target}"!` });
-  }
-
-  // ─── СЕТЕВАЯ ЛОГИКА ────────────────────────────────────────────────────────
-  function createRoom() {
-    const nameInput = document.getElementById('player-name').value.trim();
-    if(!nameInput) { alert("Введите позывной!"); return; }
-    myName = nameInput; localStorage.setItem('bunker_nick', myName);
-    myRole = "host";
-    maxPlayers = parseInt(document.getElementById('max-players-select').value);
-    allPlayersNames = [myName];
-    activePlayers = [myName];
-    document.getElementById('host-id-section').style.display = 'block';
-    document.getElementById('lobby-max').textContent = maxPlayers;
-    document.getElementById('lobby-count').textContent = "1";
-    document.getElementById('btn-start-game').style.display = 'block';
-    renderLobbyPlayers();
-    setScreen('scr-lobby');
-    peer.on('connection', c => {
-      if(clients.length >= maxPlayers - 1) {
-        c.on('open', () => c.send({ type: 'lobby-full' }));
-        setTimeout(() => c.close(), 1000);
-        return;
-      }
-      setupHostConnection(c);
-    });
-    checkLobbyReadiness();
-  }
-
-  function setupHostConnection(c) {
-    c.on('open', () => {
-      clients.push(c);
-      logMessage(`Система: Новое подключение терминала.`);
-    });
-    c.on('data', data => {
-      if(data.type === 'join-request') {
-        c.playerName = data.name;
-        if(allPlayersNames.includes(data.name)) {
-          c.send({ type: 'join-error', reason: 'Позывной уже занят в сети!' });
-          return;
+  function updateSystemBars() {
+    // Обновление шкал и динамическая смена цвета в зависимости от уровня ресурса (< 40% - критический)
+    const resourcesList = ['o2', 'power', 'water'];
+    resourcesList.forEach(res => {
+      const val = resources[res];
+      const bar = document.getElementById(`status-${res}-bar`);
+      const text = document.getElementById(`status-${res}-val`);
+      const container = document.getElementById(`sys-${res}-container`);
+      
+      if(bar && text && container) {
+        bar.style.width = `${val}%`;
+        text.innerText = `${val}%`;
+        
+        if(val <= 40) {
+          container.classList.add('critical');
+        } else {
+          container.classList.remove('critical');
         }
-        allPlayersNames.push(data.name);
-        activePlayers.push(data.name);
-        document.getElementById('lobby-count').textContent = allPlayersNames.length;
-        renderLobbyPlayers();
-        checkLobbyReadiness();
-        broadcast({ type: 'lobby-update', names: allPlayersNames, max: maxPlayers });
-      }
-      if(data.type === 'use-card-click') handleRemoteCardUse(data.sender, data.cardId);
-      if(data.type === 'submit-vote') {
-        votesReceived[data.voter] = data.target;
-        logMessage(`Голос получен от: ${data.voter}`);
-        checkVotesProgress();
-      }
-    });
-    c.on('close', () => {
-      clients = clients.filter(x => x !== c);
-      if(c.playerName) {
-        allPlayersNames = allPlayersNames.filter(n => n !== c.playerName);
-        activePlayers = activePlayers.filter(n => n !== c.playerName);
-        document.getElementById('lobby-count').textContent = allPlayersNames.length;
-        renderLobbyPlayers();
-        checkLobbyReadiness();
-        broadcast({ type: 'lobby-update', names: allPlayersNames, max: maxPlayers });
-        if(gameActive) checkGameOverStatus();
       }
     });
   }
 
-  function joinRoom() {
-    const nameInput = document.getElementById('player-name').value.trim();
-    const rId = document.getElementById('room-id').value.trim();
-    if(!nameInput) { alert("Введите позывной!"); return; }
-    if(!rId) { alert("Введите ID хоста!"); return; }
-    myName = nameInput; localStorage.setItem('bunker_nick', myName);
-    myRole = "guest";
-    document.getElementById('btn-join').disabled = true;
-    document.getElementById('btn-join').textContent = "⚡ Синхронизация...";
-    conn = peer.connect(rId, { reliable: true });
-    setupClientConnection(conn);
-  }
-
-  function setupClientConnection(c) {
-    c.on('open', () => { c.send({ type: 'join-request', name: myName }); });
-    c.on('data', data => {
-      if(data.type === 'join-error') { alert(data.reason); c.close(); window.location.reload(); }
-      if(data.type === 'lobby-full') { alert("Жилой блок переполнен! Подключение невозможно."); c.close(); }
-      if(data.type === 'lobby-update') {
-        allPlayersNames = data.names; maxPlayers = data.max;
-        document.getElementById('lobby-count').textContent = allPlayersNames.length;
-        document.getElementById('lobby-max').textContent = maxPlayers;
-        document.getElementById('client-wait-msg').style.display = 'block';
-        setScreen('scr-lobby'); renderLobbyPlayers();
-      }
-      if(data.type === 'game-start') {
-        gameActive = true;
-        disasterObj = data.disaster;
-        myDossier = data.dossiers[myName];
-        myActionCard = data.actionCards[myName];
-        generatedMapData = data.mapData;
-        activePlayers = data.activePlayers;
-        applyGameStartPayload();
-      }
-      if(data.type === 'sync-dossier-update') { myDossier = data.dossier; renderDossierScreen(); }
-      if(data.type === 'sync-metrics') drawBunkerMetricsUI(data.oxygen, data.energy, data.temp, data.rad);
-      if(data.type === 'sync-map') { generatedMapData = data.mapData; drawBunkerBlueprintMap(); }
-      if(data.type === 'open-voting-panel') showVotingUI(data.targets);
-      if(data.type === 'voting-results') {
-        activePlayers = data.activePlayers;
-        document.getElementById('vote-area').style.display = 'none';
-        alert(data.msg); logMessage(data.msg);
-      }
-      if(data.type === 'game-over-screen') showGameOverScreen(data.winner, data.msg);
-      if(data.type === 'log-relay') logMessage(data.msg);
-    });
-    c.on('close', () => { alert("Канал связи с хостом разорван."); window.location.reload(); });
-  }
-
-  function broadcast(obj) {
-    clients.forEach(c => { if(c.open) c.send(obj); });
-  }
-
-  function checkLobbyReadiness() {
+  function modifyResource(type, amount) {
     if(myRole !== 'host') return;
-    const btn = document.getElementById('btn-start-game');
-    if(allPlayersNames.length === maxPlayers) {
-      btn.disabled = false;
-      btn.textContent = "🚀 ЗАПЕЧАТАТЬ ШЛЮЗ И НАЧАТЬ";
-    } else {
-      btn.disabled = true;
-      btn.textContent = `Ожидание игроков (${allPlayersNames.length}/${maxPlayers})`;
-    }
-  }
-
-  function renderLobbyPlayers() {
-    const container = document.getElementById('player-list');
-    container.innerHTML = "";
-    allPlayersNames.forEach(p => {
-      const isHost = (p === allPlayersNames[0]);
-      const pill = document.createElement('div');
-      pill.className = 'player-pill';
-      pill.innerHTML = `<div class="pill-dot ${isHost?'host-dot':''}"></div> <span>${p} ${isHost?'[ХОСТ]':''}</span>`;
-      container.appendChild(pill);
-    });
-  }
-
-  // ─── ИГРОВАЯ ГЕНЕРАЦИЯ ─────────────────────────────────────────────────────
-  function generateBunkerSession() {
-    if(myRole !== 'host') return;
-    gameActive = true;
-    disasterObj = DISASTERS[Math.floor(Math.random() * DISASTERS.length)];
-
-    allPlayersNames.forEach(p => {
-      serverDossiers[p] = {
-        prof: PROFESSIONS[Math.floor(Math.random() * PROFESSIONS.length)],
-        health: HEALTH[Math.floor(Math.random() * HEALTH.length)],
-        hobby: HOBBIES[Math.floor(Math.random() * HOBBIES.length)],
-        baggage: BAGGAGE[Math.floor(Math.random() * BAGGAGE.length)],
-        phobia: PHOBIAS[Math.floor(Math.random() * PHOBIAS.length)],
-        habit: HABITS[Math.floor(Math.random() * HABITS.length)],
-        gender: GENDERS[Math.floor(Math.random() * GENDERS.length)]
-      };
-    });
-
-    let cardsDeck = [...ACTION_CARDS];
-    let distributedCards = {};
-    allPlayersNames.forEach(p => {
-      if(cardsDeck.length === 0) cardsDeck = [...ACTION_CARDS];
-      const idx = Math.floor(Math.random() * cardsDeck.length);
-      distributedCards[p] = cardsDeck.splice(idx, 1)[0];
-    });
-
-    const bType = BUNKER_TYPES[Math.floor(Math.random() * BUNKER_TYPES.length)];
-    generatedMapData = { bunkerName: bType, floors: [] };
-    let roomsShuffled = [...BUNKER_ROOMS].sort(() => 0.5 - Math.random());
-    for(let i=0; i<4; i++) {
-      generatedMapData.floors.push({ num: 4 - i, room: roomsShuffled[i] || "Вспомогательный отсек", sealed: false });
-    }
-
-    myDossier = serverDossiers[myName];
-    myActionCard = distributedCards[myName];
-
-    broadcast({ type: 'game-start', disaster: disasterObj, dossiers: serverDossiers, actionCards: distributedCards, mapData: generatedMapData, activePlayers });
-    applyGameStartPayload();
-    updateOxygenAndEnergy();
-  }
-
-  function applyGameStartPayload() {
-    setScreen('scr-game');
-    document.getElementById('bunker-disaster').textContent = disasterObj.name;
-    document.getElementById('bunker-desc').textContent = disasterObj.desc;
-    if(myRole === 'host') document.getElementById('btn-action').style.display = 'block';
-    document.getElementById('action-card-name').textContent = myActionCard.name;
-    document.getElementById('action-card-desc').textContent = myActionCard.desc;
-    renderDossierScreen();
-    drawBunkerBlueprintMap();
-    logMessage(`СБ: Системы активированы. Все характеристики досье доступны.`);
-
-    // ── ЗАПУСК НОВЫХ ФИЧ ──
-    startThreatSystem();
-    initLieDetector();
-    initSabotagePanel();
-  }
-
-  function renderDossierScreen() {
-    const box = document.getElementById('dossier-box');
-    box.innerHTML = "";
-    const fields = [
-      { key: 'prof', label: '💼 Профессия' },
-      { key: 'health', label: '🩺 Здоровье' },
-      { key: 'hobby', label: '🎯 Хобби' },
-      { key: 'baggage', label: '🎒 Багаж' },
-      { key: 'phobia', label: '🧠 Фобия' },
-      { key: 'habit', label: '🚬 Привычка' },
-      { key: 'gender', label: '🧬 Пол/Био' }
-    ];
-    fields.forEach(f => {
-      const row = document.createElement('div');
-      row.className = 'char-row';
-      row.innerHTML = `
-        <div style="display:flex;align-items:center;">
-          <span class="char-status">ОТКРЫТО</span>
-          <span class="char-label">${f.label}</span>
-        </div>
-        <div class="char-val">${myDossier[f.key]}</div>
-      `;
-      box.appendChild(row);
-    });
-  }
-
-  function drawBunkerBlueprintMap() {
-    document.getElementById('map-bunker-name').textContent = generatedMapData.bunkerName;
-    const box = document.getElementById('map-blueprint-box');
-    box.innerHTML = "";
-    const g = document.createElement('div');
-    g.className = 'map-bunker-graphic';
-    generatedMapData.floors.forEach(f => {
-      const fl = document.createElement('div');
-      fl.className = `bunker-floor-block ${f.sealed?'sealed':''}`;
-      fl.innerHTML = `
-        <div class="floor-header">
-          <span style="color:var(--text-dark);">ЯРУС 0${f.num}</span>
-          <span class="floor-status-text" style="color:${f.sealed?'#ff3333':'var(--neon-green)'};">${f.sealed?'🔒 ИЗОЛИРОВАН':'🔓 ФУНКЦИОНИРУЕТ'}</span>
-        </div>
-        <div class="floor-title">${f.room.toUpperCase()}</div>
-      `;
-      g.appendChild(fl);
-    });
-    box.appendChild(g);
-  }
-
-  function updateOxygenAndEnergy() {
-    if(myRole !== 'host') return;
-    let count = activePlayers.length;
-    let oxygenVal = Math.max(0, 100 - (count * 8));
-    let oxygenMode = oxygenVal <= 20 ? 'danger' : oxygenVal <= 40 ? 'warn' : 'good';
-    let energyVal = Math.max(0, 100 - (count * 5));
-    let energyMode = energyVal <= 20 ? 'danger' : energyVal <= 50 ? 'warn' : 'good';
-
-    drawBunkerMetricsUI(oxygenVal, energyVal, 65, 15);
-    broadcast({ type: 'sync-metrics', oxygen: oxygenVal, energy: energyVal, temp: 65, rad: 15 });
-
-    let sealedCount = maxPlayers - count;
-    generatedMapData.floors.forEach((f, idx) => { f.sealed = (idx < sealedCount); });
-    drawBunkerBlueprintMap();
-    broadcast({ type: 'sync-map', mapData: generatedMapData });
-  }
-
-  function drawBunkerMetricsUI(ox, en, te, rd) {
-    document.getElementById('val-oxygen').textContent = ox + '%';
-    let oxMode = ox<=20?'danger':ox<=40?'warn':'good';
-    updateMetricFill('bar-oxygen', 'lbl-oxygen', ox, oxMode, ox > 25 ? "СТАБИЛЬНО" : "РЕЗЕРВНЫЙ КЛАПАН");
-
-    document.getElementById('val-energy').textContent = en + '%';
-    let enMode = en<=20?'danger':en<=40?'warn':'good';
-    updateMetricFill('bar-energy', 'lbl-energy', en, enMode, en > 40 ? "СЕТЬ СТАБИЛЬНА" : "АККУМУЛЯТОРЫ");
-
-    document.getElementById('val-temp').textContent = '+21°C';
-    updateMetricFill('bar-temp', 'lbl-temp', te, 'good', 'КЛИМАТ-КОНТРОЛЬ');
-
-    document.getElementById('val-rad').textContent = '0.12 мЗв';
-    updateMetricFill('bar-rad', 'lbl-rad', rd, 'good', 'ЭКРАН ЗАЩИТЫ');
-
-    const layout = document.getElementById('terminal-layout');
-    if(ox <= 20) layout.classList.add('critical-alert');
-    else layout.classList.remove('critical-alert');
-  }
-
-  // ─── СПЕЦКАРТЫ ────────────────────────────────────────────────────────────
-  function useActionCard() {
-    if(isCardUsed) return;
-    if(!confirm(`Активировать спецкарту "${myActionCard.name}"?`)) return;
-    isCardUsed = true;
-    document.getElementById('btn-use-card').disabled = true;
-    document.getElementById('btn-use-card').textContent = "КАРТА АКТИВИРОВАНА";
-    if(myRole === 'host') handleRemoteCardUse(myName, myActionCard.id);
-    else conn.send({ type: 'use-card-click', sender: myName, cardId: myActionCard.id });
-  }
-
-  function handleRemoteCardUse(sender, cardId) {
-    let msg = `Игрок ${sender} активировал карту: `;
-    const cObj = ACTION_CARDS.find(x => x.id === cardId);
-    if(cObj) msg += `"${cObj.name}"`;
-    if(cardId === 'heal_card') {
-      if(sender === myName) { myDossier.health = "Абсолютно здоров"; renderDossierScreen(); }
-      else {
-        let cl = clients.find(x => x.playerName === sender);
-        if(cl) { serverDossiers[sender].health = "Абсолютно здоров"; cl.send({ type: 'sync-dossier-update', dossier: serverDossiers[sender] }); }
-      }
-      msg += ` → Здоровье восстановлено!`;
-    } else if(cardId === 'immunity_card') {
-      immunePlayers.push(sender);
-      msg += ` → Получена защита от изгнания!`;
-    } else if(cardId === 'hack') {
-      msg += ` → Взлом архивов активирован.`;
-    } else if(cardId === 'swap_all') {
-      msg += ` → Квантовая рокировка запущена.`;
-    }
-    logMessage(msg);
-    broadcast({ type: 'log-relay', msg });
-  }
-
-  // ─── ГОЛОСОВАНИЕ ──────────────────────────────────────────────────────────
-  function startVotingSession() {
-    if(myRole !== 'host') return;
-    votesReceived = {}; hasVoted = false;
-    showVotingUI(activePlayers);
-    broadcast({ type: 'open-voting-panel', targets: activePlayers });
-    logMessage("🚨 СБ: Запущена процедура голосования за изгнание!");
-  }
-
-  function showVotingUI(targets) {
-    document.getElementById('vote-area').style.display = 'block';
-    const grid = document.getElementById('vote-grid');
-    grid.innerHTML = ""; hasVoted = false;
-    targets.forEach(t => {
-      const btn = document.createElement('button');
-      btn.className = 'btn-vote-user';
-      btn.textContent = t === myName ? `${t} (Себя)` : t;
-      btn.onclick = () => submitVoteAction(t);
-      grid.appendChild(btn);
-    });
-  }
-
-  function submitVoteAction(targetName) {
-    if(hasVoted) return;
-    hasVoted = true;
-    document.querySelectorAll('.btn-vote-user').forEach(b => b.disabled = true);
-    document.getElementById('vote-instruction').textContent = `Ваш голос отправлен против: ${targetName.toUpperCase()}`;
-    if(myRole === 'host') {
-      votesReceived[myName] = targetName;
-      logMessage(`Голос получен от: ${myName} (Хост)`);
-      checkVotesProgress();
-    } else {
-      conn.send({ type: 'submit-vote', voter: myName, target: targetName });
-    }
-  }
-
-  function checkVotesProgress() {
-    if(myRole !== 'host') return;
-    if(Object.keys(votesReceived).length >= activePlayers.length) processVotingResults();
-  }
-
-  function processVotingResults() {
-    let voteCounts = {};
-    activePlayers.forEach(p => voteCounts[p] = 0);
-    for(let voter in votesReceived) {
-      const target = votesReceived[voter];
-      if(voteCounts[target] !== undefined) voteCounts[target]++;
-    }
-    let maxV = -1, loser = "Никто (Ничья)";
-    for(let t in voteCounts) {
-      if(immunePlayers.includes(t)) {
-        const shieldMsg = `Защитный протокол: Игрок ${t} защищен!`;
-        logMessage(shieldMsg); broadcast({ type: 'log-relay', msg: shieldMsg });
-        continue;
-      }
-      if(voteCounts[t] > maxV) { maxV = voteCounts[t]; loser = t; }
-      else if(voteCounts[t] === maxV && maxV > 0) loser = "Никто (Ничья голосов)";
-    }
-    if(loser !== "Никто (Ничья)" && loser !== "Никто (Ничья голосов)") {
-      activePlayers = activePlayers.filter(p => p !== loser);
-    }
-    let resultText = `Голосование завершено → `;
-    for(let p in voteCounts) resultText += `[${p}: ${voteCounts[p]}] `;
-    resultText += `→ РЕШЕНИЕ: Выдворен: ${loser.toUpperCase()}!`;
-    broadcast({ type: 'voting-results', msg: resultText, activePlayers });
-    logMessage(resultText);
-    document.getElementById('vote-area').style.display = 'none';
-    alert(resultText);
-    votesReceived = {}; immunePlayers = [];
-    updateOxygenAndEnergy();
+    resources[type] = Math.max(0, Math.min(100, resources[type] + amount));
+    updateSystemBars();
+    broadcast({ type: 'sync-resources', data: resources });
+    logToTerminal(`Ресурсы изменены: ${type.toUpperCase()} -> ${resources[type]}%`);
     checkGameOverStatus();
+  }
 
-    // Обновляем список в детекторе ЛЖИ
-    initLieDetector();
+  function initSession(role) {
+    myRole = role;
+    if(role === 'host') {
+      myName = document.getElementById('host-name-input').value.trim() || 'Смотритель';
+      peer = new Peer();
+      
+      peer.on('open', (id) => {
+        document.getElementById('host-peer-id').innerText = `ID сессии терминала: ${id}`;
+        logToTerminal(`Бункер создан. Ожидание сигналов выживших...`);
+        transitionToGame();
+        
+        activePlayers.push({ id: 'Host', name: myName, role: 'host' });
+        renderPlayersList();
+      });
+
+      peer.on('connection', (connEx) => {
+        connections.push(connEx);
+        setupReceiver(connEx);
+      });
+
+    } else {
+      myName = document.getElementById('client-name-input').value.trim() || 'Выживший';
+      const targetId = document.getElementById('client-target-id').value.trim();
+      
+      if(!targetId) {
+        alert('Введите ID терминала хоста!');
+        return;
+      }
+
+      peer = new Peer();
+      peer.on('open', () => {
+        conn = peer.connect(targetId);
+        setupReceiver(conn);
+        conn.on('open', () => {
+          logToTerminal(`Успешное сопряжение с шлюзом бункера.`);
+          conn.send({ type: 'join-request', name: myName });
+          transitionToGame();
+        });
+      });
+    }
+    generateCharacter();
+  }
+
+  function transitionToGame() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    if(myRole === 'host') {
+      document.getElementById('host-controls').style.display = 'block';
+    }
+    updateSystemBars();
+  }
+
+  function setupReceiver(c) {
+    c.on('data', (payload) => {
+      switch(payload.type) {
+        case 'join-request':
+          if(myRole === 'host') {
+            activePlayers.push({ id: c.peer, name: payload.name, role: 'client' });
+            logToTerminal(`Выживший ${payload.name} зашел в шлюз.`);
+            renderPlayersList();
+            broadcast({ type: 'sync-players', data: activePlayers });
+            broadcast({ type: 'sync-resources', data: resources });
+          }
+          break;
+        case 'sync-players':
+          activePlayers = payload.data;
+          renderPlayersList();
+          break;
+        case 'sync-resources':
+          resources = payload.data;
+          updateSystemBars();
+          break;
+        case 'game-over-screen':
+          showGameOverScreen(payload.winner, payload.msg);
+          break;
+      }
+    });
+  }
+
+  function broadcast(data) {
+    connections.forEach(c => {
+      if(c.open) c.send(data);
+    });
+  }
+
+  function renderPlayersList() {
+    const list = document.getElementById('players-list');
+    list.innerHTML = '';
+    activePlayers.forEach(p => {
+      const div = document.createElement('div');
+      div.className = `player-list-item ${p.name === myName ? 'active' : ''}`;
+      div.innerHTML = `
+        <span>${p.name} <small style="color:var(--text-muted);">[${p.role.toUpperCase()}]</small></span>
+        <span style="color:var(--sys-good);">● ONLINE</span>
+      `;
+      list.appendChild(div);
+    });
   }
 
   function checkGameOverStatus() {
     if(myRole !== 'host') return;
-    if(activePlayers.length <= 1) {
-      let finalWinner = activePlayers[0] || "Никто";
-      let finalMsg = `Финал сессии. В живых в бункере остался: ${finalWinner.toUpperCase()}. Ресурсы перераспределены на поддержание 1 единицы жизни.`;
-      showGameOverScreen(finalWinner, finalMsg);
-      broadcast({ type: 'game-over-screen', winner: finalWinner, msg: finalMsg });
+    if(resources.o2 <= 0 || resources.power <= 0) {
+      let finalMsg = `Критический сбой систем. Жизнеобеспечение бункера остановлено полностью.`;
+      showGameOverScreen("НИКТО", finalMsg);
+      broadcast({ type: 'game-over-screen', winner: "НИКТО", msg: finalMsg });
     }
   }
 
   function showGameOverScreen(winner, message) {
-    if(threatTimer) clearTimeout(threatTimer);
     const mainWindow = document.getElementById('main-window');
     mainWindow.innerHTML = `
-      <div style="text-align:center; padding:2rem 0;">
-        <h1 style="color:var(--neon-green-glow); font-size:2rem; margin-bottom:1.5rem;">🔒 БУНКЕР ЗАПЕЧАТАН</h1>
-        <div style="background:#09090d; border:1px solid var(--neon-green); padding:1.2rem; border-radius:8px; margin-bottom:1.5rem; text-align:left; font-size:0.85rem; line-height:1.5;">
-          <b style="color:var(--neon);">СБ Терминала сообщает:</b><br>${message}
+      <div class="game-over-screen">
+        <h1 class="game-over-title">🔒 БУНКЕР ЗАПЕЧАТАН</h1>
+        <div class="card" style="text-align: left; max-width: 500px; margin: 0 auto 20px;">
+          <b style="color:var(--accent);">Отчет главного терминала:</b><br>
+          <span style="color:var(--text-muted); font-size:0.9rem;">${message}</span>
         </div>
-        <p style="font-size:0.75rem; color:var(--text-dark); margin-bottom:2rem;">Системы переведены в автономный режим поддержания жизни.</p>
-        <button class="btn" onclick="window.location.reload();">🔄 Выйти в главное меню шлюза</button>
+        <button class="btn btn-accent" onclick="window.location.reload()">Перезапустить Терминал</button>
       </div>
     `;
-    resetMetrics();
   }
 </script>
+
 </body>
 </html>
