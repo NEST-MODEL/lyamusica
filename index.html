@@ -1,1396 +1,494 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>THE BUNKER V3</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<style>
-  :root {
-    --bg-dark: #050508;
-    --bg-panel: #0d0d14;
-    --bg-card: #141420;
-    --orange: #ff5500;
-    --orange-glow: rgba(255, 85, 0, 0.4);
-    --grey-border: #222230;
-    --grey-text: #707085;
-    --white: #f5f5fa;
-    --neon-green: #00ff66;
-    --neon-red: #ff2233;
-    --neon-blue: #00bfff;
-    --neon-pink: #ff007f;
-    --neon-purple: #9d00ff;
-    --neon-yellow: #ffea00;
-    --gold: #ffd700;
-  }
-
-  * { 
-    box-sizing: border-box;
-    margin: 0; 
-    padding: 0; 
-    -webkit-tap-highlight-color: transparent; 
-  }
-
-  body {
-    background-color: var(--bg-dark);
-    background-image: radial-gradient(circle at 50% 20%, rgba(255, 85, 0, 0.08), transparent 70%);
-    color: var(--white);
-    font-family: 'Space Mono', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 10px;
-  }
-
-  /* --- СИСТЕМА СВЕЧЕНИЯ И ПЕРЕЛИВОВ НИКОВ (НОВЫЕ ЦВЕТА И ЭКСКЛЮЗИВ) --- */
-  .nick-dev-style {
-    font-weight: 900 !important;
-    background: linear-gradient(90deg, #ff0000, #ff5555, #990000, #ff0000);
-    background-size: 300% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: devRedShine 2s linear infinite;
-    filter: drop-shadow(0 0 6px rgba(255, 0, 0, 0.6));
-  }
-  @keyframes devRedShine {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  .nick-glow-pink { color: var(--neon-pink) !important; font-weight: bold; animation: pPulse 1.5s ease-in-out infinite alternate; }
-  @keyframes pPulse { from { text-shadow: 0 0 2px var(--neon-pink); } to { text-shadow: 0 0 12px var(--neon-pink); } }
-
-  .nick-glow-blue { font-weight: bold; background: linear-gradient(90deg, #00bfff, #ffffff, #00bfff); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: bWave 2s linear infinite; }
-  @keyframes bWave { 0% { background-position: 200% 0; } 100% { background-position: 0 0; } }
-
-  .nick-glow-rgb { font-weight: bold; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 400% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: rgbShift 4s linear infinite; }
-  @keyframes rgbShift { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
-
-  /* Новые градиенты кастомизации */
-  .glow-black { font-weight: bold; color: #111115 !important; text-shadow: 0 0 8px #ffffff, 0 0 2px #000; }
-  .glow-grey { font-weight: bold; color: #8a8a9e !important; animation: greyP 2s ease-in-out infinite alternate; }
-  @keyframes greyP { from { text-shadow: 0 0 2px #8a8a9e; } to { text-shadow: 0 0 10px #ffffff; } }
-  
-  .glow-white { font-weight: bold; color: #ffffff !important; text-shadow: 0 0 8px rgba(255,255,255,0.8); }
-  
-  .glow-purple { font-weight: bold; background: linear-gradient(90deg, #9d00ff, #ff00ff, #9d00ff); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: bWave 2.5s linear infinite; }
-  
-  .glow-yellow { font-weight: bold; color: var(--neon-yellow) !important; animation: yGlow 1.2s ease-in-out infinite alternate; }
-  @keyframes yGlow { from { text-shadow: 0 0 1px var(--neon-yellow); } to { text-shadow: 0 0 12px var(--neon-yellow); } }
-  
-  .glow-green { font-weight: bold; color: var(--neon-green) !important; text-shadow: 0 0 6px rgba(0,255,102,0.4); }
-  
-  .glow-orange { font-weight: bold; background: linear-gradient(90deg, #ff5500, #ffaa00, #ff5500); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: bWave 2s linear infinite; }
-
-  /* Золотой перелив ЭКСКЛЮЗИВ */
-  .exclusive-header {
-    text-align: center;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 900;
-    letter-spacing: 3px;
-    background: linear-gradient(90deg, #b8860b, #ffd700, #fff8dc, #ffd700, #b8860b);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: bWave 3s linear infinite;
-    margin: 15px 0 10px;
-    text-transform: uppercase;
-  }
-
-  .screen { 
-    width: 100%; 
-    max-width: 1100px;
-    transition: all 0.3s ease; 
-    margin-top: 5px;
-  }
-  .hidden { display: none !important; }
-  
-  .fade-in { 
-    animation: screenReveal 0.4s forwards cubic-bezier(0.25, 1, 0.5, 1);
-  }
-  @keyframes screenReveal { 
-    from { opacity: 0; transform: translateY(10px); } 
-    to { opacity: 1; transform: translateY(0); } 
-  }
-
-  .header-profile-zone {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    position: relative;
-    width: 100%;
-    max-width: 1100px;
-    margin: 0 auto 10px auto;
-    padding: 0 5px;
-    z-index: 100;
-  }
-
-  .avatar-trigger {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #151522;
-    border: 2px solid var(--grey-border);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    transition: all 0.3s ease;
-  }
-  .avatar-trigger.logged-in {
-    border-color: var(--orange);
-    box-shadow: 0 0 12px var(--orange-glow);
-  }
-
-  .profile-dropdown-menu {
-    position: absolute;
-    top: 52px;
-    right: 5px;
-    background: var(--bg-panel);
-    border: 1px solid var(--orange);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 15px var(--orange-glow);
-    border-radius: 10px;
-    width: 300px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    transform: translateY(-10px);
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .profile-dropdown-menu.active {
-    transform: translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  /* Панель администратора внутри меню */
-  .dev-admin-block {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 2px dashed var(--neon-red);
-    background: rgba(255, 0, 51, 0.04);
-    border-radius: 4px;
-    padding: 6px;
-  }
-
-  .hub-tabs { display: flex; border-bottom: 1px solid var(--grey-border); margin-bottom: 10px; padding-bottom: 5px; gap: 2px; }
-  .hub-tab-btn { background: transparent; border: none; color: var(--grey-text); font-family: inherit; font-size: 0.65rem; padding: 6px 1px; cursor: pointer; flex: 1; text-transform: uppercase; text-align: center; border-radius: 4px; transition: all 0.2s; }
-  .hub-tab-btn.active { color: var(--orange); background: rgba(255,85,0,0.1); font-weight: bold; }
-  .hub-content-section { display: none; min-height: 140px; max-height: 290px; overflow-y: auto; padding: 2px; }
-  .hub-content-section.active { display: block; }
-
-  .dropdown-item-text { font-size: 0.65rem; color: var(--grey-text); text-transform: uppercase; letter-spacing: 1px; }
-  .dropdown-item-val { font-size: 0.85rem; color: var(--white); word-break: break-all; font-weight: bold; margin-top: 2px; }
-
-  .menu-logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2.3rem;
-    font-weight: 900;
-    color: var(--orange);
-    text-shadow: 0 0 20px var(--orange-glow);
-    letter-spacing: 3px;
-    text-align: center;
-    margin-bottom: 3px;
-    margin-top: 10px;
-  }
-  @media(min-width: 768px) { .menu-logo { font-size: 3.5rem; letter-spacing: 6px; } }
-  
-  .menu-version { font-size: 0.7rem; color: var(--grey-text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 25px; text-align: center; }
-  .nav-bar { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; width: 100%; }
-
-  .btn {
-    background: linear-gradient(135deg, #151522, #1c1c30); 
-    color: var(--white); 
-    border: 1px solid var(--grey-border);
-    padding: 10px 20px;
-    font-family: 'Space Mono', monospace; 
-    font-weight: bold; 
-    font-size: 0.85rem;
-    text-transform: uppercase; 
-    cursor: pointer; 
-    border-radius: 8px; 
-    transition: all 0.25s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  @media(min-width: 768px) { .btn { padding: 15px 30px; font-size: 1rem; } }
-  .btn:hover { border-color: var(--orange); color: #000; background: var(--orange); box-shadow: 0 0 15px var(--orange-glow); }
-  .btn-accent { border-color: var(--orange); color: var(--orange); }
-  .btn-sm { padding: 6px 10px; font-size: 0.7rem; border-radius: 6px; }
-
-  .network-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-  @media(min-width: 768px) { .network-grid { grid-template-columns: 1fr 1fr; gap: 25px; } }
-
-  .panel { background: var(--bg-panel); border: 1px solid var(--grey-border); border-radius: 12px; padding: 15px; position: relative; }
-  @media(min-width: 768px) { .panel { padding: 22px; } }
-  .panel-title { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; color: var(--orange); margin-bottom: 15px; text-transform: uppercase; }
-
-  .form-group { margin-bottom: 12px; }
-  label { display: block; font-size: 0.65rem; color: var(--grey-text); margin-bottom: 4px; text-transform: uppercase; }
-  
-  input[type="text"], input[type="password"], select {
-    width: 100%; background: #07070b; border: 1px solid var(--grey-border); color: var(--white); padding: 10px; border-radius: 6px; font-family: inherit; font-size: 14px; transition: all 0.3s;
-  }
-  input:focus, select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 10px var(--orange-glow); }
-
-  .shop-cats { display: flex; gap: 6px; margin-bottom: 15px; border-bottom: 1px solid var(--grey-border); padding-bottom: 8px; overflow-x: auto; }
-  .cat-btn { background: #11111c; border: 1px solid var(--grey-border); color: var(--grey-text); padding: 6px 12px; border-radius: 6px; font-family: inherit; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; transition: all 0.2s; white-space: nowrap; }
-  .cat-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,85,0,0.05); }
-
-  .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-top: 10px; }
-  .shop-item { background: var(--bg-card); border: 1px solid var(--grey-border); padding: 12px; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease; }
-  .shop-item.purchased { border-color: var(--neon-green); background: linear-gradient(180deg, #141420 0%, #0a1c12 100%); }
-  .shop-item-title { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--white); margin-bottom: 6px; }
-  .shop-item-desc { font-size: 0.75rem; color: var(--grey-text); margin-bottom: 10px; flex-grow: 1; line-height: 1.4; }
-  .shop-item-price { font-family: 'Orbitron', sans-serif; color: var(--neon-green); font-weight: bold; margin-bottom: 10px; font-size: 0.8rem; }
-
-  .game-layout { display: grid; grid-template-columns: 1fr; gap: 15px; }
-  @media(min-width: 900px) { .game-layout { grid-template-columns: 1fr 310px; gap: 20px; } }
-
-  .character-sheet { display: grid; grid-template-columns: 1fr; gap: 8px; }
-  @media(min-width: 480px) { .character-sheet { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
-  
-  .trait-card { background: var(--bg-card); border: 1px solid var(--grey-border); border-radius: 6px; padding: 10px 14px; }
-  .trait-card label { margin-bottom: 2px; color: var(--orange); font-weight: bold; }
-  .trait-value { font-size: 0.85rem; color: var(--white); word-break: break-word; }
-
-  .gui-sidebar { display: flex; flex-direction: column; gap: 15px; }
-  @media(min-width: 600px) and (max-width: 899px) { .gui-sidebar { display: grid; grid-template-columns: repeat(3, 1fr); } }
-  
-  .flask-container { background: transparent; border: none; padding: 0; display: flex; align-items: center; gap: 12px; justify-content: center; }
-  .flask-info { display: flex; flex-direction: column; justify-content: center; }
-  .flask-title { font-size: 0.65rem; color: var(--grey-text); text-transform: uppercase; }
-  .flask-val { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; margin-top: 2px; }
-  .flask-glass { 
-    width: 18px; height: 80px; background: rgba(255,255,255,0.03); border: 1.5px solid #2d2d3d; border-radius: 3px 3px 10px 10px; position: relative; overflow: hidden; flex-shrink: 0;
-  }
-  .flask-liquid { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: var(--neon-green); transition: height 0.6s ease; box-shadow: 0 0 8px rgba(0, 255, 102, 0.5); }
-  .flask-container.danger .flask-liquid { background: var(--neon-red); box-shadow: 0 0 8px rgba(255, 34, 51, 0.5); }
-  .flask-container.cold .flask-liquid { background: var(--neon-blue); box-shadow: 0 0 8px rgba(0, 191, 255, 0.5); }
-
-  .global-status { background: #100b0b; border: 1px solid #301515; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-  .action-cards-box { margin-top: 12px; }
-  .action-deck { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .action-mini-card { background: #1a110b; border: 1px solid #4a2510; border-radius: 4px; padding: 6px 10px; font-size: 0.75rem; color: #ffaa66; font-weight: bold; }
-
-  .terminal-box { background: #08080f; border: 1px solid var(--grey-border); border-radius: 6px; padding: 10px; height: 230px; overflow-y: auto; font-size: 0.8rem; }
-  .player-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-card); margin-bottom: 6px; border-radius: 4px; gap: 5px; }
-  .player-row.exiled { opacity: 0.3; text-decoration: line-through; border-left: 3px solid var(--neon-red); }
-  .player-name-col { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; display: flex; align-items: center; gap: 4px; }
-
-  /* АДАПТИВНОЕ ОКНО РУЛЕТКИ КЕЙСОВ */
-  .case-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(3,3,6,0.96); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; }
-  .roulette-container { width: 100%; max-width: 460px; background: #0d0d14; border: 2px solid var(--orange); border-radius: 12px; padding: 20px 10px; position: relative; overflow: hidden; box-shadow: 0 0 25px var(--orange-glow); }
-  .roulette-track-window { width: 100%; height: 66px; overflow: hidden; position: relative; background: #050508; border-radius: 6px; border: 1px solid #222232; }
-  .roulette-line { position: absolute; top: 0; left: 50%; width: 3px; height: 100%; background: var(--orange); z-index: 10; box-shadow: 0 0 8px var(--orange); transform: translateX(-50%); }
-  .roulette-tape { display: flex; position: absolute; left: 0; top: 8px; height: 50px; transition: transform 0s ease; }
-  .roulette-slot { width: 110px; height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border-right: 1px solid #1c1c28; background: #141420; }
-  .case-title-anim { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; color: var(--orange); margin-bottom: 15px; text-transform: uppercase; text-align: center; }
-  
-  .drop-announce { margin-top: 15px; text-align: center; opacity: 0; transform: scale(0.85); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2); }
-  .drop-announce.reveal { opacity: 1; transform: scale(1); }
-  .drop-tier-text { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
-  .drop-name-text { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; margin-top: 4px; font-weight: bold; }
-
-  .inv-item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #171726; border-radius: 6px; margin-bottom: 6px; font-size: 0.75rem; border-left: 3px solid var(--grey-border); }
-  .inv-item-row.usable { border-left-color: var(--orange); }
-
-  /* Правила */
-  .rules-panel { margin-top: 20px; background: #0a0a10; border: 1px dashed var(--grey-border); }
-  .rules-toggle-btn { width: 100%; text-align: left; background: none; border: none; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--orange); cursor: pointer; display: flex; justify-content: space-between; }
-  .rules-content { margin-top: 12px; font-size: 0.75rem; color: var(--grey-text); line-height: 1.5; }
-  .rules-content p { margin-bottom: 8px; }
-  .rules-content ul { margin-left: 15px; margin-bottom: 8px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6 ROOMS // BUNK-NET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0a0a0c;
+        }
+        .bunker-glow {
+            box-shadow: 0 0 15px rgba(255, 87, 34, 0.15);
+        }
+        .bunker-glow-red {
+            box-shadow: 0 0 20px rgba(239, 83, 80, 0.3);
+        }
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #121214; }
+        ::-webkit-scrollbar-thumb { background: #26262b; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff5722; }
+    </style>
 </head>
-<body>
+<body class="text-gray-300 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-orange-500 selection:text-black">
 
-  <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-    
-    <div class="header-profile-zone">
-      <div id="prof-trigger" class="avatar-trigger" onclick="toggleProfileMenu()">👤</div>
-      
-      <div id="prof-dropdown" class="profile-dropdown-menu">
-        <div id="drop-auth-needed">
-          <p class="dropdown-item-text">Статус Терминала</p>
-          <p class="dropdown-item-val" style="color: var(--neon-red);">Требуется вход</p>
+    <header class="border-b border-zinc-800 bg-[#121214] px-6 py-4 flex justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></div>
+            <span class="text-sm font-bold tracking-widest text-zinc-400">SYSTEM: BUNK-NET v1.0.6</span>
         </div>
+        <div class="text-center">
+            <h1 class="text-xl font-black tracking-widest text-white">6 КОМНАТ</h1>
+        </div>
+        <div id="round-counter" class="text-sm font-bold border border-zinc-700 px-3 py-1 bg-zinc-900 rounded text-orange-500">
+            ПОДГОТОВКА К ИГРЕ
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1800px] w-full mx-auto class-init">
         
-        <div id="drop-auth-logged" style="display: none;">
-          <div class="hub-tabs">
-            <button class="hub-tab-btn active" onclick="switchHubTab('hub-prof')">Профиль</button>
-            <button class="hub-tab-btn" onclick="switchHubTab('hub-inv')">Склад</button>
-            <button class="hub-tab-btn" onclick="switchHubTab('hub-dev')" id="tab-dev-toggle" style="display:none; color:var(--neon-red); font-weight:bold;">DEV</button>
-            <button class="hub-tab-btn" onclick="switchHubTab('hub-sett')">Опции</button>
-          </div>
+        <section class="lg:col-span-3 flex flex-col gap-3 bg-[#121214] p-4 rounded-xl border border-zinc-800/80 bunker-glow">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2 flex justify-between items-center">
+                <span>Мониторинг Комнат</span>
+                <span id="comms-status" class="text-[10px] bg-red-950 text-red-400 px-2 py-0.5 rounded border border-red-900">Связь отключена</span>
+            </h2>
+            <div id="rooms-container" class="grid grid-cols-1 gap-2.5 flex-1 justify-between">
+                </div>
+        </section>
 
-          <div id="hub-prof" class="hub-content-section active">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-              <div id="hub-avatar-display" style="font-size: 1.8rem; cursor: pointer; background: #000; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--orange);" onclick="cycleLocalAvatar()">👤</div>
-              <div style="flex:1;">
-                <p class="dropdown-item-text">Позывной Оператора</p>
-                <input type="text" id="hub-inp-nickname" style="padding: 4px 8px; font-size: 0.8rem; margin-top: 2px;" value="Выживший" onchange="saveProfileSettings()">
-              </div>
+        <section class="lg:col-span-6 flex flex-col bg-[#121214] rounded-xl border border-zinc-800 overflow-hidden relative">
+            <div class="bg-zinc-900/60 border-b border-zinc-800 p-4 flex items-start gap-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-zinc-700 to-zinc-900 rounded-lg flex-shrink-0 flex items-center justify-center border border-zinc-700">
+                    <span class="text-xl">🎙️</span>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-orange-400 uppercase tracking-wider">Ведущий Системы</h3>
+                    <p id="host-speech" class="text-sm text-zinc-300 mt-1 italic">"Добро пожаловать в Бункер. Шесть комнат, но выйдет не каждый. Готовьтесь к первому раунду."</p>
+                </div>
             </div>
-            <div style="border-top: 1px solid var(--grey-border); padding-top: 6px; display: flex; justify-content: space-between;">
-              <div>
-                <p class="dropdown-item-text">Баланс</p>
-                <p id="drop-coins" class="dropdown-item-val" style="color: var(--neon-green);">0 🪙</p>
-              </div>
-              <div style="text-align: right;">
-                <p class="dropdown-item-text">Цифровой #ID</p>
-                <p id="drop-my-short-id" class="dropdown-item-val" style="color: var(--neon-blue);">#0000</p>
-              </div>
-            </div>
-          </div>
 
-          <div id="hub-inv" class="hub-content-section">
-            <div id="hub-inventory-list" style="color: var(--grey-text); font-size: 0.75rem;">Загрузка ресурсов...</div>
-          </div>
+            <div class="flex-1 p-6 flex flex-col justify-center items-center text-center relative">
+                <div id="game-arena" class="w-full max-w-md space-y-6">
+                    <div id="start-screen" class="space-y-4">
+                        <p class="text-zinc-400 text-sm">Все участники изолированы в своих комнатах. Баллы начисляются скрытно. Связь доступна только во время раундов и обсуждений.</p>
+                        <button onclick="startGame()" class="w-full py-4 bg-orange-600 hover:bg-orange-500 text-black font-bold uppercase tracking-widest rounded transition-all transform active:scale-95 duration-150">
+                            Инициализировать Протокол Игры
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-          <div id="hub-dev" class="hub-content-section dev-admin-block">
-            <p style="font-size:0.65rem; color:var(--neon-red); font-weight:bold; text-transform:uppercase; text-align:center; margin-bottom:8px;">⚡ СИСТЕМА УПРАВЛЕНИЯ ЯДРОМ ⚡</p>
-            <div class="form-group">
-              <label>Ник или #ID Игрока</label>
-              <input type="text" id="dev-target-user" placeholder="Например: lyohich или #4812" style="padding:6px; font-size:11px;">
+            <div class="bg-black/40 border-t border-zinc-950 p-3 h-28 overflow-y-auto text-[11px] font-mono text-zinc-500" id="system-logs">
+                [SYSTEM]: Ожидание запуска протокола...
             </div>
-            <div class="form-group">
-              <label>Количество Коинов (+ / -)</label>
-              <input type="text" id="dev-coin-amount" placeholder="Пример: 500 или -200" style="padding:6px; font-size:11px;">
+        </section>
+
+        <section class="lg:col-span-3 flex flex-col bg-[#121214] p-4 rounded-xl border border-zinc-800/80 bunker-glow justify-between">
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-4">Ваш Коммуникатор (КПК)</h2>
+                <div class="bg-black/60 border border-zinc-800 rounded-lg p-4 mb-4 text-center">
+                    <div class="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Ваша локация</div>
+                    <div class="text-lg font-bold text-white tracking-wide">КОМНАТА №1 <span class="text-xs text-zinc-400">(Вы)</span></div>
+                </div>
+
+                <div id="phone-interface" class="space-y-4 opacity-40 pointer-events-none transition-opacity duration-300">
+                    <label class="block text-xs text-zinc-400 uppercase mb-1">Выберите линию для звонка:</label>
+                    <select id="call-target" class="w-full bg-zinc-900 border border-zinc-700 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+                        </select>
+                    <button id="btn-call" onclick="makeCall()" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded text-sm font-medium transition-colors text-orange-400">
+                        Установить P2P соединение
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-sm" style="width:100%; font-size:10px; border-color:var(--neon-green); color:var(--neon-green); margin-bottom:8px;" onclick="devModifyCoins()">Изменить коины игрока</button>
+
+            <div id="call-screen" class="border border-dashed border-zinc-800 rounded-lg p-4 text-center text-xs text-zinc-500">
+                Линия связи свободна
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#0a0a0c] px-6 py-3 border-t border-zinc-900 text-center text-[10px] text-zinc-600 tracking-wider">
+        ДИЗАЙН ПРОЕКТА: SENIOR PRODUCT SUITE // ALL RIGHTS RESERVED © 2026
+    </footer>
+
+    <script>
+        // Игровой стейт (State Management)
+        const state = {
+            currentRound: 0,
+            maxRounds: 11,
+            phase: 'lobby', // lobby, intro, challenge, discussion, gun-round, ended
+            commsOpen: false,
+            gunHolder: null,
+            players: [
+                { id: 1, name: "Комната 1 (Вы)", score: 0, isAlive: true },
+                { id: 2, name: "Комната 2", score: 0, isAlive: true },
+                { id: 3, name: "Комната 3", score: 0, isAlive: true },
+                { id: 4, name: "Комната 4", score: 0, isAlive: true },
+                { id: 5, name: "Комната 5", score: 0, isAlive: true },
+                { id: 6, name: "Комната 6", score: 0, isAlive: true },
+            ],
+            challenges: [
+                { title: "Тест Лояльности", desc: "Анонимно проголосуйте: разделить ресурсы или забрать себе? (Симуляция обработки ответов комнат...)" },
+                { title: "Слепая Зона", desc: "В бункере отключился свет. Нажмите кнопку датчика движения быстрее остальных игроков." },
+                { title: "Цифровой Шифр", desc: "Угадайте случайное число от 1 до 10. Ближайший получает балл." },
+                { title: "Вент-Каналы", desc: "Необходимо перекрыть шлюз. Кто пожертвует секундой времени ради общей безопасности?" },
+                { title: "Распределение Энергии", desc: "Отдайте свой виртуальный токен любому игроку. Большинство решает всё." },
+                { title: "Генетический Код", desc: "Быстрый тест на реакцию нейросети. Ждите вердикт Системы." }
+            ]
+        };
+
+        // Логирование событий в консоль бункера
+        function log(message, type = 'system') {
+            const logs = document.getElementById('system-logs');
+            const color = type === 'important' ? 'text-orange-400' : type === 'danger' ? 'text-red-400' : 'text-zinc-500';
+            logs.innerHTML += `<div class="${color}">[${new Date().toLocaleTimeString()}]: ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        // Рендер сетки комнат
+        function renderRooms() {
+            const container = document.getElementById('rooms-container');
+            container.innerHTML = '';
             
-            <div style="display:flex; gap:4px; margin-bottom:5px;">
-              <button class="btn btn-sm" style="flex:1; font-size:10px; border-color:var(--neon-yellow); color:var(--neon-yellow);" onclick="devBlockUser('mute')">Мут 15м</button>
-              <button class="btn btn-sm" style="flex:1; font-size:10px; border-color:var(--neon-red); color:var(--neon-red);" onclick="devBlockUser('ban')">Перм. Бан</button>
-            </div>
-            <button class="btn btn-sm" style="width:100%; font-size:10px; background:#4a0000; color:#fff;" onclick="devKickLobby()">Выгнать из текущего лобби</button>
-          </div>
+            state.players.forEach(p => {
+                let statusBg = 'bg-zinc-900 border-zinc-800';
+                let statusText = '<span class="text-emerald-500">В СЕТИ</span>';
+                
+                if (!p.isAlive) {
+                    statusBg = 'bg-red-950/20 border-red-900/40 opacity-50';
+                    statusText = '<span class="text-red-500">ВЫБЫЛ</span>';
+                } else if (state.gunHolder === p.id) {
+                    statusBg = 'bg-orange-950/30 border-orange-500 bunker-glow-red';
+                    statusText = '<span class="text-orange-500 animate-pulse">⚙️ ВООРУЖЕН</span>';
+                }
 
-          <div id="hub-sett" class="hub-content-section">
-            <button class="btn btn-sm" style="border-color: var(--neon-red); color: var(--neon-red); margin-top: 40px; width: 100%;" onclick="logout(); toggleProfileMenu();">Выйти из сети</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="scr-menu" class="screen">
-      <div class="menu-logo">THE BUNKER V3</div>
-      <div class="menu-version">СИСТЕМА СИНХРОННОГО ЖИЗНЕОБЕСПЕЧЕНИЯ</div>
-      
-      <div class="nav-bar">
-        <button class="btn btn-accent" onclick="navigate('scr-menu', 'scr-network')">В бункер</button>
-        <button class="btn" onclick="openShop()">Магазин</button>
-      </div>
-
-      <div class="network-grid" style="max-width: 900px; margin: auto;">
-        <div class="panel">
-          <div class="panel-title">🔒 Шлюз Идентификации</div>
-          <div id="auth-form">
-            <div class="form-group">
-              <label>Шлюзовой Email</label>
-              <input type="text" id="inp-email" placeholder="oper@bunker.com">
-            </div>
-            <div class="form-group">
-              <label>Код Доступа</label>
-              <input type="password" id="inp-pass" placeholder="••••">
-            </div>
-            <div style="display:flex; gap:10px;">
-              <button class="btn btn-sm" style="flex:1;" onclick="handleAuth('login')">Войти</button>
-              <button class="btn btn-sm btn-accent" style="flex:1;" onclick="handleAuth('register')">Создать профиль</button>
-            </div>
-          </div>
-          <div id="auth-user-status" style="display:none; text-align: center; padding: 10px 0;">
-            <p style="font-size:0.95rem;">Синхронизация с сервером успешна.</p>
-            <p style="font-size:0.75rem; color: var(--grey-text); margin-top: 5px;">Все модификаторы и эксклюзивные настройки привязаны к вашему профилю.</p>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">📡 ИНФОРМАЦИЯ ЯДРА</div>
-          <p style="font-size:0.8rem; line-height:1.6; color:var(--grey-text);">
-            Внимание! Каждому игроку генерируется строго <span style="color:var(--orange); font-weight:bold;">одна уникальная карта действия</span> на раунд — повторы исключены алгоритмом. Шансы в Кибер-Кейсах абсолютно честные. Наш ведущий разработчик: <span class="nick-dev-style">lyohich DEV</span>.И так же нашего главного дизайнера <span class="nick-dev-style">Sashenka</span>
-          </p>
-        </div>
-      </div>
-
-      <div class="panel rules-panel" style="max-width: 900px; margin: 15px auto 0;">
-        <button class="rules-toggle-btn" onclick="document.getElementById('rules-block').classList.toggle('hidden')">
-          <span>📖 БОРТОВОЙ ЖУРНАЛ: ПРАВИЛА ИГРЫ</span>
-          <span>▼</span>
-        </button>
-        <div id="rules-block" class="rules-content hidden">
-          <p><strong>Суть игры:</strong> На Земле произошла глобальная катастрофа. Задача вашей группы — заполнить подземный бункер самыми полезными выжившими. Места ограничены ровно наполовину от стартового состава игроков!</p>
-          <p><strong>Игровой процесс:</strong></p>
-          <ul>
-            <li>В начале раунда каждый получает уникальное автоматическое Досье: Профессию, Возраст, Состояние Здоровья, Хобби и Багаж.</li>
-            <li>Каждый раунд игроки по очереди открывают одну из своих характеристик и аргументируют, почему именно они должны остаться жить.</li>
-            <li>В любой момент вы можете разыграть свою уникальную секретную Карту Действия, чтобы перевернуть ход обсуждения или спасти товарища.</li>
-          </ul>
-          <p><strong>Голосование и Финал:</strong> Хост открывает шлюзовое голосование. Игрок, набравший абсолютное большинство голосов, навсегда выбрасывается на поверхность. Игра заканчивается успехом, когда внутри бункера остается ровно целевая квота живых людей. Выжившие забирают награду в виде Кибер-Коинов!</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="scr-shop" class="screen hidden">
-      <div class="panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap: 10px;">
-          <div class="panel-title" style="margin:0;">🛒 КИБЕРНЕТИЧЕСКИЙ МАРКЕТ</div>
-          <button class="btn btn-sm" onclick="navigate('scr-shop', 'scr-menu')">Назад</button>
-        </div>
-        <div style="font-size:0.9rem; margin-bottom: 15px;">Ваш баланс: <span id="shop-balance-holder" style="color:var(--neon-green); font-weight:bold;">0</span> 🪙</div>
-        
-        <div class="shop-cats">
-          <button id="cat-btn-mods" class="cat-btn active" onclick="switchShopCategory('mods')">Модификаторы</button>
-          <button id="cat-btn-custom" class="cat-btn" onclick="switchShopCategory('custom')">Кастомизация</button>
-          <button id="cat-btn-cases" class="cat-btn" onclick="switchShopCategory('cases')">Кейсы</button>
-        </div>
-
-        <div id="shop-cat-mods" class="shop-grid">
-          <div class="shop-item" id="item-mod_immunity">
-            <div class="shop-item-title">Иммунитет шлюза</div>
-            <div class="shop-item-desc">Защищает вашу ДНК. Если вас выгоняют на самом первом голосовании, вы автоматически остаетесь живы.</div>
-            <div class="shop-item-price">150 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_immunity', 150, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_hacker">
-            <div class="shop-item-title">Взломщик данных</div>
-            <div class="shop-item-desc">Позволяет в начале раунда мгновенно узнать скрытые Секреты абсолютно всех игроков в лобби.</div>
-            <div class="shop-item-price">300 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_hacker', 300, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_nanites">
-            <div class="shop-item-title">Инъекция Нанитов</div>
-            <div class="shop-item-desc">Автоматически излечивает любую критическую или смертельную болезнь в вашем досье на здоровую.</div>
-            <div class="shop-item-price">200 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_nanites', 200, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_radar">
-            <div class="shop-item-title">Радар Хоста</div>
-            <div class="shop-item-desc">Вы видите, кто именно проголосовал против вас во время раунда шлюзования.</div>
-            <div class="shop-item-price">180 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_radar', 180, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_shield">
-            <div class="shop-item-title">Защитный Сектор</div>
-            <div class="shop-item-desc">Снижает входящие против вас голоса на 1 единицу в финальном раунде подсчета.</div>
-            <div class="shop-item-price">250 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_shield', 250, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_double">
-            <div class="shop-item-title">Двойной Багаж</div>
-            <div class="shop-item-desc">Генерирует вам сразу два предмета багажа вместо одного, удваивая вашу полезность.</div>
-            <div class="shop-item-price">160 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_double', 160, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_spy">
-            <div class="shop-item-title">Шпион Шлюза</div>
-            <div class="shop-item-desc">Вы можете анонимно поменять свою карту действия на другую случайную прямо в разгаре катки.</div>
-            <div class="shop-item-price">140 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_spy', 140, 'mod')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-mod_overload">
-            <div class="shop-item-title">Перегрузка Системы</div>
-            <div class="shop-item-desc">Один раз за игру позволяет заблокировать любое голосование против любого выбранного игрока.</div>
-            <div class="shop-item-price">400 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('mod_overload', 400, 'mod')">Купить</button>
-          </div>
-        </div>
-
-        <div id="shop-cat-custom" class="shop-grid hidden">
-          <div class="shop-item" id="item-glow_pink"><div class="shop-item-title nick-glow-pink">Розовый Неон</div><div class="shop-item-desc">Свечение розового спектра.</div><div class="shop-item-price">80 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_pink', 80, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_blue"><div class="shop-item-title nick-glow-blue">Синий Импульс</div><div class="shop-item-desc">Лазерная бегущая волна синего цвета.</div><div class="shop-item-price">80 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_blue', 80, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_rgb"><div class="shop-item-title nick-glow-rgb">Элитный RGB</div><div class="shop-item-desc">Перелив всеми цветами радуги.</div><div class="shop-item-price">250 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_rgb', 250, 'custom')">Купить</button></div>
-          
-          <div class="shop-item" id="item-glow_black"><div class="shop-item-title glow-black">ЧернаяБездна</div><div class="shop-item-desc">Черный цвет со светлым контуром.</div><div class="shop-item-price">100 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_black', 100, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_grey"><div class="shop-item-title glow-grey">Серый Стальной</div><div class="shop-item-desc">Пульсирующий металлический оттенок.</div><div class="shop-item-price">100 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_grey', 100, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_white"><div class="shop-item-title glow-white">Белый Квант</div><div class="shop-item-desc">Тяжелое белое сияние вокруг ника.</div><div class="shop-item-price">100 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_white', 100, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_purple"><div class="shop-item-title glow-purple">ФиолетовыйИмпульс</div><div class="shop-item-desc">Глубокий фиолетовый перелив шлюза.</div><div class="shop-item-price">120 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_purple', 120, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_yellow"><div class="shop-item-title glow-yellow">Желтая Радиация</div><div class="shop-item-desc">Ядерно-желтый анимированный цвет.</div><div class="shop-item-price">120 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_yellow', 120, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_green"><div class="shop-item-title glow-green">Зеленый Матрикс</div><div class="shop-item-desc">Кислотный зеленый защитный цвет.</div><div class="shop-item-price">120 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_green', 120, 'custom')">Купить</button></div>
-          <div class="shop-item" id="item-glow_orange"><div class="shop-item-title glow-orange">Огненный Шторм</div><div class="shop-item-desc">Переливающийся оранжевый огонь.</div><div class="shop-item-price">120 🪙</div><button class="btn btn-sm" onclick="buyItem('glow_orange', 120, 'custom')">Купить</button></div>
-
-          <div style="grid-column: 1 / -1;" class="exclusive-header">⭐ ЭКСКЛЮЗИВ ⭐</div>
-
-          <div class="shop-item" id="item-title_shadow">
-            <div class="shop-item-title" style="color:var(--gold);">[Тень Бункера]</div>
-            <div class="shop-item-desc">Уникальный элитный титул перед вашим игровым ником в терминале.</div>
-            <div class="shop-item-price">500 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('title_shadow', 500, 'custom')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-title_baron">
-            <div class="shop-item-title" style="color:var(--gold);">[Кибер-Барон]</div>
-            <div class="shop-item-desc">Уникальный элитный титул перед вашим игровым ником в терминале.</div>
-            <div class="shop-item-price">500 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('title_baron', 500, 'custom')">Купить</button>
-          </div>
-          <div class="shop-item" id="item-title_ghost">
-            <div class="shop-item-title" style="color:var(--gold);">[Призрак Шлюза]</div>
-            <div class="shop-item-desc">Уникальный элитный титул перед вашим игровым ником в терминале.</div>
-            <div class="shop-item-price">500 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('title_ghost', 500, 'custom')">Купить</button>
-          </div>
-        </div>
-
-        <div id="shop-cat-cases" class="shop-grid hidden">
-          <div class="shop-item" id="item-case_cyber">
-            <div class="shop-item-title" style="color:var(--orange); text-shadow:0 0 5px var(--orange-glow);">Матричный Кибер-Кейс</div>
-            <div class="shop-item-desc">Рандомизатор. Содержит полезный инвентарь, модификаторы или чистые коины! Веса настроены честно.</div>
-            <div class="shop-item-price">80 🪙</div>
-            <button class="btn btn-sm" onclick="buyItem('case_cyber', 80, 'case')">Купить кейс</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="scr-network" class="screen hidden">
-      <div class="nav-bar" style="margin-bottom:10px; justify-content: flex-start;">
-        <button class="btn btn-sm" onclick="navigate('scr-network', 'scr-menu')">← Меню</button>
-      </div>
-      <div class="network-grid">
-        <div class="panel">
-          <div class="panel-title">Инициализировать Убежище</div>
-          <div class="form-group">
-            <label>Лимит выживших</label>
-            <select id="sel-player-limit">
-              <option value="2">2 Игрока (1 выживший)</option>
-              <option value="4">4 Игрока (2 выживших)</option>
-              <option value="6">6 Игроков (3 выживших)</option>
-              <option value="8">8 Игроков (4 выживших)</option>
-            </select>
-          </div>
-          <button class="btn" style="width: 100%;" id="btn-host-init" onclick="initP2P('host')">Занять Бункер</button>
-          
-          <div id="host-share-zone" style="display:none; margin-top:15px; background:#000; padding:12px; border-radius:6px; text-align:center;">
-            <label>Код доступа шлюза:</label>
-            <div id="bunker-code-txt" style="font-family:'Orbitron',sans-serif; font-size:1.3rem; color:var(--orange); font-weight:bold; margin:5px 0 10px;">-----</div>
-            <div id="lobby-players-list" style="font-size:0.85rem; background:#050508; padding:8px; margin-bottom:10px; max-height:100px; overflow-y:auto; text-align:left;"></div>
-            <button class="btn btn-sm btn-accent" style="width:100%;" onclick="hostStartGame()">Запустить Игру</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">Подключить терминал</div>
-          <div class="form-group">
-            <label>Код Шлюза Хоста</label>
-            <input type="text" id="inp-target-id" placeholder="ID бункера...">
-          </div>
-          <button class="btn" style="width: 100%;" onclick="initP2P('client')">Открыть Шлюз</button>
-          <div id="client-wait-msg" style="display:none; margin-top:15px; color:var(--orange); font-weight:bold; text-align:center; animation: pPulse 1s ease-in-out infinite alternate;">ОЖИДАНИЕ КАНАЛА СВЯЗИ ХОСТА...</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="scr-game" class="screen hidden">
-      <div class="global-status">
-        <div style="color:var(--orange); font-family:'Orbitron', sans-serif; font-size:0.85rem;">⚠ Протокол Изоляции: Датчики среды обитания</div>
-        <div id="world-disaster-text" style="font-size:0.95rem; font-weight:bold; margin-top:4px;">Расчет параметров катастрофы...</div>
-        <div id="bunker-condition-text" style="font-size:0.8rem; color:var(--grey-text); margin-top:2px;">Анализ состояния...</div>
-        <div id="bunker-time-text" style="font-size:0.85rem; color:var(--neon-blue); font-weight:bold; margin-top:2px;">СРОК ИЗОЛЯЦИИ: --</div>
-      </div>
-
-      <div class="game-layout">
-        <div>
-          <div class="panel" style="margin-bottom:15px;">
-            <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center; gap: 10px;">
-              <span>Ваш Секретный Профиль</span>
-              <span id="my-name-badge" style="font-size:0.8rem;">---</span>
-            </div>
-            <div class="character-sheet" id="char-sheet-box"></div>
-            <div class="action-cards-box">
-              <label>Ваша Уникальная Карта Действия (Без повторов):</label>
-              <div class="action-deck" id="action-deck-box"></div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-              <span>Участники Изоляции (<span id="total-surv-count">0</span>)</span>
-              <div id="host-voting-controls"></div>
-            </div>
-            <div id="current-vote-alert" style="background:#1b120c; border:1px solid #ff7700; color:#ffaa55; font-size:0.75rem; padding:6px; margin-bottom:10px; border-radius:4px; display:none; text-align:center; font-weight:bold;">🚨 СИНХРОННОЕ ГОЛОСОВАНИЕ ОТКРЫТО! ВЫБЕРИТЕ КАНДИДАТА НА НАЗЕМНОЕ ШЛЮЗОВАНИЕ.</div>
-            <div class="terminal-box" id="players-terminal-list"></div>
-          </div>
-        </div>
-
-        <div class="gui-sidebar">
-          <div class="flask-container" id="flask-o2-box">
-            <div class="flask-glass"><div class="flask-liquid" id="f-liq-o2" style="height:100%;"></div></div>
-            <div class="flask-info"><div class="flask-title">Уровень O₂</div><div class="flask-val" id="f-txt-o2">НОРМА</div></div>
-          </div>
-          <div class="flask-container" id="flask-power-box">
-            <div class="flask-glass"><div class="flask-liquid" id="f-liq-power" style="height:100%;"></div></div>
-            <div class="flask-info"><div class="flask-title">Генератор Ядра</div><div class="flask-val" id="f-txt-power">100%</div></div>
-          </div>
-          <div class="flask-container" id="flask-temp-box">
-            <div class="flask-glass"><div class="flask-liquid" id="f-liq-temp" style="height:50%;"></div></div>
-            <div class="flask-info"><div class="flask-title">Термостат</div><div class="flask-val" id="f-txt-temp">+22°C</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="case-modal" class="case-overlay hidden">
-    <div class="case-title-anim">Запуск Модуля Дешифровки Ресурсов</div>
-    <div class="roulette-container">
-      <div class="roulette-line"></div>
-      <div class="roulette-track-window">
-        <div id="roulette-tape-el" class="roulette-tape"></div>
-      </div>
-    </div>
-    <div id="drop-announce-el" class="drop-announce">
-      <div id="drop-tier" class="drop-tier-text">АРТЕФАКТ СИСТЕМЫ</div>
-      <div id="drop-name" class="drop-name-text">---</div>
-    </div>
-    <button class="btn btn-sm" id="btn-close-case-modal" style="margin-top: 25px; display:none;" onclick="closeCaseModal()">Закрыть шлюз</button>
-  </div>
-
-<script>
-  // Конфиг Firebase Realtime Database
-  const firebaseConfig = {
-    apiKey: "AIzaSyD7tXeqTP_HWmfnZV2us10Uocp2iuser6I",
-    authDomain: "the-bunker-96d5c.firebaseapp.com",
-    databaseURL: "https://the-bunker-96d5c-default-rtdb.firebaseio.com",
-    projectId: "the-bunker-96d5c",
-    storageBucket: "the-bunker-96d5c.firebasestorage.app",
-    messagingSenderId: "481257011457",
-    appId: "1:481257011457:web:b60b5a1f62d17af1520300"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const auth = firebase.auth();
-
-  let currentUser = null, userCoins = 0, userEmailClean = "", myShortId = "";
-  let userActiveItems = [], userInventory = [], userCustomStyle = "none", userAvatar = "👤";
-  let peer = null, conn = null, connections = [];
-  let myRole = '', myName = 'Выживший', gameConfig = null, myPeerId = '';
-  let activePlayers = [];
-  let votingActive = false, hasVoted = false;
-
-  const availAvatars = ["👤", "👑", "💀", "🤖", "🦊", "🛸", "🕶", "☣", "🥷", "🔥"];
-
-  // УНИКАЛЬНЫЕ КАРТЫ ДЕЙСТВИЙ (ДЛЯ ВЫДАЧИ ОДНОМУ ИГРОКУ БЕЗ ПОВТОРОВ)
-  const masterActionCards = [
-    "Спиздить багаж у любого соседа",
-    "Полная отмена любого действия игрока",
-    "Замена своего здоровья на абсолютно здоровый статус",
-    "Принудительно вскрыть профессию соседа",
-    "Дополнительное право голоса на этом раунде",
-    "Вылечить фобию у себя или выбранного игрока",
-    "Проверить досье хоста лобби",
-    "Заблокировать голосование против себя на 1 раунд",
-    "Принудительно выкинуть карту действия соседа в утиль",
-    "Поменяться хобби с любым выжившим",
-    "Закоротить шлюз (Голосование пропускается)",
-    "Выкрасть случайный модификатор соседа",
-    "Иммунитет от изгнания на текущем раунде",
-    "Перемешать багаж всех выживших в лобби",
-    "Тайно подсмотреть фобию соседа справа"
-  ];
-
-  const professions = ["Врач-хирург", "Инженер ядерных систем", "Агроном био-плантаций", "Слесарь вентиляции", "Физик-радиобиолог", "Программист ИИ", "Охранник шлюза", "Электрик", "Инженер СЖО", "Биохимик", "Военный медик"];
-  
-  // РАСШИРЕННЫЙ АТМОСФЕРНЫЙ СПИСОК БОЛЕЗНЕЙ
-  const healthBad = [
-    "Лучевой некроз тканей (Тяжёлая стадия)", 
-    "Кибер-психоз стадии 2 (Агрессивный синдром)", 
-    "Генетическое разложение клеток ДНК", 
-    "Хроническая гипоксия мозга", 
-    "Токсический отек легких",
-    "Вирус «Некро-V2» (Скрытый инкубатор)",
-    "Паразит легочной фильтрации",
-    "Острая лучевая слепота",
-    "Мутация костного мозга 3 степени"
-  ];
-  const healthNormal = ["Абсолютно здоров", "Сломана левая рука", "Легкое заикание", "Искусственное сердце (Старое)", "Шрамы от ожогов радиации"];
-  
-  const hobbies = ["Охота и стрельба", "Экстремальная медицина", "Радиолюбитель", "Сборка фильтров", "Хакинг терминалов"];
-  const phobias = ["Клаустрофобия", "Гермофобия", "Ахлуофобия (Боязнь темноты)", "Радиофобия"];
-  const traits = ["Эгоизм", "Эмпатия", "Хладнокровие", "Лидерство", "Паранойя"];
-  const baggages = ["Армейская аптечка", "Набор инструментов", "Фляга спирта (5л)", "Дробовик (3 патрона)", "Защитный костюм ОЗК", "Портативный очиститель воды"];
-  
-  const disasters = [
-    { title: "Ядерная зима", temp: "-45°C", style: "cold" },
-    { title: "Солнечная супер-вспышка", temp: "+65°C", style: "danger" },
-    { title: "Атмосферный выброс токсинов", temp: "+18°C", style: "danger" }
-  ];
-
-  const caseLootTable = [
-    { name: "Ржавый штык-нож", tier: "common", color: "#707085", icon: "🔪", weight: 25 },
-    { name: "Старый дозиметр КП-4", tier: "common", color: "#707085", icon: "📟", weight: 25 },
-    { name: "Тактический лазер", tier: "rare", color: "var(--neon-blue)", icon: "🔦", weight: 15 },
-    { name: "Экстренный энерго-заряд", tier: "rare", color: "var(--neon-blue)", icon: "🔋", weight: 15 },
-    { name: "Иммунитет шлюза (Мод)", tier: "epic", color: "var(--neon-pink)", icon: "🛡", type: "mod", itemKey: "mod_immunity", weight: 5 },
-    { name: "+150 Кибер-Коинов", tier: "epic", color: "var(--neon-pink)", icon: "🪙", type: "coins", value: 150, weight: 8 },
-    { name: "Взломщик данных (Мод)", tier: "legendary", color: "var(--orange)", icon: "🔑", type: "mod", itemKey: "mod_hacker", weight: 3 },
-    { name: "Плазма-ган «ЗЕВС»", tier: "legendary", color: "var(--orange)", icon: "⚡", weight: 4 }
-  ];
-
-  function toggleProfileMenu() {
-    document.getElementById('prof-dropdown').classList.toggle('active');
-  }
-
-  window.addEventListener('click', function(e) {
-    const drop = document.getElementById('prof-dropdown');
-    const trigger = document.getElementById('prof-trigger');
-    if (!drop.contains(e.target) && !trigger.contains(e.target)) {
-      drop.classList.remove('active');
-    }
-  });
-
-  function switchHubTab(tabId) {
-    document.querySelectorAll('.hub-tab-btn').forEach(b => {
-      b.classList.toggle('active', b.getAttribute('onclick').includes(tabId));
-    });
-    document.querySelectorAll('.hub-content-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-  }
-
-  function switchShopCategory(catKey) {
-    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('cat-btn-' + catKey).classList.add('active');
-    document.getElementById('shop-cat-mods').classList.add('hidden');
-    document.getElementById('shop-cat-custom').classList.add('hidden');
-    document.getElementById('shop-cat-cases').classList.add('hidden');
-    document.getElementById('shop-cat-' + catKey).classList.remove('hidden');
-  }
-
-  function navigate(fromId, toId) {
-    document.getElementById(fromId).classList.add('hidden');
-    const toEl = document.getElementById(toId);
-    toEl.classList.remove('hidden');
-    toEl.classList.add('fade-in');
-  }
-
-  function openShop() { navigate('scr-menu', 'scr-shop'); }
-
-  function cycleLocalAvatar() {
-    let currIdx = availAvatars.indexOf(userAvatar);
-    let nextIdx = (currIdx + 1) % availAvatars.length;
-    userAvatar = availAvatars[nextIdx];
-    document.getElementById('hub-avatar-display').innerText = userAvatar;
-    document.getElementById('prof-trigger').innerText = userAvatar;
-    saveProfileSettings();
-  }
-
-  function saveProfileSettings() {
-    if(!currentUser) return;
-    let nick = document.getElementById('hub-inp-nickname').value.trim() || "Выживший";
-    myName = nick;
-    db.ref('users/' + userEmailClean + '/profile').set({ nickname: nick, avatar: userAvatar });
-  }
-
-  // СИСТЕМА ПРОВЕРКИ ВХОДА, БАНОВ И МУТОВ И ДЕВ-РЕЖИМА
-  auth.onAuthStateChanged((user) => {
-    const trigger = document.getElementById('prof-trigger');
-    if (user) {
-      currentUser = user;
-      userEmailClean = user.email.replace(/\./g, '_');
-      myShortId = String(Math.abs(userEmailClean.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0))).substring(0,4);
-      document.getElementById('drop-my-short-id').innerText = "#" + myShortId;
-
-      // ПРОВЕРКА НА БАН
-      db.ref('bans/' + userEmailClean).once('value', (snapshot) => {
-        if(snapshot.val()) {
-          alert("Ваш терминал заблокирован разработчиком НАВСЕГДА.");
-          auth.signOut();
-          window.location.reload();
-        }
-      });
-
-      document.getElementById('auth-form').style.display = 'none';
-      document.getElementById('auth-user-status').style.display = 'block';
-      document.getElementById('drop-auth-needed').style.display = 'none';
-      document.getElementById('drop-auth-logged').style.display = 'block';
-      
-      db.ref('users/' + userEmailClean).on('value', (snap) => {
-        const data = snap.val() || {};
-        userCoins = data.coins || 0;
-        userActiveItems = data.mods || [];
-        userInventory = data.inventory || [];
-        userCustomStyle = data.customStyle || "none";
-        
-        const prof = data.profile || {};
-        let nick = prof.nickname || user.email.split('@')[0];
-        userAvatar = prof.avatar || "👤";
-        myName = nick;
-
-        // ЕСЛИ Я РАЗРАБОТЧИК (НИК LYOHICH) — ОТОБРАЖАЕМ ПАНЕЛЬ АДМИНА
-        if(nick.toLowerCase() === 'lyohich') {
-          document.getElementById('tab-dev-toggle').style.display = 'inline-block';
-        } else {
-          document.getElementById('tab-dev-toggle').style.display = 'none';
+                container.innerHTML += `
+                    <div class="border p-3 rounded-lg flex justify-between items-center transition-all duration-300 ${statusBg}">
+                        <div>
+                            <div class="text-xs font-bold text-white">${p.name}</div>
+                            <div class="text-[10px] text-zinc-500 mt-0.5">Скрытые баллы: ??</div>
+                        </div>
+                        <div class="text-[10px] font-mono border border-zinc-800 px-2 py-1 rounded bg-black/40">
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+            });
+            updateCallSelect();
         }
 
-        document.getElementById('hub-inp-nickname').value = nick;
-        document.getElementById('hub-avatar-display').innerText = userAvatar;
-        trigger.innerText = userAvatar;
-        trigger.classList.add('logged-in');
-
-        document.getElementById('shop-balance-holder').innerText = userCoins;
-        document.getElementById('drop-coins').innerText = userCoins + " 🪙";
-        
-        updateShopCardsUI();
-        renderHubInventory();
-      });
-    } else {
-      currentUser = null;
-      document.getElementById('auth-form').style.display = 'block';
-      document.getElementById('auth-user-status').style.display = 'none';
-      document.getElementById('drop-auth-needed').style.display = 'block';
-      document.getElementById('drop-auth-logged').style.display = 'none';
-      document.getElementById('tab-dev-toggle').style.display = 'none';
-      trigger.classList.remove('logged-in');
-      trigger.innerText = "👤";
-    }
-  });
-
-  function handleAuth(type) {
-    const email = document.getElementById('inp-email').value.trim();
-    const pass = document.getElementById('inp-pass').value.trim();
-    if(!email || !pass) return alert('Заполните поля!');
-    if(type === 'register') {
-      auth.createUserWithEmailAndPassword(email, pass).then((cred) => {
-        let clean = cred.user.email.replace(/\./g, '_');
-        db.ref('users/' + clean).set({ coins: 150, mods: [], inventory: [], customStyle: "none" });
-        alert('Успешно зарегистрировано! Стартовый баланс: 150 коинов.');
-      }).catch(err => alert('Ошибка регистрации: ' + err.message));
-    } else {
-      auth.signInWithEmailAndPassword(email, pass).catch(err => alert('Ошибка входа: ' + err.message));
-    }
-  }
-
-  function logout() { auth.signOut(); }
-
-  // АДМИНИСТРАТИВНЫЕ ФУНКЦИИ РАЗРАБОТЧИКА (ПО НИКУ ИЛИ ID)
-  function findUserKeyByInput(inputVal, callback) {
-    db.ref('users').once('value', (snapshot) => {
-      let allUsers = snapshot.val() || {};
-      let targetCleanEmail = null;
-      
-      for (let emailKey in allUsers) {
-        let prof = allUsers[emailKey].profile || {};
-        let uNick = (prof.nickname || "").toLowerCase();
-        let uShortId = "#" + String(Math.abs(emailKey.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0))).substring(0,4);
-        
-        if (uNick === inputVal.toLowerCase() || uShortId === inputVal) {
-          targetCleanEmail = emailKey;
-          break;
+        // Обновление селекта для звонков
+        function updateCallSelect() {
+            const select = document.getElementById('call-target');
+            select.innerHTML = '';
+            state.players.forEach(p => {
+                if(p.id !== 1 && p.isAlive) {
+                    select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                }
+            });
         }
-      }
-      callback(targetCleanEmail);
-    });
-  }
 
-  function devModifyCoins() {
-    let target = document.getElementById('dev-target-user').value.trim();
-    let amt = parseInt(document.getElementById('dev-coin-amount').value.trim());
-    if(!target || isNaN(amt)) return alert("Введите корректные данные в админку!");
+        // Управление доступностью P2P Телефонии
+        function setComms(status) {
+            state.commsOpen = status;
+            const phoneInterface = document.getElementById('phone-interface');
+            const commsStatus = document.getElementById('comms-status');
+            const callScreen = document.getElementById('call-screen');
 
-    findUserKeyByInput(target, (userKey) => {
-      if(!userKey) return alert("Игрок не обнаружен в базе данных.");
-      db.ref('users/' + userKey + '/coins').transaction((current) => {
-        return (current || 0) + amt;
-      }, () => alert("Финансовый баланс изменен успешно."));
-    });
-  }
-
-  function devBlockUser(mode) {
-    let target = document.getElementById('dev-target-user').value.trim();
-    if(!target) return alert("Укажите цель блокировки.");
-
-    findUserKeyByInput(target, (userKey) => {
-      if(!userKey) return alert("Игрок не найден.");
-      if(mode === 'ban') {
-        db.ref('bans/' + userKey).set(true, () => alert("Выдан Перманентный бан терминала."));
-      } else {
-        let expireTime = Date.now() + 15 * 60 * 1000;
-        db.ref('mutes/' + userKey).set(expireTime, () => alert("Выдан Мут шлюза на 15 минут."));
-      }
-    });
-  }
-
-  function devKickLobby() {
-    let target = document.getElementById('dev-target-user').value.trim();
-    if(!target) return alert("Укажите ник игрока.");
-    if(myRole !== 'host') return alert("Для кика из лобби вы должны быть Хостом этой сессии!");
-    
-    let p = activePlayers.find(pl => pl.name.toLowerCase() === target.toLowerCase() || ("#" + pl.shortId) === target);
-    if(p) {
-      p.kicked = true;
-      syncAll();
-      alert("Игрок принудительно удален из бункера.");
-    } else alert("Игрок не найден в текущей сессии.");
-  }
-
-  function updateShopCardsUI() {
-    document.querySelectorAll('.shop-item').forEach(card => card.classList.remove('purchased'));
-    userActiveItems.forEach(k => { const c = document.getElementById('item-' + k); if(c) c.classList.add('purchased'); });
-    if(userCustomStyle !== "none") {
-      const c = document.getElementById('item-' + userCustomStyle);
-      if(c) c.classList.add('purchased');
-    }
-  }
-
-  function buyItem(itemKey, price, type) {
-    if(!currentUser) return alert('Требуется авторизация!');
-    if(userCoins < price) return alert('Недостаточно коинов!');
-
-    db.ref('users/' + userEmailClean).transaction((userData) => {
-      if (userData && userData.coins >= price) {
-        userData.coins -= price;
-        if(type === 'mod') {
-          if(!userData.mods) userData.mods = [];
-          if(!userData.mods.includes(itemKey)) userData.mods.push(itemKey);
-        } else if(type === 'custom') {
-          userData.customStyle = itemKey;
-        } else if(type === 'case') {
-          if(!userData.inventory) userData.inventory = [];
-          userData.inventory.push('case_cyber');
+            if(status) {
+                phoneInterface.classList.remove('opacity-40', 'pointer-events-none');
+                commsStatus.innerText = "Связь активна";
+                commsStatus.className = "text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-900";
+                log("Внутренние P2P линии открыты. Вы можете совершать звонки.");
+            } else {
+                phoneInterface.classList.add('opacity-40', 'pointer-events-none');
+                commsStatus.innerText = "Связь отключена";
+                commsStatus.className = "text-[10px] bg-red-950 text-red-400 px-2 py-0.5 rounded border border-red-900";
+                callScreen.innerText = "Линия связи свободна";
+                log("Внутренние P2P линии заблокированы Системой.");
+            }
         }
-      }
-      return userData;
-    }, (err, comm) => { if(comm) alert('Ресурс успешно зачислен на аккаунт!'); });
-  }
 
-  function renderHubInventory() {
-    const box = document.getElementById('hub-inventory-list');
-    if(!userInventory || userInventory.length === 0) {
-      box.innerHTML = `<div style="text-align:center; padding:15px 0;">Склад пуст ресурсов.</div>`;
-      return;
-    }
-    let html = "";
-    userInventory.forEach((item, idx) => {
-      if(item === 'case_cyber') {
-        html += `
-          <div class="inv-item-row usable">
-            <span>📦 Кибер-Кейс</span>
-            <button class="btn btn-sm btn-accent" style="padding:2px 6px; font-size:0.65rem;" onclick="openCyberCaseAnimation(${idx})">Открыть</button>
-          </div>
-        `;
-      } else {
-        html += `
-          <div class="inv-item-row">
-            <span>${item}</span>
-            <span style="color:var(--grey-text); font-size:0.65rem;">Материал</span>
-          </div>
-        `;
-      }
-    });
-    box.innerHTML = html;
-  }
+        // Симуляция P2P Звонка
+        function makeCall() {
+            if(!state.commsOpen) return;
+            const targetId = document.getElementById('call-target').value;
+            const target = state.players.find(p => p.id == targetId);
+            const callScreen = document.getElementById('call-screen');
 
-  function openCyberCaseAnimation(itemIndex) {
-    toggleProfileMenu();
-    document.getElementById('case-modal').classList.remove('hidden');
-    document.getElementById('btn-close-case-modal').style.display = 'none';
-    document.getElementById('drop-announce-el').classList.remove('reveal');
-    
-    const tape = document.getElementById('roulette-tape-el');
-    tape.style.transition = "none";
-    tape.style.transform = "translateX(0px)";
-
-    let totalWeight = caseLootTable.reduce((acc, item) => acc + item.weight, 0);
-    let randomNum = Math.floor(Math.random() * totalWeight);
-    let finalLoot = caseLootTable[0];
-    
-    for (let i = 0; i < caseLootTable.length; i++) {
-      if (randomNum < caseLootTable[i].weight) {
-        finalLoot = caseLootTable[i];
-        break;
-      }
-      randomNum -= caseLootTable[i].weight;
-    }
-    
-    let tapeHtml = "";
-    for(let i=0; i<45; i++) {
-      let randLoot = caseLootTable[Math.floor(Math.random() * caseLootTable.length)];
-      tapeHtml += `<div class="roulette-slot" style="border-bottom: 2px solid ${randLoot.color};">${randLoot.icon}</div>`;
-    }
-    tape.innerHTML = tapeHtml;
-
-    const targetSlotIndex = 38; 
-    const slotsArr = tape.getElementsByClassName('roulette-slot');
-    
-    setTimeout(() => {
-      slotsArr[targetSlotIndex].innerHTML = finalLoot.icon;
-      slotsArr[targetSlotIndex].style.borderBottom = `3px solid ${finalLoot.color}`;
-      
-      let slotWidth = 110;
-      let windowWidth = document.querySelector('.roulette-track-window').offsetWidth;
-      let targetLeft = (targetSlotIndex * slotWidth) - (windowWidth / 2) + (slotWidth / 2);
-      
-      tape.style.transition = "transform 4.2s cubic-bezier(0.1, 0.55, 0.1, 1)";
-      tape.style.transform = `translateX(-${targetLeft}px)`;
-    }, 50);
-
-    setTimeout(() => {
-      document.getElementById('drop-announce-el').classList.add('reveal');
-      document.getElementById('drop-tier').innerText = `ДАННЫЕ ТИРА: ${finalLoot.tier.toUpperCase()}`;
-      document.getElementById('drop-tier').style.color = finalLoot.color;
-      document.getElementById('drop-name').innerText = finalLoot.name;
-      document.getElementById('btn-close-case-modal').style.display = 'inline-flex';
-
-      db.ref('users/' + userEmailClean).transaction((userData) => {
-        if(userData) {
-          if(userData.inventory) userData.inventory.splice(itemIndex, 1);
-          if(finalLoot.type === 'coins') {
-            userData.coins = (userData.coins || 0) + finalLoot.value;
-          } else if(finalLoot.type === 'mod') {
-            if(!userData.mods) userData.mods = [];
-            if(!userData.mods.includes(finalLoot.itemKey)) userData.mods.push(finalLoot.itemKey);
-          } else {
-            if(!userData.inventory) userData.inventory = [];
-            userData.inventory.push(finalLoot.icon + " " + finalLoot.name);
-          }
+            callScreen.innerHTML = `<span class="text-orange-400 animate-pulse">Гудки... Соединение с Комнатой ${targetId}</span>`;
+            
+            setTimeout(() => {
+                const answers = [
+                    "Да? Я согласен действовать сообща, давай сольем Комнату 3.",
+                    "Не верь Комнате 5, они копят баллы.",
+                    "Слушай, если мне выпадет ствол, я тебя не трону. Договорились?",
+                    "Я тебе не доверяю. Не звони сюда.",
+                    "У меня есть план, давай распределим голоса поровну."
+                ];
+                const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
+                callScreen.innerHTML = `
+                    <div class="text-left text-zinc-300">
+                        <span class="text-orange-400 font-bold">Комната ${targetId}:</span> "${randomAnswer}"
+                    </div>
+                `;
+                log(`Установлен P2P контакт с Комнатой ${targetId}`);
+            }, 1500);
         }
-        return userData;
-      });
-    }, 4300);
-  }
 
-  function closeCaseModal() { document.getElementById('case-modal').classList.add('hidden'); }
-  function consumeUserModsInDB() { if(currentUser && userEmailClean) db.ref('users/' + userEmailClean + '/mods').set([]); }
-
-  // СБОРКА ДОСЬЕ С УНИКАЛЬНОЙ КАРТОЙ (БЕЗ ПОВТОРОВ У ИГРОКОВ В ЛОББИ)
-  function createCharacterData(modifiers = [], chosenCard = "Укрепленный бронежилет") {
-    let health = Math.random() < 0.40 ? healthBad[Math.floor(Math.random() * healthBad.length)] : healthNormal[Math.floor(Math.random() * healthNormal.length)];
-    const age = Math.floor(Math.random() * (68 - 19 + 1)) + 19;
-    
-    return {
-      gender: `Пол: ${Math.random() > 0.5 ? 'Муж' : 'Жен'}, ${age} лет`,
-      prof: professions[Math.floor(Math.random() * professions.length)],
-      health: health,
-      hobby: hobbies[Math.floor(Math.random() * hobbies.length)],
-      phobia: phobias[Math.floor(Math.random() * phobias.length)],
-      trait: traits[Math.floor(Math.random() * traits.length)],
-      baggage: baggages[Math.floor(Math.random() * baggages.length)],
-      cards: [chosenCard],
-      modifiers: modifiers
-    };
-  }
-
-  function initP2P(role) {
-    // Проверка мута перед созданием лобби / подключением
-    if(currentUser) {
-      db.ref('mutes/' + userEmailClean).once('value', (snap) => {
-        let expire = snap.val();
-        if(expire && Date.now() < expire) {
-          alert("Ваш шлюзовой канал заблокирован админом. Осталось мута: " + Math.round((expire - Date.now())/1000/60) + " мин.");
-          return;
+        // ДВИЖОК ИГРЫ (Game Core Loop)
+        function startGame() {
+            state.currentRound = 1;
+            document.getElementById('round-counter').innerText = `РАУНД 1 / ${state.maxRounds}`;
+            log("Протокол '6 КОМНАТ' запущен. Удачи.", "important");
+            nextPhase();
         }
-        startPeerEngine(role);
-      });
-    } else {
-      startPeerEngine(role);
-    }
-  }
 
-  function startPeerEngine(role) {
-    myRole = role;
-    peer = new Peer(role === 'host' ? 'bunker-' + Math.floor(1000 + Math.random() * 9000) : null, { debug: 1 });
+        function nextPhase() {
+            // Если раунды закончились
+            if (state.currentRound > state.maxRounds) {
+                endGame();
+                return;
+            }
 
-    peer.on('open', (id) => {
-      myPeerId = id;
-      if(role === 'host') {
-        document.getElementById('btn-host-init').style.display = 'none';
-        document.getElementById('host-share-zone').style.display = 'block';
-        document.getElementById('bunker-code-txt').innerText = id;
-        
-        let localPool = [...masterActionCards];
-        let randCard = localPool.splice(Math.floor(Math.random() * localPool.length), 1)[0];
+            // Проверяем жива ли Комната 1
+            if(!state.players[0].isAlive) {
+                endGame(false);
+                return;
+            }
 
-        activePlayers.push({
-          id: id, name: myName, avatar: userAvatar, customStyle: userCustomStyle,
-          shortId: myShortId || "0000", emailClean: userEmailClean || 'none', 
-          data: createCharacterData(userActiveItems, randCard),
-          kicked: false, voteCount: 0, votedFor: ''
-        });
-        consumeUserModsInDB(); renderLobbyList();
-      } else {
-        const targetId = document.getElementById('inp-target-id').value.trim();
-        if(!targetId) return alert('Укажите код!');
-        conn = peer.connect(targetId); setupConnection(conn);
-      }
-    });
+            // 7 раунд — раунд ликвидации (особенность с пистолетом)
+            if (state.currentRound === 7 && state.phase !== 'gun-round') {
+                triggerGunRound();
+                return;
+            }
 
-    peer.on('connection', (c) => { if(role === 'host') { connections.push(c); setupHostHandlers(c); } });
-  }
-
-  function setupConnection(c) {
-    c.on('open', () => {
-      c.send({ type: 'join', name: myName, avatar: userAvatar, customStyle: userCustomStyle, shortId: myShortId, emailClean: userEmailClean || 'none', modifiers: userActiveItems });
-      consumeUserModsInDB();
-      document.getElementById('client-wait-msg').style.display = 'block';
-    });
-
-    c.on('data', (data) => {
-      if(data.type === 'start') {
-        gameConfig = data.config; activePlayers = data.players;
-        navigate('scr-network', 'scr-game'); initGameUI();
-      }
-      if(data.type === 'sync') { activePlayers = data.players; renderPlayersTerminal(); checkOxygenStatus(); }
-      if(data.type === 'vote-state') {
-        votingActive = data.active;
-        document.getElementById('current-vote-alert').style.display = votingActive ? 'block' : 'none';
-        if(!votingActive) hasVoted = false;
-        renderPlayersTerminal();
-      }
-      if(data.type === 'game-end') showGameOver(data.msg);
-    });
-  }
-
-  function setupHostHandlers(c) {
-    c.on('data', (data) => {
-      if(data.type === 'join') {
-        // Выдача строго уникальной карты действия для входящего игрока (без повторений в лобби)
-        let usedCards = activePlayers.map(p => p.data.cards[0]);
-        let safePool = masterActionCards.filter(card => !usedCards.includes(card));
-        if(safePool.length === 0) safePool = [...masterActionCards]; // Резервный ресет если много людей
-        let assignedCard = safePool[Math.floor(Math.random() * safePool.length)];
-
-        activePlayers.push({
-          id: c.peer, name: data.name, avatar: data.avatar || "👤", customStyle: data.customStyle || "none",
-          shortId: data.shortId || "1111", emailClean: data.emailClean || 'none', 
-          data: createCharacterData(data.modifiers || [], assignedCard),
-          kicked: false, voteCount: 0, votedFor: ''
-        });
-        renderLobbyList(); syncAll();
-      }
-      if(data.type === 'submit-vote') {
-        if(!votingActive) return;
-        let p = activePlayers.find(pl => pl.id === data.from);
-        if(p && !p.votedFor) {
-          p.votedFor = data.targetId;
-          let target = activePlayers.find(pl => pl.id === data.targetId); if(target) target.voteCount++;
-          syncAll();
+            runStandardChallenge();
         }
-      }
-    });
-  }
 
-  function renderLobbyList() {
-    document.getElementById('lobby-players-list').innerHTML = activePlayers.map(p => {
-      let devB = (p.name.toLowerCase() === "lyohich") ? ` <span class="nick-dev-style">DEV</span>` : "";
-      return `<div>${p.avatar} <b>${p.name}</b> [#${p.shortId}]${devB} готов</div>`;
-    }).join('');
-  }
-
-  function hostStartGame() {
-    const limit = parseInt(document.getElementById('sel-player-limit').value);
-    gameConfig = {
-      limit: limit, targetSurvivors: Math.ceil(activePlayers.length / 2),
-      disaster: disasters[Math.floor(Math.random() * disasters.length)],
-      condition: "Шлюзовая фильтрация кислорода работает в штатном режиме бункера.",
-      timeText: `12 МЕСЯЦЕВ В АВТОНОМИИ`
-    };
-    connections.forEach(c => c.open && c.send({ type: 'start', config: gameConfig, players: activePlayers }));
-    navigate('scr-network', 'scr-game'); initGameUI();
-  }
-
-  function initGameUI() {
-    document.getElementById('world-disaster-text').innerText = `КАТАСТРОФА: ${gameConfig.disaster.title} (${gameConfig.disaster.temp})`;
-    document.getElementById('bunker-condition-text').innerText = gameConfig.condition;
-    document.getElementById('bunker-time-text').innerText = `СРОК ИЗОЛЯЦИИ: ${gameConfig.timeText}`;
-
-    const flPower = document.getElementById('flask-power-box');
-    const flTemp = document.getElementById('flask-temp-box');
-    if(gameConfig.disaster.style === 'danger') {
-      flPower.className = "flask-container danger"; flTemp.className = "flask-container danger";
-      document.getElementById('f-txt-temp').innerText = gameConfig.disaster.temp;
-      document.getElementById('f-liq-temp').style.height = "90%";
-    } else {
-      flPower.className = "flask-container cold"; flTemp.className = "flask-container cold";
-      document.getElementById('f-txt-temp').innerText = gameConfig.disaster.temp;
-      document.getElementById('f-liq-temp').style.height = "25px";
-    }
-
-    const me = activePlayers.find(p => p.id === myPeerId);
-    if(me) {
-      let isMeDev = (me.name.toLowerCase() === 'lyohich');
-      document.getElementById('my-name-badge').innerHTML = isMeDev ? `<span class="nick-dev-style">lyohich DEV</span>` : me.name + ` [#${me.shortId}]`;
-      document.getElementById('char-sheet-box').innerHTML = `
-        <div class="trait-card"><label>Био-Данные</label><div class="trait-value">${me.data.gender}</div></div>
-        <div class="trait-card"><label>Специализация</label><div class="trait-value">${me.data.prof}</div></div>
-        <div class="trait-card"><label>Статус Здоровья</label><div class="trait-value">${me.data.health}</div></div>
-        <div class="trait-card"><label>Хобби</label><div class="trait-value">${me.data.hobby}</div></div>
-        <div class="trait-card"><label>Характер</label><div class="trait-value">${me.data.trait}</div></div>
-        <div class="trait-card"><label>Страх фобии</label><div class="trait-value">${me.data.phobia}</div></div>
-        <div class="trait-card" style="grid-column: span 2;"><label>Инвентарь багажа</label><div class="trait-value">${me.data.baggage}</div></div>
-      `;
-      let cardHtml = me.data.cards.map(c => `<div class="action-mini-card">${c}</div>`).join('');
-      document.getElementById('action-deck-box').innerHTML = cardHtml;
-    }
-    if(myRole === 'host') {
-      document.getElementById('host-voting-controls').innerHTML = `<button class="btn btn-sm btn-accent" id="btn-toggle-v" onclick="hostToggleVoting()">Открыть Голосование</button>`;
-    }
-    renderPlayersTerminal(); checkOxygenStatus();
-  }
-
-  // ЗАКРЫТИЕ ГОЛОСОВАНИЯ С РЕАЛЬНЫМ ИЗГНАНИЕМ ИГРОКА С НАИБОЛЬШИМ ЧИСЛОМ ГОЛОСОВ
-  function hostToggleVoting() {
-    votingActive = !votingActive;
-    const btn = document.getElementById('btn-toggle-v');
-    
-    if(votingActive) {
-      btn.innerText = "Завершить Голосование"; 
-      activePlayers.forEach(p => { p.voteCount = 0; p.votedFor = ''; });
-    } else {
-      btn.innerText = "Открыть Голосование";
-      
-      // Логика вычисления абсолютного большинства голосов
-      let alivePlayers = activePlayers.filter(p => !p.kicked);
-      let maxVotes = 0;
-      let targetToKick = null;
-      let tie = false;
-
-      alivePlayers.forEach(p => {
-        if(p.voteCount > maxVotes) {
-          maxVotes = p.voteCount;
-          targetToKick = p;
-          tie = false;
-        } else if(p.voteCount === maxVotes && maxVotes > 0) {
-          tie = true;
+        // Генерация обычного испытания
+        function runStandardChallenge() {
+            state.phase = 'challenge';
+            setComms(true); // Включаем телефоны в начале раунда
+            
+            const randomChallenge = state.challenges[Math.floor(Math.random() * state.challenges.length)];
+            document.getElementById('host-speech').innerText = `"Раунд ${state.currentRound}. Испытание: ${randomChallenge.title}. Думайте быстро, общайтесь по телефонам."`;
+            
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4 text-left">
+                    <h4 class="text-lg font-bold text-white border-b border-zinc-800 pb-2">${randomChallenge.title}</h4>
+                    <p class="text-sm text-zinc-400">${randomChallenge.desc}</p>
+                    <div class="pt-2">
+                        <button onclick="submitChallenge()" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-black font-bold uppercase text-xs tracking-wider rounded transition-colors">
+                            Принять участие в испытании
+                        </button>
+                    </div>
+                </div>
+            `;
+            renderRooms();
         }
-      });
 
-      if(targetToKick && !tie && maxVotes > 0) {
-        targetToKick.kicked = true;
-        alert(`Игрок ${targetToKick.name} собрал большинство голосов [${maxVotes}] и изгнан наружу!`);
-      } else {
-        alert("Голоса распределились поровну или никто не проголосовал. Шлюз закрыт, все остались живы.");
-      }
-    }
-    connections.forEach(c => c.open && c.send({ type: 'vote-state', active: votingActive }));
-    syncAll();
-  }
+        function submitChallenge() {
+            setComms(false); // Выключаем телефоны в конце раунда для обсуждения итогов
+            
+            // Начисляем скрытые баллы живым игрокам
+            state.players.forEach(p => {
+                if (p.isAlive && Math.random() > 0.4) {
+                    p.score += 1; // 1 балл за испытание
+                }
+            });
 
-  function castVote(targetId) {
-    if(!votingActive || hasVoted) return;
-    hasVoted = true;
-    if(myRole === 'host') {
-      let me = activePlayers.find(p => p.id === myPeerId);
-      if(me && !me.votedFor) {
-        me.votedFor = targetId;
-        let t = activePlayers.find(pl => pl.id === targetId); if(t) t.voteCount++;
-        syncAll();
-      }
-    } else if(conn && conn.open) conn.send({ type: 'submit-vote', from: myPeerId, targetId: targetId });
-    renderPlayersTerminal();
-  }
-
-  function hostKickPlayer(id) { if(myRole === 'host') { let p = activePlayers.find(pl => pl.id === id); if(p) { p.kicked = true; syncAll(); } } }
-
-  function renderPlayersTerminal() {
-    const listEl = document.getElementById('players-terminal-list');
-    if(!listEl) return;
-    let html = '';
-    activePlayers.forEach(p => {
-      let styleClass = "";
-      let pNameClean = p.name;
-      let prefixTitle = "";
-
-      // Расчет эксклюзивных титулов (приписок)
-      if(p.customStyle === "title_shadow") prefixTitle = `<span style="color:var(--gold); font-size:10px;">[Тень Бункера] </span>`;
-      else if(p.customStyle === "title_baron") prefixTitle = `<span style="color:var(--gold); font-size:10px;">[Кибер-Барон] </span>`;
-      else if(p.customStyle === "title_ghost") prefixTitle = `<span style="color:var(--gold); font-size:10px;">[Призрак Шлюза] </span>`;
-      
-      // Обработка цветов ника
-      if(p.name.toLowerCase() === "lyohich") { styleClass = "nick-dev-style"; pNameClean = "lyohich DEV"; }
-      else if(p.customStyle === "glow_pink") styleClass = "nick-glow-pink";
-      else if(p.customStyle === "glow_blue") styleClass = "nick-glow-blue";
-      else if(p.customStyle === "glow_rgb") styleClass = "nick-glow-rgb";
-      else if(p.customStyle === "glow_black") styleClass = "glow-black";
-      else if(p.customStyle === "glow_grey") styleClass = "glow-grey";
-      else if(p.customStyle === "glow_white") styleClass = "glow-white";
-      else if(p.customStyle === "glow_purple") styleClass = "glow-purple";
-      else if(p.customStyle === "glow_yellow") styleClass = "glow-yellow";
-      else if(p.customStyle === "glow_green") styleClass = "glow-green";
-      else if(p.customStyle === "glow_orange") styleClass = "glow-orange";
-
-      let statusText = p.kicked ? `<span style="color:var(--neon-red);">ИЗГНАН</span>` : `<span style="color:var(--neon-green);">ВНУТРИ</span>`;
-      let voteBtn = (votingActive && !p.kicked && !hasVoted) ? `<button class="btn btn-sm" style="border-color:var(--neon-red); color:var(--neon-red); padding:2px 6px; font-size:10px;" onclick="castVote('${p.id}')">Голос</button>` : "";
-      let hostKickBtn = (myRole === 'host' && !p.kicked) ? `<button class="btn btn-sm" style="margin-left:5px; padding:2px 6px; background:#301515;" onclick="hostKickPlayer('${p.id}')">❌</button>` : "";
-      let voteIndicators = p.voteCount > 0 ? ` <span style="color:var(--orange);">[${p.voteCount}]</span>` : '';
-
-      html += `
-        <div class="player-row ${p.kicked ? 'exiled' : ''}">
-          <div class="player-name-col">${p.avatar} ${prefixTitle}<span class="${styleClass}">${pNameClean}</span> [#${p.shortId}]${voteIndicators}</div>
-          <div>${statusText} ${voteBtn} ${hostKickBtn}</div>
-        </div>
-      `;
-    });
-    listEl.innerHTML = html;
-    document.getElementById('total-surv-count').innerText = activePlayers.filter(p => !p.kicked).length;
-  }
-
-  function checkOxygenStatus() {
-    let ratio = activePlayers.filter(p => !p.kicked).length / activePlayers.length;
-    let pct = Math.round(ratio * 100);
-    document.getElementById('f-liq-o2').style.height = pct + '%';
-    document.getElementById('f-txt-o2').innerText = pct <= 50 ? "КРИТ. О2" : "НОРМА";
-    document.getElementById('flask-o2-box').className = pct <= 50 ? "flask-container danger" : "flask-container";
-  }
-
-  // СИНХРОНИЗАЦИЯ И ИСПРАВЛЕНИЕ АБУЗА (ДЮПА) ВАЛЮТЫ В СОЛО
-  function syncAll() {
-    renderPlayersTerminal(); checkOxygenStatus();
-    connections.forEach(c => c.open && c.send({ type: 'sync', players: activePlayers }));
-    const remaining = activePlayers.filter(p => !p.kicked);
-    
-    if(gameConfig && remaining.length === gameConfig.targetSurvivors && myRole === 'host') {
-      
-      // ФИКС АБУЗА: Если в бункере изначально меньше 2 игроков, монеты не начисляются!
-      if(activePlayers.length < 2) {
-        let msg = "Сессия завершена. Для начисления Кибер-Коинов в бункере должно быть минимум 2 игрока!";
-        connections.forEach(c => c.open && c.send({ type: 'game-end', msg: msg }));
-        showGameOver(msg);
-        return;
-      }
-
-      remaining.forEach(p => {
-        if(p.emailClean && p.emailClean !== 'none' && !p.kicked) {
-          db.ref('users/' + p.emailClean + '/coins').transaction((current) => {
-            return (current || 0) + 100;
-          }).catch(e => console.log("Ошибка записи монет"));
+            log(`Раунд ${state.currentRound} завершен. Баллы распределены анонимно.`);
+            
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="space-y-4">
+                    <p class="text-sm text-zinc-400">Система обрабатывает результаты... Линии связи закрыты на технический перерыв раунда.</p>
+                    <button onclick="startDiscussionPhase()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase text-xs tracking-wider border border-zinc-700 rounded transition-colors">
+                        Перейти к обсуждению результатов
+                    </button>
+                </div>
+            `;
         }
-      });
 
-      let msg = `Квота достигнута. Шлюзы заблокированы! Выжили: ` + remaining.map(p => p.name).join(', ') + `. Выжившим начислено +100 коинов!`;
-      connections.forEach(c => c.open && c.send({ type: 'game-end', msg: msg }));
-      showGameOver(msg);
-    }
-  }
+        function startDiscussionPhase() {
+            state.phase = 'discussion';
+            setComms(true); // Включаем телефоны ПОСЛЕ раунда для обсуждения
+            
+            document.getElementById('host-speech').innerText = `"Вы можете обсудить прошедшее испытание по телефонам. Кто лидирует? Никто не знает."`;
+            
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4">
+                    <p class="text-sm text-zinc-300">Интерком и телефоны активны. Время на дипломатию.</p>
+                    <button onclick="finishRound()" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-black font-bold uppercase text-xs tracking-wider rounded transition-colors">
+                        Завершить раунд и перейти к следующему
+                    </button>
+                </div>
+            `;
+        }
 
-  function showGameOver(msg) {
-    document.body.innerHTML = `
-      <div class="screen fade-in" style="text-align:center; max-width:650px; margin:20px auto; padding: 15px;">
-        <div class="menu-logo" style="color:var(--neon-green);">СЕССИЯ ОКОНЧЕНА</div>
-        <div class="panel" style="margin-top:20px; border-color: var(--neon-green);">
-          <p style="font-size:0.95rem; line-height:1.6;">${msg}</p>
-          <button class="btn" style="margin-top:20px; width: 100%;" onclick="window.location.reload()">Вернуться в терминал</button>
-        </div>
-      </div>
-    `;
-  }
-</script>
+        function finishRound() {
+            setComms(false);
+            state.currentRound++;
+            if(state.currentRound <= state.maxRounds) {
+                document.getElementById('round-counter').innerText = `РАУНД ${state.currentRound} / ${state.maxRounds}`;
+            }
+            nextPhase();
+        }
+
+        // ОСОБЕННОСТЬ: РАУНД С ПИСТОЛЕТОМ (7-й РАУНД)
+        function triggerGunRound() {
+            state.phase = 'gun-round';
+            setComms(true); // Телефоны работают — можно умолять не стрелять
+            
+            // Выбираем случайного ЖИВОГО игрока, кому дать пистолет
+            const alivePlayers = state.players.filter(p => p.isAlive);
+            const luckyPlayer = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+            state.gunHolder = luckyPlayer.id;
+
+            renderRooms();
+
+            document.getElementById('host-speech').innerText = `"Внимание! Экстренный протокол. В Комнате №${state.gunHolder} обнаружен огнестрельное оружие. У него есть один выстрел."`;
+            log(`Критическое событие: Пистолет выдан Комнате ${state.gunHolder}`, 'danger');
+
+            const arena = document.getElementById('game-arena');
+            
+            if (state.gunHolder === 1) {
+                // Если пистолет у игрока (Комната 1)
+                let targetsHtml = '';
+                state.players.forEach(p => {
+                    if(p.id !== 1 && p.isAlive) {
+                        targetsHtml += `
+                            <button onclick="shootPlayer(${p.id})" class="w-full py-2 bg-red-950/40 hover:bg-red-900 border border-red-800 rounded text-xs text-red-200 font-bold transition-colors">
+                                Ликвидировать Комнату ${p.id} (+2 балла)
+                            </button>
+                        `;
+                    }
+                });
+
+                arena.innerHTML = `
+                    <div class="bg-red-950/20 border border-red-500 p-6 rounded-xl space-y-4 text-left bunker-glow-red">
+                        <h4 class="text-lg font-bold text-red-500 uppercase tracking-widest">⚠️ ВЫ ВООРУЖЕНЫ</h4>
+                        <p class="text-xs text-zinc-400">Телефоны работают. Жертвы могут пытаться договориться с вами прямо сейчас. Выберите, кого устранить:</p>
+                        <div class="space-y-2 pt-2">
+                            ${targetsHtml}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Если пистолет у бота
+                arena.innerHTML = `
+                    <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4">
+                        <h4 class="text-lg font-bold text-orange-500 animate-pulse">ОПАСНОСТЬ</h4>
+                        <p class="text-sm text-zinc-400">Комната ${state.gunHolder} выбирает жертву. Воспользуйтесь телефоном справа, чтобы договориться со стрелком!</p>
+                        <button onclick="simulateBotShot()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-black font-bold uppercase text-xs tracking-wider rounded transition-colors">
+                            Ожидать решения стрелка
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Игрок делает выстрел
+        function shootPlayer(targetId) {
+            const target = state.players.find(p => p.id === targetId);
+            target.isAlive = false;
+            
+            // Стрелок получает 2 балла
+            const shooter = state.players.find(p => p.id === 1);
+            shooter.score += 2;
+
+            log(`Вы застрелили Комнату ${targetId}. Вам начислено 2 балла.`, 'important');
+            resolveGunRound();
+        }
+
+        // Бот делает выстрел
+        function simulateBotShot() {
+            const shooter = state.players.find(p => p.id === state.gunHolder);
+            // Бот выбирает случайную живую цель кроме себя
+            const targets = state.players.filter(p => p.isAlive && p.id !== shooter.id);
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            
+            target.isAlive = false;
+            shooter.score += 2;
+
+            if (target.id === 1) {
+                log(`Комната ${shooter.id} застрелила ВАС! Вы выбыли из игры.`, 'danger');
+            } else {
+                log(`Комната ${shooter.id} застрелила Комнату ${target.id}.`, 'important');
+            }
+            resolveGunRound();
+        }
+
+        function resolveGunRound() {
+            state.gunHolder = null;
+            setComms(false);
+            renderRooms();
+
+            const arena = document.getElementById('game-arena');
+            arena.innerHTML = `
+                <div class="space-y-4">
+                    <p class="text-sm text-zinc-400">Выстрел произведен. Оружие утилизировано. Возврат к стандартному протоколу испытаний.</p>
+                    <button onclick="finishRound()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase text-xs tracking-wider border border-zinc-700 rounded transition-colors">
+                        Продолжить симуляцию
+                    </button>
+                </div>
+            `;
+        }
+
+        // ФИНАЛ ИГРЫ
+        function endGame(survived = true) {
+            state.phase = 'ended';
+            setComms(false);
+            
+            const arena = document.getElementById('game-arena');
+            document.getElementById('round-counter').innerText = `ИГРА ОКОНЧЕНА`;
+
+            // Сортировка по баллам для определения победителя
+            const leaderboard = [...state.players].sort((a, b) => b.score - a.score);
+            const winner = leaderboard[0];
+
+            let leaderboardHtml = '';
+            leaderboard.forEach((p, idx) => {
+                leaderboardHtml += `
+                    <div class="flex justify-between items-center text-xs py-1.5 border-b border-zinc-800 ${p.id === 1 ? 'text-orange-400 font-bold' : ''}">
+                        <span>${idx + 1}. ${p.name} ${!p.isAlive ? '(Мертв)' : ''}</span>
+                        <span>${p.score} б.</span>
+                    </div>
+                `;
+            });
+
+            if (!survived) {
+                document.getElementById('host-speech').innerText = `"Вы были ликвидированы. Бункер закрывается навсесь."`;
+                arena.innerHTML = `
+                    <div class="bg-red-950/30 border border-red-900 p-6 rounded-xl space-y-4 text-center">
+                        <h4 class="text-xl font-bold text-red-500">ВЫ БЫЛИ ЗАСТРЕЛЕНЫ</h4>
+                        <div class="text-left bg-black/50 p-4 rounded border border-zinc-800">
+                            <div class="text-[10px] text-zinc-500 uppercase font-bold mb-2">Финальные скрытые баллы:</div>
+                            ${leaderboardHtml}
+                        </div>
+                        <button onclick="location.reload()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded text-xs font-bold text-white transition-colors">
+                            Перезапустить систему
+                        </button>
+                    </div>
+                `;
+            } else {
+                document.getElementById('host-speech').innerText = `"Испытания завершены. Маски сброшены. Вот ваши результаты."`;
+                arena.innerHTML = `
+                    <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4 text-center">
+                        <h4 class="text-xl font-bold text-orange-500">ИТОГИ СИМУЛЯЦИИ</h4>
+                        <p class="text-xs text-zinc-400">Победитель проекта: <span class="text-white font-bold">${winner.name}</span> с результатом в ${winner.score} баллов!</p>
+                        <div class="text-left bg-black/50 p-4 rounded border border-zinc-800">
+                            <div class="text-[10px] text-zinc-500 uppercase font-bold mb-2">Финальная таблица:</div>
+                            ${leaderboardHtml}
+                        </div>
+                        <button onclick="location.reload()" class="w-full py-2 bg-orange-600 hover:bg-orange-500 text-black font-bold text-xs uppercase tracking-wider rounded transition-colors">
+                            Начать новую игру
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Первичный рендер сетки комнат при загрузке
+        renderRooms();
+    </script>
 </body>
 </html>
