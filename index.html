@@ -1,494 +1,885 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>6 ROOMS // BUNK-NET</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto Mono', monospace;
-            background-color: #0a0a0c;
-        }
-        .bunker-glow {
-            box-shadow: 0 0 15px rgba(255, 87, 34, 0.15);
-        }
-        .bunker-glow-red {
-            box-shadow: 0 0 20px rgba(239, 83, 80, 0.3);
-        }
-        /* Кастомный скроллбар */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #121214; }
-        ::-webkit-scrollbar-thumb { background: #26262b; }
-        ::-webkit-scrollbar-thumb:hover { background: #ff5722; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6 КОМНАТ // Испытание Смотрителя</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Roboto+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0810;
+  --panel:#141019;
+  --panel2:#1b1522;
+  --border:#2c2434;
+  --gold:#cda35e;
+  --gold-dim:#8a7247;
+  --violet:#8f6fff;
+  --violet-dim:#4d3f8a;
+  --blood:#b0392c;
+  --blood-glow:rgba(176,57,44,.35);
+  --text:#ece6da;
+  --muted:#8d8698;
+  --ok:#5fbfa0;
+}
+*{box-sizing:border-box;}
+body{
+  font-family:'Roboto Mono',monospace;
+  background:
+    radial-gradient(circle at 20% -10%, rgba(143,111,255,.10), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(205,163,94,.08), transparent 35%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+}
+.font-display{font-family:'Cinzel',serif;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--panel);}
+::-webkit-scrollbar-thumb{background:var(--border);}
+::-webkit-scrollbar-thumb:hover{background:var(--gold-dim);}
+
+.panel{background:var(--panel);border:1px solid var(--border);}
+.panel2{background:var(--panel2);border:1px solid var(--border);}
+.glow-gold{box-shadow:0 0 22px rgba(205,163,94,.12);}
+.glow-violet{box-shadow:0 0 22px rgba(143,111,255,.15);}
+.glow-blood{box-shadow:0 0 26px var(--blood-glow);}
+.text-gold{color:var(--gold);}
+.text-violet{color:var(--violet);}
+.text-blood{color:var(--blood);}
+.text-muted{color:var(--muted);}
+.text-ok{color:var(--ok);}
+.border-goldline{border-color:var(--gold-dim);}
+.bg-gold{background:var(--gold);}
+.bg-blood{background:var(--blood);}
+
+.btn{
+  font-family:'Roboto Mono',monospace;
+  letter-spacing:.06em;
+  transition:all .15s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn-gold{
+  background:linear-gradient(180deg,#dcb972,#b98f45);
+  color:#181108;
+  font-weight:700;
+}
+.btn-gold:hover{background:linear-gradient(180deg,#e6c684,#c69a51);}
+.btn-ghost{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  color:var(--text);
+}
+.btn-ghost:hover{border-color:var(--gold-dim);color:var(--gold);}
+.btn-blood{
+  background:linear-gradient(180deg,#c94d3d,#8f2c21);
+  color:#fff0ea;
+  font-weight:700;
+}
+.btn-blood:hover{background:linear-gradient(180deg,#d75c4b,#9e3327);}
+.btn:disabled{opacity:.35;pointer-events:none;}
+
+input[type=text]{
+  background:#0e0b13;
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:'Roboto Mono',monospace;
+}
+input[type=text]:focus{outline:none;border-color:var(--gold-dim);}
+input[type=text]::placeholder{color:#514a5c;}
+
+@keyframes pulse-slow{0%,100%{opacity:.55;}50%{opacity:1;}}
+.pulse-slow{animation:pulse-slow 2.6s ease-in-out infinite;}
+@keyframes ember{0%,100%{opacity:.5;transform:scale(1);}50%{opacity:1;transform:scale(1.06);}}
+.ember{animation:ember 1.4s ease-in-out infinite;}
+@keyframes irisTurn{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.iris-ring{animation:irisTurn 40s linear infinite;}
+@keyframes riseIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.rise-in{animation:riseIn .35s ease-out;}
+@keyframes flicker{0%,100%{opacity:1;}45%{opacity:.85;}50%{opacity:.4;}55%{opacity:.9;}}
+.flicker{animation:flicker 6s ease-in-out infinite;}
+
+.eyeSvg{filter:drop-shadow(0 0 10px rgba(205,163,94,.35));}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);}
+</style>
 </head>
-<body class="text-gray-300 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-orange-500 selection:text-black">
+<body class="min-h-screen">
 
-    <header class="border-b border-zinc-800 bg-[#121214] px-6 py-4 flex justify-between items-center z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-3 h-3 rounded-full bg-orange-500 animate-pulse"></div>
-            <span class="text-sm font-bold tracking-widest text-zinc-400">SYSTEM: BUNK-NET v1.0.6</span>
+<div id="app" class="min-h-screen flex flex-col"></div>
+
+<script>
+/* ============================================================
+   6 КОМНАТ — многопользовательская игра
+   Синхронизация между устройствами через window.storage (shared=true)
+   ============================================================ */
+
+const MAX_ROUNDS = 11;
+const GUN_ROUND = 7;
+const POLL_MS = 1300;
+
+const CHALLENGES = [
+  {title:"Испытание Доверия", desc:"Каждая комната тайно решает: разделить общий ресурс поровну или забрать его себе. Смотритель считает голоса без свидетелей."},
+  {title:"Тьма", desc:"Свет в чертогах гаснет на мгновение. Кто первым отзовётся Смотрителю — получает его расположение."},
+  {title:"Число Судьбы", desc:"Назовите Смотрителю число от 1 до 10. Чем ближе к загаданному — тем выше шанс на очко."},
+  {title:"Печать Молчания", desc:"Три минуты линии связи будут заняты собой. Кто выдержит и не станет никому звонить — будет отмечен."},
+  {title:"Жертва Ради Всех", desc:"Кто-то должен добровольно уступить своё будущее очко. Обсудите это — если осмелитесь сказать правду."},
+  {title:"Зеркало Чертога", desc:"Скажите вслух в своей комнате, что вы думаете о соседней комнате. Никто не узнает, кто это сказал — кроме Смотрителя."},
+  {title:"Испытание Голоса", desc:"Смотритель слушает переговоры по линиям связи. Убедительность в разговоре сама по себе не забыта."},
+  {title:"Круг Шести", desc:"Коллективное решение: комнаты должны молча прийти к общему числу от 1 до 6. Совпадение будет вознаграждено."}
+];
+
+const HOST_LINES = {
+  welcome: "Шесть комнат. Шесть незнакомцев. Один Смотритель. Не каждый увидит конец испытания.",
+  lobbyWait: "Комнаты заполняются. Ожидайте моего сигнала.",
+  challenge: (r,c)=>`Раунд ${r}. Испытание «${c.title}». ${c.desc}`,
+  processing: "Молчите. Я взвешиваю каждый ваш поступок.",
+  discussion: "Линии связи открыты. Говорите — если решитесь довериться друг другу.",
+  gunIntro: (slot)=>`В Комнате №${slot} обнаружен клинок Смотрителя. Один удар решит многое.`,
+  gunResolved: (shooter,target)=>`Комната №${shooter} сделала свой выбор. Комната №${target} покидает чертог.`,
+  gunEmpty: "Клинок остался нетронутым. Чертог продолжает дышать.",
+  ended: "Испытания окончены. Маски сняты. Вот то, что было скрыто от вас все это время."
+};
+
+/* ---------------- utilities ---------------- */
+function genCode(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s="";
+  for(let i=0;i<5;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function uid(){ return 'c'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+function pairKey(a,b){ return a<b? `${a}-${b}` : `${b}-${a}`; }
+function esc(str){
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function timeStr(ts){
+  return new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+/* ---------------- storage helpers ---------------- */
+async function getGame(code){
+  try{
+    const res = await window.storage.get(`game:${code}`, true);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){ return null; }
+}
+async function setGame(code, obj){
+  obj.updatedAt = Date.now();
+  try{
+    await window.storage.set(`game:${code}`, JSON.stringify(obj), true);
+    return true;
+  }catch(e){ console.error('storage set failed', e); return false; }
+}
+async function mutateGame(code, fn){
+  const g = await getGame(code);
+  if(!g) return null;
+  fn(g);
+  await setGame(code, g);
+  return g;
+}
+function pushLog(g, text, type='system'){
+  g.log = g.log || [];
+  g.log.push({ts:Date.now(), text, type});
+  if(g.log.length>60) g.log = g.log.slice(-60);
+}
+
+/* ---------------- app state ---------------- */
+const S = {
+  role:null,      // 'host' | 'player'
+  code:null,
+  mySlot:null,
+  myName:null,
+  clientId: uid(),
+  pollTimer:null,
+  game:null,
+  renderedCallPartner:undefined,
+  busyFlash:null,
+};
+
+const app = document.getElementById('app');
+
+function stopPolling(){ if(S.pollTimer){ clearInterval(S.pollTimer); S.pollTimer=null; } }
+function startPolling(){
+  stopPolling();
+  S.pollTimer = setInterval(async ()=>{
+    const g = await getGame(S.code);
+    if(!g) return;
+    S.game = g;
+    if(S.role==='host') renderHostDynamic();
+    else if(S.role==='player') renderPlayerDynamic();
+  }, POLL_MS);
+}
+
+/* ================================================================
+   LANDING
+   ================================================================ */
+function renderLanding(){
+  stopPolling();
+  S.role=null; S.code=null; S.mySlot=null;
+  app.innerHTML = `
+  <div class="flex-1 flex items-center justify-center p-4">
+    <div class="w-full max-w-md rise-in">
+      <div class="flex flex-col items-center mb-6">
+        ${eyeSigil(64)}
+        <h1 class="font-display text-4xl font-bold tracking-widest text-gold mt-4">6 КОМНАТ</h1>
+        <p class="text-muted text-xs italic mt-1 tracking-wide">Испытание Смотрителя</p>
+      </div>
+
+      <div id="landing-body" class="panel rounded-xl p-5 glow-gold space-y-3">
+        <button id="btn-show-create" class="btn btn-gold w-full py-3.5 rounded uppercase text-sm tracking-wider">Создать игру</button>
+        <button id="btn-show-join" class="btn btn-ghost w-full py-3.5 rounded uppercase text-sm tracking-wider">Войти в комнату</button>
+        <div class="divider my-2"></div>
+        <button id="btn-show-reconnect" class="text-[11px] text-muted hover:text-gold transition-colors w-full text-center underline underline-offset-2">Восстановить прерванную сессию</button>
+      </div>
+      <p class="text-[10px] text-muted text-center mt-4 leading-relaxed">Игра синхронизируется через это окно артефакта.<br>Друзья должны открыть ту же ссылку на своих устройствах.</p>
+    </div>
+  </div>`;
+  document.getElementById('btn-show-create').onclick = showCreateForm;
+  document.getElementById('btn-show-join').onclick = showJoinForm;
+  document.getElementById('btn-show-reconnect').onclick = showReconnectForm;
+}
+
+function eyeSigil(size){
+  return `
+  <svg width="${size}" height="${size}" viewBox="0 0 100 100" class="eyeSvg">
+    <g class="iris-ring" style="transform-origin:50px 50px;">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="var(--gold-dim)" stroke-width="1" stroke-dasharray="2 6"/>
+    </g>
+    <path d="M6 50 Q50 10 94 50 Q50 90 6 50 Z" fill="none" stroke="var(--gold)" stroke-width="2.5"/>
+    <circle cx="50" cy="50" r="16" fill="#0a0810" stroke="var(--violet)" stroke-width="2" class="pulse-slow"/>
+    <circle cx="50" cy="50" r="6" fill="var(--gold)"/>
+  </svg>`;
+}
+
+function showCreateForm(){
+  const box = document.getElementById('landing-body');
+  box.innerHTML = `
+    <label class="block text-[11px] uppercase text-muted tracking-wider mb-1">Ваше имя (как Смотритель)</label>
+    <input id="host-name" type="text" maxlength="18" placeholder="Смотритель" class="w-full rounded p-3 text-sm mb-3">
+    <button id="btn-create" class="btn btn-gold w-full py-3 rounded uppercase text-sm tracking-wider">Открыть чертог</button>
+    <button id="btn-back" class="text-[11px] text-muted hover:text-gold w-full text-center mt-3">← Назад</button>
+  `;
+  document.getElementById('btn-back').onclick = renderLanding;
+  document.getElementById('btn-create').onclick = async ()=>{
+    const name = document.getElementById('host-name').value.trim() || "Смотритель";
+    const code = genCode();
+    const doc = {
+      code, createdAt: Date.now(),
+      started:false, ended:false,
+      phase:'lobby', round:0, maxRounds:MAX_ROUNDS,
+      commsOpen:false,
+      challenge:null,
+      gunHolder:null,
+      winnerSlot:null,
+      hostName:name,
+      hostSpeech: HOST_LINES.welcome,
+      log:[{ts:Date.now(), text:"Чертог инициализирован. Ожидание испытуемых.", type:'system'}],
+      players:[],
+      chats:{}
+    };
+    await setGame(code, doc);
+    S.role='host'; S.code=code; S.game=doc;
+    renderHostShell();
+    startPolling();
+  };
+}
+
+function showJoinForm(){
+  const box = document.getElementById('landing-body');
+  box.innerHTML = `
+    <label class="block text-[11px] uppercase text-muted tracking-wider mb-1">Код чертога</label>
+    <input id="join-code" type="text" maxlength="5" placeholder="XXXXX" class="w-full rounded p-3 text-sm mb-3 uppercase tracking-widest text-center font-bold">
+    <label class="block text-[11px] uppercase text-muted tracking-wider mb-1">Ваше имя</label>
+    <input id="join-name" type="text" maxlength="18" placeholder="Безымянный" class="w-full rounded p-3 text-sm mb-3">
+    <div id="join-error" class="text-[11px] text-blood mb-2 hidden"></div>
+    <button id="btn-join" class="btn btn-gold w-full py-3 rounded uppercase text-sm tracking-wider">Войти в чертог</button>
+    <button id="btn-back" class="text-[11px] text-muted hover:text-gold w-full text-center mt-3">← Назад</button>
+  `;
+  document.getElementById('btn-back').onclick = renderLanding;
+  document.getElementById('join-code').addEventListener('input', e=>{ e.target.value = e.target.value.toUpperCase(); });
+  document.getElementById('btn-join').onclick = async ()=>{
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    const name = document.getElementById('join-name').value.trim() || "Безымянный";
+    const errBox = document.getElementById('join-error');
+    errBox.classList.add('hidden');
+    if(!code){ errBox.textContent="Введите код."; errBox.classList.remove('hidden'); return; }
+    const g = await getGame(code);
+    if(!g){ errBox.textContent="Чертог с таким кодом не найден."; errBox.classList.remove('hidden'); return; }
+    if(g.phase!=='lobby'){ errBox.textContent="Испытание уже началось. Вход закрыт."; errBox.classList.remove('hidden'); return; }
+    if(g.players.length>=6){ errBox.textContent="Все шесть комнат заняты."; errBox.classList.remove('hidden'); return; }
+    const slot = g.players.length+1;
+    g.players.push({slot, name, clientId:S.clientId, alive:true, score:0, inCallWith:null});
+    pushLog(g, `Комната №${slot} подключена к чертогу.`, 'system');
+    await setGame(code, g);
+    S.role='player'; S.code=code; S.mySlot=slot; S.myName=name; S.game=g;
+    renderPlayerShell();
+    startPolling();
+  };
+}
+
+function showReconnectForm(){
+  const box = document.getElementById('landing-body');
+  box.innerHTML = `
+    <p class="text-[11px] text-muted mb-3 leading-relaxed">Если ваша страница обновилась и связь с комнатой прервалась — введите код чертога и номер вашей комнаты, чтобы вернуться.</p>
+    <label class="block text-[11px] uppercase text-muted tracking-wider mb-1">Код чертога</label>
+    <input id="rc-code" type="text" maxlength="5" placeholder="XXXXX" class="w-full rounded p-3 text-sm mb-3 uppercase tracking-widest text-center font-bold">
+    <label class="block text-[11px] uppercase text-muted tracking-wider mb-1">Номер вашей комнаты (1–6)</label>
+    <input id="rc-slot" type="text" maxlength="1" placeholder="1" class="w-full rounded p-3 text-sm mb-3 text-center">
+    <div id="rc-error" class="text-[11px] text-blood mb-2 hidden"></div>
+    <button id="btn-rc" class="btn btn-ghost w-full py-3 rounded uppercase text-sm tracking-wider">Восстановить</button>
+    <button id="btn-back" class="text-[11px] text-muted hover:text-gold w-full text-center mt-3">← Назад</button>
+  `;
+  document.getElementById('btn-back').onclick = renderLanding;
+  document.getElementById('btn-rc').onclick = async ()=>{
+    const code = document.getElementById('rc-code').value.trim().toUpperCase();
+    const slot = parseInt(document.getElementById('rc-slot').value.trim(),10);
+    const errBox = document.getElementById('rc-error');
+    errBox.classList.add('hidden');
+    const g = await getGame(code);
+    if(!g){ errBox.textContent="Чертог не найден."; errBox.classList.remove('hidden'); return; }
+    const p = g.players.find(pl=>pl.slot===slot);
+    if(!p){ errBox.textContent="Такой комнаты в этом чертоге нет."; errBox.classList.remove('hidden'); return; }
+    S.role='player'; S.code=code; S.mySlot=slot; S.myName=p.name; S.game=g;
+    renderPlayerShell();
+    startPolling();
+  };
+}
+
+/* ================================================================
+   HOST SCREEN  (the "Overseer" — shared/main display)
+   ================================================================ */
+function renderHostShell(){
+  app.innerHTML = `
+  <header class="border-b border-goldline bg-[#100d16] px-5 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      ${eyeSigil(28)}
+      <div>
+        <div class="font-display text-sm font-bold text-gold tracking-widest">СМОТРИТЕЛЬ</div>
+        <div class="text-[10px] text-muted">Экран чертога</div>
+      </div>
+    </div>
+    <div class="text-center">
+      <div id="round-badge" class="text-xs font-bold border border-goldline px-3 py-1 rounded text-gold panel2"></div>
+    </div>
+    <div class="text-right">
+      <div class="text-[10px] text-muted">Код чертога</div>
+      <div id="code-display" class="text-lg font-bold text-violet tracking-widest">${S.code}</div>
+    </div>
+  </header>
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1700px] w-full mx-auto">
+    <section class="lg:col-span-4 panel rounded-xl p-4 glow-violet flex flex-col gap-3">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-muted mb-1">Комнаты</h2>
+      <div id="host-rooms" class="grid gap-2"></div>
+    </section>
+    <section class="lg:col-span-8 panel rounded-xl overflow-hidden flex flex-col">
+      <div class="panel2 border-b border-goldline p-4 flex items-start gap-4">
+        ${eyeSigil(40)}
+        <div>
+          <h3 class="text-[10px] font-bold text-gold uppercase tracking-wider">Голос Смотрителя</h3>
+          <p id="host-speech" class="text-sm text-gray-200 mt-1 italic leading-relaxed"></p>
         </div>
+      </div>
+      <div class="flex-1 p-6 flex flex-col justify-center items-center text-center">
+        <div id="host-arena" class="w-full max-w-lg space-y-4"></div>
+      </div>
+      <div class="border-t border-goldline p-3 h-32 overflow-y-auto text-[11px] font-mono" id="host-log"></div>
+    </section>
+  </main>`;
+  renderHostDynamic();
+}
+
+function roomStatusChip(g, p){
+  if(!p) return `<span class="text-[10px] text-muted">свободна</span>`;
+  if(!p.alive) return `<span class="text-[10px] text-blood">устранена</span>`;
+  if(g.gunHolder===p.slot) return `<span class="text-[10px] text-blood ember">⚔ вооружена</span>`;
+  if(p.inCallWith) return `<span class="text-[10px] text-violet">на связи</span>`;
+  return `<span class="text-[10px] text-ok">в сети</span>`;
+}
+
+function renderHostDynamic(){
+  const g = S.game;
+  if(!g) return;
+  document.getElementById('code-display').textContent = S.code;
+  document.getElementById('round-badge').textContent =
+    g.ended ? 'ИСПЫТАНИЕ ОКОНЧЕНО' :
+    g.phase==='lobby' ? 'ПОДГОТОВКА' :
+    `РАУНД ${g.round} / ${g.maxRounds}`;
+  document.getElementById('host-speech').textContent = g.hostSpeech || '';
+
+  const roomsBox = document.getElementById('host-rooms');
+  let slots = [1,2,3,4,5,6];
+  roomsBox.innerHTML = slots.map(slot=>{
+    const p = g.players.find(pl=>pl.slot===slot);
+    const dead = p && !p.alive;
+    const armed = g.gunHolder===slot;
+    return `<div class="border rounded-lg p-2.5 flex justify-between items-center ${dead?'border-blood/40 bg-blood/5 opacity-60': armed? 'border-blood glow-blood':'border-goldline panel2'}">
+      <div>
+        <div class="text-xs font-bold text-gray-100">Комната №${slot}${p? '' : ''}</div>
+        <div class="text-[10px] text-muted mt-0.5">${p? esc(p.name) : '— пусто —'}${p? ` · очки: <span class="text-gray-500">??</span>`:''}</div>
+      </div>
+      ${roomStatusChip(g,p)}
+    </div>`;
+  }).join('');
+
+  document.getElementById('host-log').innerHTML = (g.log||[]).slice(-30).map(l=>{
+    const color = l.type==='important' ? 'text-gold' : l.type==='danger' ? 'text-blood' : 'text-muted';
+    return `<div class="${color}">[${timeStr(l.ts)}] ${esc(l.text)}</div>`;
+  }).join('');
+  document.getElementById('host-log').scrollTop = 999999;
+
+  renderHostArena(g);
+}
+
+function renderHostArena(g){
+  const arena = document.getElementById('host-arena');
+  const alivePlayers = g.players.filter(p=>p.alive);
+
+  if(g.phase==='lobby'){
+    arena.innerHTML = `
+      <p class="text-sm text-gray-300">Игроки подключаются по коду <span class="text-violet font-bold">${S.code}</span>.</p>
+      <div class="text-2xl font-display font-bold text-gold">${g.players.length} / 6</div>
+      <p class="text-[11px] text-muted">Рекомендуется дождаться всех шести — но начать можно и раньше.</p>
+      <button id="btn-start" class="btn btn-gold w-full py-3.5 rounded uppercase text-sm tracking-wider" ${g.players.length<2?'disabled':''}>Начать испытание</button>
+    `;
+    const btn = document.getElementById('btn-start');
+    if(btn) btn.onclick = hostStartGame;
+    return;
+  }
+
+  if(g.ended){
+    const leaderboard = [...g.players].sort((a,b)=>b.score-a.score);
+    arena.innerHTML = `
+      <h4 class="font-display text-xl font-bold text-gold">ЧЕРТОГ РАСКРЫТ</h4>
+      <div class="text-left panel2 rounded-lg p-4 border border-goldline">
+        ${leaderboard.map((p,i)=>`
+          <div class="flex justify-between items-center text-xs py-1.5 border-b border-goldline/50 ${i===0?'text-gold font-bold':''}">
+            <span>${i+1}. Комната №${p.slot} — ${esc(p.name)} ${!p.alive?'<span class="text-blood">(устранён)</span>':''}</span>
+            <span>${p.score} очк.</span>
+          </div>`).join('')}
+      </div>
+      <button id="btn-restart" class="btn btn-ghost w-full py-3 rounded uppercase text-sm tracking-wider">Закрыть чертог</button>
+    `;
+    document.getElementById('btn-restart').onclick = ()=>{ renderLanding(); };
+    return;
+  }
+
+  if(g.phase==='challenge'){
+    arena.innerHTML = `
+      <div class="panel2 border border-goldline rounded-xl p-5 text-left space-y-3">
+        <h4 class="text-lg font-display font-bold text-gray-100">${esc(g.challenge.title)}</h4>
+        <p class="text-sm text-gray-400">${esc(g.challenge.desc)}</p>
+        <button id="btn-end-challenge" class="btn btn-gold w-full py-3 rounded uppercase text-xs tracking-wider">Завершить испытание и начислить очки</button>
+      </div>`;
+    document.getElementById('btn-end-challenge').onclick = hostEndChallenge;
+    return;
+  }
+
+  if(g.phase==='processing'){
+    arena.innerHTML = `
+      <p class="text-sm text-gray-400">Смотритель взвешивает результат... Линии связи временно закрыты.</p>
+      <button id="btn-to-discussion" class="btn btn-ghost w-full py-3 rounded uppercase text-xs tracking-wider">Открыть обсуждение</button>
+    `;
+    document.getElementById('btn-to-discussion').onclick = hostOpenDiscussion;
+    return;
+  }
+
+  if(g.phase==='discussion'){
+    arena.innerHTML = `
+      <p class="text-sm text-gray-300">Линии связи открыты. Комнаты обсуждают прошедшее испытание.</p>
+      <button id="btn-finish-round" class="btn btn-gold w-full py-3 rounded uppercase text-xs tracking-wider">Завершить раунд</button>
+    `;
+    document.getElementById('btn-finish-round').onclick = hostFinishRound;
+    return;
+  }
+
+  if(g.phase==='gun-active'){
+    arena.innerHTML = `
+      <div class="panel2 border border-blood rounded-xl p-5 space-y-3 glow-blood">
+        <h4 class="font-display text-lg font-bold text-blood">⚔ КЛИНОК СМОТРИТЕЛЯ</h4>
+        <p class="text-sm text-gray-300">Комната №${g.gunHolder} держит клинок и выбирает жертву на своём устройстве.</p>
+        <button id="btn-autoshot" class="btn btn-ghost w-full py-2.5 rounded uppercase text-[11px] tracking-wider">Автовыстрел (если Комната №${g.gunHolder} медлит)</button>
+      </div>`;
+    document.getElementById('btn-autoshot').onclick = hostForceAutoShot;
+    return;
+  }
+
+  if(g.phase==='gun-resolved'){
+    arena.innerHTML = `
+      <p class="text-sm text-gray-300">Клинок использован. Чертог замер.</p>
+      <button id="btn-continue-after-gun" class="btn btn-gold w-full py-3 rounded uppercase text-xs tracking-wider">Продолжить испытание</button>
+    `;
+    document.getElementById('btn-continue-after-gun').onclick = hostFinishRound;
+    return;
+  }
+}
+
+/* ---------- host actions ---------- */
+async function hostStartGame(){
+  await mutateGame(S.code, g=>{
+    g.started=true; g.phase='challenge'; g.round=1; g.commsOpen=true;
+    g.challenge = CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+    g.hostSpeech = HOST_LINES.challenge(g.round, g.challenge);
+    pushLog(g, "Испытание начато. Да начнётся первый раунд.", 'important');
+  });
+  const g = await getGame(S.code); S.game=g; renderHostDynamic();
+}
+
+async function hostEndChallenge(){
+  await mutateGame(S.code, g=>{
+    g.commsOpen=false;
+    g.players.forEach(p=>{ p.inCallWith=null; if(p.alive && Math.random()>0.4) p.score+=1; });
+    g.phase='processing';
+    g.hostSpeech = HOST_LINES.processing;
+    pushLog(g, `Раунд ${g.round} завершён. Очки распределены — но никто не узнает, кому и сколько.`);
+  });
+  const g = await getGame(S.code); S.game=g; renderHostDynamic();
+}
+
+async function hostOpenDiscussion(){
+  await mutateGame(S.code, g=>{
+    g.phase='discussion'; g.commsOpen=true;
+    g.hostSpeech = HOST_LINES.discussion;
+  });
+  const g = await getGame(S.code); S.game=g; renderHostDynamic();
+}
+
+async function hostFinishRound(){
+  await mutateGame(S.code, g=>{
+    g.commsOpen=false;
+    g.players.forEach(p=>p.inCallWith=null);
+    g.gunHolder=null;
+    g.round++;
+    if(g.round>g.maxRounds){
+      finalizeEnd(g);
+      return;
+    }
+    if(g.round===GUN_ROUND){
+      const alive = g.players.filter(p=>p.alive);
+      if(alive.length<2){
+        pushLog(g,"Клинок остался в тени — слишком мало испытуемых.",'system');
+        g.phase='challenge';
+        g.commsOpen=true;
+        g.challenge = CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+        g.hostSpeech = HOST_LINES.challenge(g.round, g.challenge);
+        return;
+      }
+      const lucky = alive[Math.floor(Math.random()*alive.length)];
+      g.gunHolder = lucky.slot;
+      g.phase='gun-active';
+      g.commsOpen=true;
+      g.hostSpeech = HOST_LINES.gunIntro(lucky.slot);
+      pushLog(g, `Клинок передан Комнате №${lucky.slot}.`, 'danger');
+      return;
+    }
+    g.phase='challenge';
+    g.commsOpen=true;
+    g.challenge = CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+    g.hostSpeech = HOST_LINES.challenge(g.round, g.challenge);
+  });
+  const g = await getGame(S.code); S.game=g; renderHostDynamic();
+}
+
+function finalizeEnd(g){
+  g.phase='ended'; g.ended=true; g.commsOpen=false;
+  const leaderboard=[...g.players].sort((a,b)=>b.score-a.score);
+  g.winnerSlot = leaderboard.length? leaderboard[0].slot : null;
+  g.hostSpeech = HOST_LINES.ended;
+  pushLog(g, "Испытание окончено. Маски сняты.", 'important');
+}
+
+async function hostForceAutoShot(){
+  await mutateGame(S.code, g=>{
+    if(g.phase!=='gun-active' || !g.gunHolder) return;
+    const shooter = g.players.find(p=>p.slot===g.gunHolder);
+    const targets = g.players.filter(p=>p.alive && p.slot!==shooter.slot);
+    if(!targets.length){ g.phase='gun-resolved'; g.hostSpeech=HOST_LINES.gunEmpty; return; }
+    const target = targets[Math.floor(Math.random()*targets.length)];
+    target.alive=false; shooter.score+=2;
+    g.gunHolder=null; g.phase='gun-resolved'; g.commsOpen=false;
+    g.players.forEach(p=>p.inCallWith=null);
+    g.hostSpeech = HOST_LINES.gunResolved(shooter.slot, target.slot);
+    pushLog(g, `Автовыстрел: Комната №${shooter.slot} устранила Комнату №${target.slot}.`, 'danger');
+  });
+  const g = await getGame(S.code); S.game=g; renderHostDynamic();
+}
+
+/* ================================================================
+   PLAYER SCREEN  (personal chamber + intercom)
+   ================================================================ */
+function renderPlayerShell(){
+  app.innerHTML = `
+  <header class="border-b border-goldline bg-[#100d16] px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      ${eyeSigil(24)}
+      <div>
+        <div class="font-display text-xs font-bold text-gold tracking-widest">КОМНАТА №${S.mySlot}</div>
+        <div id="player-alive-tag" class="text-[10px] text-ok">в сети</div>
+      </div>
+    </div>
+    <div id="player-round-badge" class="text-[11px] font-bold border border-goldline px-2.5 py-1 rounded text-gold panel2"></div>
+  </header>
+
+  <main class="flex-1 p-4 max-w-lg w-full mx-auto flex flex-col gap-4">
+    <div class="panel2 border border-goldline rounded-xl p-4 flex items-start gap-3">
+      ${eyeSigil(32)}
+      <p id="player-speech" class="text-sm italic text-gray-200 leading-relaxed"></p>
+    </div>
+
+    <div id="player-arena" class="panel rounded-xl p-4 glow-violet"></div>
+
+    <div class="panel rounded-xl p-4 flex flex-col gap-3">
+      <h2 class="text-[11px] font-bold uppercase tracking-wider text-muted flex justify-between">
+        <span>Интерком</span>
+        <span id="comms-pill" class="text-[10px] px-2 py-0.5 rounded border"></span>
+      </h2>
+      <div id="call-targets" class="grid grid-cols-3 gap-2"></div>
+      <div id="call-box"></div>
+    </div>
+  </main>`;
+  renderPlayerDynamic();
+}
+
+function renderPlayerDynamic(){
+  const g = S.game;
+  if(!g) return;
+  const me = g.players.find(p=>p.slot===S.mySlot);
+  if(!me) return;
+
+  document.getElementById('player-round-badge').textContent =
+    g.ended ? 'ОКОНЧЕНО' : g.phase==='lobby' ? 'ОЖИДАНИЕ' : `РАУНД ${g.round} / ${g.maxRounds}`;
+  document.getElementById('player-speech').textContent = g.hostSpeech || '';
+  const aliveTag = document.getElementById('player-alive-tag');
+  aliveTag.textContent = me.alive ? 'в сети' : 'устранена';
+  aliveTag.className = me.alive ? 'text-[10px] text-ok' : 'text-[10px] text-blood';
+
+  const pill = document.getElementById('comms-pill');
+  pill.textContent = g.commsOpen ? 'связь активна' : 'связь закрыта';
+  pill.className = g.commsOpen
+    ? 'text-[10px] px-2 py-0.5 rounded border border-ok text-ok'
+    : 'text-[10px] px-2 py-0.5 rounded border border-blood/50 text-blood';
+
+  renderPlayerArena(g, me);
+  renderCallTargets(g, me);
+  renderCallBox(g, me);
+}
+
+function renderPlayerArena(g, me){
+  const arena = document.getElementById('player-arena');
+
+  if(g.phase==='lobby'){
+    arena.innerHTML = `
+      <p class="text-sm text-gray-300">Вы в чертоге как <span class="text-gold font-bold">${esc(me.name)}</span>.</p>
+      <p class="text-[11px] text-muted mt-2">Ожидайте, когда Смотритель начнёт испытание. Сейчас в чертоге ${g.players.length} / 6 комнат.</p>`;
+    return;
+  }
+
+  if(g.ended){
+    const leaderboard=[...g.players].sort((a,b)=>b.score-a.score);
+    arena.innerHTML = `
+      <h4 class="font-display text-lg font-bold text-gold mb-2">ИТОГИ ЧЕРТОГА</h4>
+      <div class="text-left space-y-1">
+        ${leaderboard.map((p,i)=>`
+          <div class="flex justify-between text-xs py-1 border-b border-goldline/40 ${p.slot===S.mySlot?'text-gold font-bold':''}">
+            <span>${i+1}. Комната №${p.slot} ${!p.alive?'<span class="text-blood">(устранён)</span>':''}</span>
+            <span>${p.score} очк.</span>
+          </div>`).join('')}
+      </div>`;
+    return;
+  }
+
+  if(!me.alive){
+    arena.innerHTML = `<p class="text-sm text-blood text-center">Ваша комната устранена. Вы можете наблюдать за ходом чертога, но не участвуете дальше.</p>`;
+    return;
+  }
+
+  if(g.phase==='challenge' && g.challenge){
+    arena.innerHTML = `
+      <h4 class="text-sm font-bold text-gray-100 mb-1">${esc(g.challenge.title)}</h4>
+      <p class="text-xs text-gray-400">${esc(g.challenge.desc)}</p>
+      <p class="text-[10px] text-muted mt-2">Ваши очки скрыты Смотрителем: <span class="text-gray-500">??</span></p>`;
+    return;
+  }
+  if(g.phase==='processing'){
+    arena.innerHTML = `<p class="text-sm text-gray-400 text-center">Смотритель обрабатывает результаты испытания...</p>`;
+    return;
+  }
+  if(g.phase==='discussion'){
+    arena.innerHTML = `<p class="text-sm text-gray-300 text-center">Обсудите произошедшее по интеркому.</p>`;
+    return;
+  }
+  if(g.phase==='gun-active'){
+    if(g.gunHolder===me.slot){
+      const targets = g.players.filter(p=>p.alive && p.slot!==me.slot);
+      arena.innerHTML = `
         <div class="text-center">
-            <h1 class="text-xl font-black tracking-widest text-white">6 КОМНАТ</h1>
+          <h4 class="font-display text-blood font-bold mb-1">⚔ ВЫ ДЕРЖИТЕ КЛИНОК</h4>
+          <p class="text-[11px] text-muted mb-3">Выберите комнату, которая покинет чертог. Начисляет вам 2 очка.</p>
         </div>
-        <div id="round-counter" class="text-sm font-bold border border-zinc-700 px-3 py-1 bg-zinc-900 rounded text-orange-500">
-            ПОДГОТОВКА К ИГРЕ
+        <div class="space-y-2">
+          ${targets.map(t=>`<button data-shoot="${t.slot}" class="btn btn-blood w-full py-2.5 rounded text-xs uppercase tracking-wide">Устранить Комнату №${t.slot}</button>`).join('')}
+        </div>`;
+      arena.querySelectorAll('[data-shoot]').forEach(btn=>{
+        btn.onclick = ()=>playerShoot(parseInt(btn.dataset.shoot,10));
+      });
+    } else {
+      arena.innerHTML = `
+        <p class="text-sm text-blood text-center ember">Клинок Смотрителя в Комнате №${g.gunHolder}.</p>
+        <p class="text-[11px] text-muted text-center mt-2">Возможно, стоит воспользоваться интеркомом.</p>`;
+    }
+    return;
+  }
+  if(g.phase==='gun-resolved'){
+    arena.innerHTML = `<p class="text-sm text-gray-300 text-center">Клинок использован. Ожидайте продолжения.</p>`;
+    return;
+  }
+}
+
+function renderCallTargets(g, me){
+  const box = document.getElementById('call-targets');
+  if(!g.commsOpen || !me.alive){
+    box.innerHTML = `<div class="col-span-3 text-center text-[11px] text-muted py-3 panel2 rounded">Линии связи закрыты Смотрителем</div>`;
+    return;
+  }
+  const others = g.players.filter(p=>p.slot!==me.slot);
+  box.innerHTML = others.map(p=>{
+    let label, cls, disabled='';
+    if(!p.alive){ label='устранена'; cls='opacity-40 border-goldline'; disabled='disabled'; }
+    else if(me.inCallWith===p.slot){ label='на связи'; cls='border-violet text-violet glow-violet'; }
+    else if(p.inCallWith){ label='занято'; cls='border-blood/40 text-blood/80'; disabled='disabled'; }
+    else{ label='свободна'; cls='border-goldline text-gray-200 hover:border-gold hover:text-gold'; }
+    return `<button ${disabled} data-call="${p.slot}" class="btn panel2 border rounded p-2 text-[10px] flex flex-col items-center gap-0.5 ${cls}">
+        <span class="font-bold text-xs">№${p.slot}</span><span>${label}</span>
+      </button>`;
+  }).join('');
+  box.querySelectorAll('[data-call]').forEach(btn=>{
+    btn.onclick = ()=>playerCall(parseInt(btn.dataset.call,10));
+  });
+}
+
+async function playerCall(targetSlot){
+  const res = await mutateGame(S.code, g=>{
+    const me = g.players.find(p=>p.slot===S.mySlot);
+    const target = g.players.find(p=>p.slot===targetSlot);
+    if(!me || !target || !g.commsOpen) return;
+    if(target.inCallWith && target.inCallWith!==me.slot){
+      g.__busy = true; // transient marker, not persisted meaningfully but harmless
+      return;
+    }
+    if(me.inCallWith){
+      const oldPartner = g.players.find(p=>p.slot===me.inCallWith);
+      if(oldPartner && oldPartner.inCallWith===me.slot) oldPartner.inCallWith=null;
+    }
+    me.inCallWith = target.slot;
+    target.inCallWith = me.slot;
+  });
+  if(res){
+    const target = res.players.find(p=>p.slot===targetSlot);
+    if(target && target.inCallWith!==S.mySlot){
+      S.busyFlash = targetSlot;
+    }
+    S.game = res;
+  }
+  renderPlayerDynamic();
+}
+
+async function playerHangup(){
+  await mutateGame(S.code, g=>{
+    const me = g.players.find(p=>p.slot===S.mySlot);
+    if(!me || !me.inCallWith) return;
+    const partner = g.players.find(p=>p.slot===me.inCallWith);
+    if(partner && partner.inCallWith===me.slot) partner.inCallWith=null;
+    me.inCallWith=null;
+  });
+  const g = await getGame(S.code); S.game=g; renderPlayerDynamic();
+}
+
+function renderCallBox(g, me){
+  const box = document.getElementById('call-box');
+  const partner = me.inCallWith;
+
+  if(S.busyFlash===undefined) S.busyFlash=null;
+
+  if(!partner){
+    if(S.busyFlash){
+      const slot=S.busyFlash; S.busyFlash=null;
+      box.innerHTML = `<div class="text-center text-[11px] text-blood py-2">Линия Комнаты №${slot} занята. Попробуйте позже.</div>`;
+    } else {
+      box.innerHTML = '';
+    }
+    S.renderedCallPartner = null;
+    return;
+  }
+
+  if(S.renderedCallPartner !== partner){
+    S.renderedCallPartner = partner;
+    box.innerHTML = `
+      <div class="panel2 border border-violet rounded-lg p-3 flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-violet font-bold">Связь с Комнатой №${partner}</span>
+          <button id="btn-hangup" class="text-[10px] text-blood hover:underline">Завершить</button>
         </div>
-    </header>
+        <div id="chat-messages" class="h-32 overflow-y-auto text-xs space-y-1 pr-1"></div>
+        <div id="chat-input-row" class="flex gap-2">
+          <input id="chat-input" type="text" maxlength="200" placeholder="Сообщение..." class="flex-1 rounded p-2 text-xs">
+          <button id="chat-send" class="btn btn-gold px-3 rounded text-xs">→</button>
+        </div>
+      </div>`;
+    document.getElementById('btn-hangup').onclick = playerHangup;
+    const input = document.getElementById('chat-input');
+    const send = ()=>sendChat(partner, input);
+    document.getElementById('chat-send').onclick = send;
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+  }
+  updateChatMessages(g, partner);
+}
 
-    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1800px] w-full mx-auto class-init">
-        
-        <section class="lg:col-span-3 flex flex-col gap-3 bg-[#121214] p-4 rounded-xl border border-zinc-800/80 bunker-glow">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2 flex justify-between items-center">
-                <span>Мониторинг Комнат</span>
-                <span id="comms-status" class="text-[10px] bg-red-950 text-red-400 px-2 py-0.5 rounded border border-red-900">Связь отключена</span>
-            </h2>
-            <div id="rooms-container" class="grid grid-cols-1 gap-2.5 flex-1 justify-between">
-                </div>
-        </section>
+function updateChatMessages(g, partner){
+  const list = document.getElementById('chat-messages');
+  if(!list) return;
+  const key = pairKey(S.mySlot, partner);
+  const msgs = (g.chats && g.chats[key]) || [];
+  const wasAtBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 10;
+  list.innerHTML = msgs.map(m=>`
+    <div class="${m.from===S.mySlot?'text-right':'text-left'}">
+      <span class="inline-block px-2 py-1 rounded ${m.from===S.mySlot?'bg-gold text-[#1a1208]':'panel2 border border-goldline text-gray-200'}">${esc(m.text)}</span>
+    </div>`).join('') || `<div class="text-muted text-center text-[10px] py-2">Линия открыта. Скажите что-нибудь.</div>`;
+  if(wasAtBottom) list.scrollTop = list.scrollHeight;
+}
 
-        <section class="lg:col-span-6 flex flex-col bg-[#121214] rounded-xl border border-zinc-800 overflow-hidden relative">
-            <div class="bg-zinc-900/60 border-b border-zinc-800 p-4 flex items-start gap-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-zinc-700 to-zinc-900 rounded-lg flex-shrink-0 flex items-center justify-center border border-zinc-700">
-                    <span class="text-xl">🎙️</span>
-                </div>
-                <div>
-                    <h3 class="text-xs font-bold text-orange-400 uppercase tracking-wider">Ведущий Системы</h3>
-                    <p id="host-speech" class="text-sm text-zinc-300 mt-1 italic">"Добро пожаловать в Бункер. Шесть комнат, но выйдет не каждый. Готовьтесь к первому раунду."</p>
-                </div>
-            </div>
+async function sendChat(partner, input){
+  const text = input.value.trim();
+  if(!text) return;
+  input.value='';
+  await mutateGame(S.code, g=>{
+    const me = g.players.find(p=>p.slot===S.mySlot);
+    if(!me || me.inCallWith!==partner) return;
+    const key = pairKey(S.mySlot, partner);
+    g.chats = g.chats || {};
+    g.chats[key] = g.chats[key] || [];
+    g.chats[key].push({from:S.mySlot, text, ts:Date.now()});
+    if(g.chats[key].length>150) g.chats[key] = g.chats[key].slice(-150);
+  });
+  const g = await getGame(S.code); S.game=g; renderPlayerDynamic();
+  const freshInput = document.getElementById('chat-input');
+  if(freshInput) freshInput.focus();
+}
 
-            <div class="flex-1 p-6 flex flex-col justify-center items-center text-center relative">
-                <div id="game-arena" class="w-full max-w-md space-y-6">
-                    <div id="start-screen" class="space-y-4">
-                        <p class="text-zinc-400 text-sm">Все участники изолированы в своих комнатах. Баллы начисляются скрытно. Связь доступна только во время раундов и обсуждений.</p>
-                        <button onclick="startGame()" class="w-full py-4 bg-orange-600 hover:bg-orange-500 text-black font-bold uppercase tracking-widest rounded transition-all transform active:scale-95 duration-150">
-                            Инициализировать Протокол Игры
-                        </button>
-                    </div>
-                </div>
-            </div>
+async function playerShoot(targetSlot){
+  await mutateGame(S.code, g=>{
+    if(g.phase!=='gun-active' || g.gunHolder!==S.mySlot) return;
+    const shooter = g.players.find(p=>p.slot===S.mySlot);
+    const target = g.players.find(p=>p.slot===targetSlot);
+    if(!shooter || !target || !target.alive) return;
+    target.alive=false; shooter.score+=2;
+    g.gunHolder=null; g.phase='gun-resolved'; g.commsOpen=false;
+    g.players.forEach(p=>p.inCallWith=null);
+    g.hostSpeech = HOST_LINES.gunResolved(shooter.slot, target.slot);
+    pushLog(g, `Комната №${shooter.slot} устранила Комнату №${target.slot} клинком Смотрителя.`, 'danger');
+  });
+  const g = await getGame(S.code); S.game=g; renderPlayerDynamic();
+}
 
-            <div class="bg-black/40 border-t border-zinc-950 p-3 h-28 overflow-y-auto text-[11px] font-mono text-zinc-500" id="system-logs">
-                [SYSTEM]: Ожидание запуска протокола...
-            </div>
-        </section>
-
-        <section class="lg:col-span-3 flex flex-col bg-[#121214] p-4 rounded-xl border border-zinc-800/80 bunker-glow justify-between">
-            <div>
-                <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-4">Ваш Коммуникатор (КПК)</h2>
-                <div class="bg-black/60 border border-zinc-800 rounded-lg p-4 mb-4 text-center">
-                    <div class="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Ваша локация</div>
-                    <div class="text-lg font-bold text-white tracking-wide">КОМНАТА №1 <span class="text-xs text-zinc-400">(Вы)</span></div>
-                </div>
-
-                <div id="phone-interface" class="space-y-4 opacity-40 pointer-events-none transition-opacity duration-300">
-                    <label class="block text-xs text-zinc-400 uppercase mb-1">Выберите линию для звонка:</label>
-                    <select id="call-target" class="w-full bg-zinc-900 border border-zinc-700 rounded p-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
-                        </select>
-                    <button id="btn-call" onclick="makeCall()" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded text-sm font-medium transition-colors text-orange-400">
-                        Установить P2P соединение
-                    </button>
-                </div>
-            </div>
-
-            <div id="call-screen" class="border border-dashed border-zinc-800 rounded-lg p-4 text-center text-xs text-zinc-500">
-                Линия связи свободна
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="bg-[#0a0a0c] px-6 py-3 border-t border-zinc-900 text-center text-[10px] text-zinc-600 tracking-wider">
-        ДИЗАЙН ПРОЕКТА: SENIOR PRODUCT SUITE // ALL RIGHTS RESERVED © 2026
-    </footer>
-
-    <script>
-        // Игровой стейт (State Management)
-        const state = {
-            currentRound: 0,
-            maxRounds: 11,
-            phase: 'lobby', // lobby, intro, challenge, discussion, gun-round, ended
-            commsOpen: false,
-            gunHolder: null,
-            players: [
-                { id: 1, name: "Комната 1 (Вы)", score: 0, isAlive: true },
-                { id: 2, name: "Комната 2", score: 0, isAlive: true },
-                { id: 3, name: "Комната 3", score: 0, isAlive: true },
-                { id: 4, name: "Комната 4", score: 0, isAlive: true },
-                { id: 5, name: "Комната 5", score: 0, isAlive: true },
-                { id: 6, name: "Комната 6", score: 0, isAlive: true },
-            ],
-            challenges: [
-                { title: "Тест Лояльности", desc: "Анонимно проголосуйте: разделить ресурсы или забрать себе? (Симуляция обработки ответов комнат...)" },
-                { title: "Слепая Зона", desc: "В бункере отключился свет. Нажмите кнопку датчика движения быстрее остальных игроков." },
-                { title: "Цифровой Шифр", desc: "Угадайте случайное число от 1 до 10. Ближайший получает балл." },
-                { title: "Вент-Каналы", desc: "Необходимо перекрыть шлюз. Кто пожертвует секундой времени ради общей безопасности?" },
-                { title: "Распределение Энергии", desc: "Отдайте свой виртуальный токен любому игроку. Большинство решает всё." },
-                { title: "Генетический Код", desc: "Быстрый тест на реакцию нейросети. Ждите вердикт Системы." }
-            ]
-        };
-
-        // Логирование событий в консоль бункера
-        function log(message, type = 'system') {
-            const logs = document.getElementById('system-logs');
-            const color = type === 'important' ? 'text-orange-400' : type === 'danger' ? 'text-red-400' : 'text-zinc-500';
-            logs.innerHTML += `<div class="${color}">[${new Date().toLocaleTimeString()}]: ${message}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-        }
-
-        // Рендер сетки комнат
-        function renderRooms() {
-            const container = document.getElementById('rooms-container');
-            container.innerHTML = '';
-            
-            state.players.forEach(p => {
-                let statusBg = 'bg-zinc-900 border-zinc-800';
-                let statusText = '<span class="text-emerald-500">В СЕТИ</span>';
-                
-                if (!p.isAlive) {
-                    statusBg = 'bg-red-950/20 border-red-900/40 opacity-50';
-                    statusText = '<span class="text-red-500">ВЫБЫЛ</span>';
-                } else if (state.gunHolder === p.id) {
-                    statusBg = 'bg-orange-950/30 border-orange-500 bunker-glow-red';
-                    statusText = '<span class="text-orange-500 animate-pulse">⚙️ ВООРУЖЕН</span>';
-                }
-
-                container.innerHTML += `
-                    <div class="border p-3 rounded-lg flex justify-between items-center transition-all duration-300 ${statusBg}">
-                        <div>
-                            <div class="text-xs font-bold text-white">${p.name}</div>
-                            <div class="text-[10px] text-zinc-500 mt-0.5">Скрытые баллы: ??</div>
-                        </div>
-                        <div class="text-[10px] font-mono border border-zinc-800 px-2 py-1 rounded bg-black/40">
-                            ${statusText}
-                        </div>
-                    </div>
-                `;
-            });
-            updateCallSelect();
-        }
-
-        // Обновление селекта для звонков
-        function updateCallSelect() {
-            const select = document.getElementById('call-target');
-            select.innerHTML = '';
-            state.players.forEach(p => {
-                if(p.id !== 1 && p.isAlive) {
-                    select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-                }
-            });
-        }
-
-        // Управление доступностью P2P Телефонии
-        function setComms(status) {
-            state.commsOpen = status;
-            const phoneInterface = document.getElementById('phone-interface');
-            const commsStatus = document.getElementById('comms-status');
-            const callScreen = document.getElementById('call-screen');
-
-            if(status) {
-                phoneInterface.classList.remove('opacity-40', 'pointer-events-none');
-                commsStatus.innerText = "Связь активна";
-                commsStatus.className = "text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-900";
-                log("Внутренние P2P линии открыты. Вы можете совершать звонки.");
-            } else {
-                phoneInterface.classList.add('opacity-40', 'pointer-events-none');
-                commsStatus.innerText = "Связь отключена";
-                commsStatus.className = "text-[10px] bg-red-950 text-red-400 px-2 py-0.5 rounded border border-red-900";
-                callScreen.innerText = "Линия связи свободна";
-                log("Внутренние P2P линии заблокированы Системой.");
-            }
-        }
-
-        // Симуляция P2P Звонка
-        function makeCall() {
-            if(!state.commsOpen) return;
-            const targetId = document.getElementById('call-target').value;
-            const target = state.players.find(p => p.id == targetId);
-            const callScreen = document.getElementById('call-screen');
-
-            callScreen.innerHTML = `<span class="text-orange-400 animate-pulse">Гудки... Соединение с Комнатой ${targetId}</span>`;
-            
-            setTimeout(() => {
-                const answers = [
-                    "Да? Я согласен действовать сообща, давай сольем Комнату 3.",
-                    "Не верь Комнате 5, они копят баллы.",
-                    "Слушай, если мне выпадет ствол, я тебя не трону. Договорились?",
-                    "Я тебе не доверяю. Не звони сюда.",
-                    "У меня есть план, давай распределим голоса поровну."
-                ];
-                const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
-                callScreen.innerHTML = `
-                    <div class="text-left text-zinc-300">
-                        <span class="text-orange-400 font-bold">Комната ${targetId}:</span> "${randomAnswer}"
-                    </div>
-                `;
-                log(`Установлен P2P контакт с Комнатой ${targetId}`);
-            }, 1500);
-        }
-
-        // ДВИЖОК ИГРЫ (Game Core Loop)
-        function startGame() {
-            state.currentRound = 1;
-            document.getElementById('round-counter').innerText = `РАУНД 1 / ${state.maxRounds}`;
-            log("Протокол '6 КОМНАТ' запущен. Удачи.", "important");
-            nextPhase();
-        }
-
-        function nextPhase() {
-            // Если раунды закончились
-            if (state.currentRound > state.maxRounds) {
-                endGame();
-                return;
-            }
-
-            // Проверяем жива ли Комната 1
-            if(!state.players[0].isAlive) {
-                endGame(false);
-                return;
-            }
-
-            // 7 раунд — раунд ликвидации (особенность с пистолетом)
-            if (state.currentRound === 7 && state.phase !== 'gun-round') {
-                triggerGunRound();
-                return;
-            }
-
-            runStandardChallenge();
-        }
-
-        // Генерация обычного испытания
-        function runStandardChallenge() {
-            state.phase = 'challenge';
-            setComms(true); // Включаем телефоны в начале раунда
-            
-            const randomChallenge = state.challenges[Math.floor(Math.random() * state.challenges.length)];
-            document.getElementById('host-speech').innerText = `"Раунд ${state.currentRound}. Испытание: ${randomChallenge.title}. Думайте быстро, общайтесь по телефонам."`;
-            
-            const arena = document.getElementById('game-arena');
-            arena.innerHTML = `
-                <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4 text-left">
-                    <h4 class="text-lg font-bold text-white border-b border-zinc-800 pb-2">${randomChallenge.title}</h4>
-                    <p class="text-sm text-zinc-400">${randomChallenge.desc}</p>
-                    <div class="pt-2">
-                        <button onclick="submitChallenge()" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-black font-bold uppercase text-xs tracking-wider rounded transition-colors">
-                            Принять участие в испытании
-                        </button>
-                    </div>
-                </div>
-            `;
-            renderRooms();
-        }
-
-        function submitChallenge() {
-            setComms(false); // Выключаем телефоны в конце раунда для обсуждения итогов
-            
-            // Начисляем скрытые баллы живым игрокам
-            state.players.forEach(p => {
-                if (p.isAlive && Math.random() > 0.4) {
-                    p.score += 1; // 1 балл за испытание
-                }
-            });
-
-            log(`Раунд ${state.currentRound} завершен. Баллы распределены анонимно.`);
-            
-            const arena = document.getElementById('game-arena');
-            arena.innerHTML = `
-                <div class="space-y-4">
-                    <p class="text-sm text-zinc-400">Система обрабатывает результаты... Линии связи закрыты на технический перерыв раунда.</p>
-                    <button onclick="startDiscussionPhase()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase text-xs tracking-wider border border-zinc-700 rounded transition-colors">
-                        Перейти к обсуждению результатов
-                    </button>
-                </div>
-            `;
-        }
-
-        function startDiscussionPhase() {
-            state.phase = 'discussion';
-            setComms(true); // Включаем телефоны ПОСЛЕ раунда для обсуждения
-            
-            document.getElementById('host-speech').innerText = `"Вы можете обсудить прошедшее испытание по телефонам. Кто лидирует? Никто не знает."`;
-            
-            const arena = document.getElementById('game-arena');
-            arena.innerHTML = `
-                <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4">
-                    <p class="text-sm text-zinc-300">Интерком и телефоны активны. Время на дипломатию.</p>
-                    <button onclick="finishRound()" class="w-full py-3 bg-orange-600 hover:bg-orange-500 text-black font-bold uppercase text-xs tracking-wider rounded transition-colors">
-                        Завершить раунд и перейти к следующему
-                    </button>
-                </div>
-            `;
-        }
-
-        function finishRound() {
-            setComms(false);
-            state.currentRound++;
-            if(state.currentRound <= state.maxRounds) {
-                document.getElementById('round-counter').innerText = `РАУНД ${state.currentRound} / ${state.maxRounds}`;
-            }
-            nextPhase();
-        }
-
-        // ОСОБЕННОСТЬ: РАУНД С ПИСТОЛЕТОМ (7-й РАУНД)
-        function triggerGunRound() {
-            state.phase = 'gun-round';
-            setComms(true); // Телефоны работают — можно умолять не стрелять
-            
-            // Выбираем случайного ЖИВОГО игрока, кому дать пистолет
-            const alivePlayers = state.players.filter(p => p.isAlive);
-            const luckyPlayer = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-            state.gunHolder = luckyPlayer.id;
-
-            renderRooms();
-
-            document.getElementById('host-speech').innerText = `"Внимание! Экстренный протокол. В Комнате №${state.gunHolder} обнаружен огнестрельное оружие. У него есть один выстрел."`;
-            log(`Критическое событие: Пистолет выдан Комнате ${state.gunHolder}`, 'danger');
-
-            const arena = document.getElementById('game-arena');
-            
-            if (state.gunHolder === 1) {
-                // Если пистолет у игрока (Комната 1)
-                let targetsHtml = '';
-                state.players.forEach(p => {
-                    if(p.id !== 1 && p.isAlive) {
-                        targetsHtml += `
-                            <button onclick="shootPlayer(${p.id})" class="w-full py-2 bg-red-950/40 hover:bg-red-900 border border-red-800 rounded text-xs text-red-200 font-bold transition-colors">
-                                Ликвидировать Комнату ${p.id} (+2 балла)
-                            </button>
-                        `;
-                    }
-                });
-
-                arena.innerHTML = `
-                    <div class="bg-red-950/20 border border-red-500 p-6 rounded-xl space-y-4 text-left bunker-glow-red">
-                        <h4 class="text-lg font-bold text-red-500 uppercase tracking-widest">⚠️ ВЫ ВООРУЖЕНЫ</h4>
-                        <p class="text-xs text-zinc-400">Телефоны работают. Жертвы могут пытаться договориться с вами прямо сейчас. Выберите, кого устранить:</p>
-                        <div class="space-y-2 pt-2">
-                            ${targetsHtml}
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Если пистолет у бота
-                arena.innerHTML = `
-                    <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4">
-                        <h4 class="text-lg font-bold text-orange-500 animate-pulse">ОПАСНОСТЬ</h4>
-                        <p class="text-sm text-zinc-400">Комната ${state.gunHolder} выбирает жертву. Воспользуйтесь телефоном справа, чтобы договориться со стрелком!</p>
-                        <button onclick="simulateBotShot()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-black font-bold uppercase text-xs tracking-wider rounded transition-colors">
-                            Ожидать решения стрелка
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        // Игрок делает выстрел
-        function shootPlayer(targetId) {
-            const target = state.players.find(p => p.id === targetId);
-            target.isAlive = false;
-            
-            // Стрелок получает 2 балла
-            const shooter = state.players.find(p => p.id === 1);
-            shooter.score += 2;
-
-            log(`Вы застрелили Комнату ${targetId}. Вам начислено 2 балла.`, 'important');
-            resolveGunRound();
-        }
-
-        // Бот делает выстрел
-        function simulateBotShot() {
-            const shooter = state.players.find(p => p.id === state.gunHolder);
-            // Бот выбирает случайную живую цель кроме себя
-            const targets = state.players.filter(p => p.isAlive && p.id !== shooter.id);
-            const target = targets[Math.floor(Math.random() * targets.length)];
-            
-            target.isAlive = false;
-            shooter.score += 2;
-
-            if (target.id === 1) {
-                log(`Комната ${shooter.id} застрелила ВАС! Вы выбыли из игры.`, 'danger');
-            } else {
-                log(`Комната ${shooter.id} застрелила Комнату ${target.id}.`, 'important');
-            }
-            resolveGunRound();
-        }
-
-        function resolveGunRound() {
-            state.gunHolder = null;
-            setComms(false);
-            renderRooms();
-
-            const arena = document.getElementById('game-arena');
-            arena.innerHTML = `
-                <div class="space-y-4">
-                    <p class="text-sm text-zinc-400">Выстрел произведен. Оружие утилизировано. Возврат к стандартному протоколу испытаний.</p>
-                    <button onclick="finishRound()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase text-xs tracking-wider border border-zinc-700 rounded transition-colors">
-                        Продолжить симуляцию
-                    </button>
-                </div>
-            `;
-        }
-
-        // ФИНАЛ ИГРЫ
-        function endGame(survived = true) {
-            state.phase = 'ended';
-            setComms(false);
-            
-            const arena = document.getElementById('game-arena');
-            document.getElementById('round-counter').innerText = `ИГРА ОКОНЧЕНА`;
-
-            // Сортировка по баллам для определения победителя
-            const leaderboard = [...state.players].sort((a, b) => b.score - a.score);
-            const winner = leaderboard[0];
-
-            let leaderboardHtml = '';
-            leaderboard.forEach((p, idx) => {
-                leaderboardHtml += `
-                    <div class="flex justify-between items-center text-xs py-1.5 border-b border-zinc-800 ${p.id === 1 ? 'text-orange-400 font-bold' : ''}">
-                        <span>${idx + 1}. ${p.name} ${!p.isAlive ? '(Мертв)' : ''}</span>
-                        <span>${p.score} б.</span>
-                    </div>
-                `;
-            });
-
-            if (!survived) {
-                document.getElementById('host-speech').innerText = `"Вы были ликвидированы. Бункер закрывается навсесь."`;
-                arena.innerHTML = `
-                    <div class="bg-red-950/30 border border-red-900 p-6 rounded-xl space-y-4 text-center">
-                        <h4 class="text-xl font-bold text-red-500">ВЫ БЫЛИ ЗАСТРЕЛЕНЫ</h4>
-                        <div class="text-left bg-black/50 p-4 rounded border border-zinc-800">
-                            <div class="text-[10px] text-zinc-500 uppercase font-bold mb-2">Финальные скрытые баллы:</div>
-                            ${leaderboardHtml}
-                        </div>
-                        <button onclick="location.reload()" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded text-xs font-bold text-white transition-colors">
-                            Перезапустить систему
-                        </button>
-                    </div>
-                `;
-            } else {
-                document.getElementById('host-speech').innerText = `"Испытания завершены. Маски сброшены. Вот ваши результаты."`;
-                arena.innerHTML = `
-                    <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-xl space-y-4 text-center">
-                        <h4 class="text-xl font-bold text-orange-500">ИТОГИ СИМУЛЯЦИИ</h4>
-                        <p class="text-xs text-zinc-400">Победитель проекта: <span class="text-white font-bold">${winner.name}</span> с результатом в ${winner.score} баллов!</p>
-                        <div class="text-left bg-black/50 p-4 rounded border border-zinc-800">
-                            <div class="text-[10px] text-zinc-500 uppercase font-bold mb-2">Финальная таблица:</div>
-                            ${leaderboardHtml}
-                        </div>
-                        <button onclick="location.reload()" class="w-full py-2 bg-orange-600 hover:bg-orange-500 text-black font-bold text-xs uppercase tracking-wider rounded transition-colors">
-                            Начать новую игру
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        // Первичный рендер сетки комнат при загрузке
-        renderRooms();
-    </script>
+/* ---------------- boot ---------------- */
+renderLanding();
+</script>
 </body>
 </html>
