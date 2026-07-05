@@ -156,18 +156,30 @@ function timeStr(ts){
 }
 
 /* ---------------- storage helpers ---------------- */
+const STORAGE_AVAILABLE = (typeof window.storage !== 'undefined' && window.storage !== null);
+let LAST_STORAGE_ERROR = null;
+
 async function getGame(code){
+  if(!STORAGE_AVAILABLE) return null;
   try{
     const res = await window.storage.get(`game:${code}`, true);
     return res ? JSON.parse(res.value) : null;
-  }catch(e){ return null; }
+  }catch(e){
+    LAST_STORAGE_ERROR = (e && e.message) ? e.message : String(e);
+    return null;
+  }
 }
 async function setGame(code, obj){
+  if(!STORAGE_AVAILABLE) return false;
   obj.updatedAt = Date.now();
   try{
     await window.storage.set(`game:${code}`, JSON.stringify(obj), true);
     return true;
-  }catch(e){ console.error('storage set failed', e); return false; }
+  }catch(e){
+    LAST_STORAGE_ERROR = (e && e.message) ? e.message : String(e);
+    console.error('storage set failed', e);
+    return false;
+  }
 }
 async function mutateGame(code, fn){
   const g = await getGame(code);
@@ -225,12 +237,13 @@ function renderLanding(){
       </div>
 
       <div id="landing-body" class="panel rounded-xl p-5 glow-gold space-y-3">
+        ${!STORAGE_AVAILABLE ? `<div class="text-[11px] text-blood border border-blood/40 rounded p-3 mb-2 leading-relaxed">⚠ Хранилище не обнаружено. Эта страница должна быть открыта как артефакт Claude (панель предпросмотра справа/внутри чата), а не как отдельно скачанный .html-файл или на другом хостинге — иначе комнаты не смогут находить друг друга.</div>` : ''}
         <button id="btn-show-create" class="btn btn-gold w-full py-3.5 rounded uppercase text-sm tracking-wider">Создать игру</button>
         <button id="btn-show-join" class="btn btn-ghost w-full py-3.5 rounded uppercase text-sm tracking-wider">Войти в комнату</button>
         <div class="divider my-2"></div>
         <button id="btn-show-reconnect" class="text-[11px] text-muted hover:text-gold transition-colors w-full text-center underline underline-offset-2">Восстановить прерванную сессию</button>
       </div>
-      <p class="text-[10px] text-muted text-center mt-4 leading-relaxed">Игра синхронизируется через это окно артефакта.<br>Друзья должны открыть ту же ссылку на своих устройствах.</p>
+      <p class="text-[10px] text-muted text-center mt-4 leading-relaxed">Игра синхронизируется через этот артефакт.<br>Друзья должны открыть ту же ссылку/артефакт на своих устройствах, а не скачивать файл.</p>
     </div>
   </div>`;
   document.getElementById('btn-show-create').onclick = showCreateForm;
@@ -276,11 +289,28 @@ function showCreateForm(){
       players:[],
       chats:{}
     };
-    await setGame(code, doc);
-    S.role='host'; S.code=code; S.game=doc;
+    const btn = document.getElementById('btn-create');
+    btn.disabled = true; btn.textContent = 'Открываю...';
+    const ok = await setGame(code, doc);
+    const verify = ok ? await getGame(code) : null;
+    if(!ok || !verify){
+      btn.disabled = false; btn.textContent = 'Открыть чертог';
+      showStorageError(box);
+      return;
+    }
+    S.role='host'; S.code=code; S.game=verify;
     renderHostShell();
     startPolling();
   };
+}
+
+function showStorageError(box){
+  const errDiv = document.createElement('div');
+  errDiv.className = 'text-[11px] text-blood mt-3 leading-relaxed border-t border-goldline pt-3';
+  errDiv.innerHTML = !STORAGE_AVAILABLE
+    ? `Хранилище недоступно в этом окне. Игра должна быть открыта именно как артефакт Claude (в панели предпросмотра), а не как скачанный файл, открытый отдельно в браузере, или на другом сайте.`
+    : `Не удалось сохранить игру. Техническая причина: ${esc(LAST_STORAGE_ERROR||'неизвестна')}. Попробуйте ещё раз.`;
+  box.appendChild(errDiv);
 }
 
 function showJoinForm(){
@@ -302,8 +332,17 @@ function showJoinForm(){
     const errBox = document.getElementById('join-error');
     errBox.classList.add('hidden');
     if(!code){ errBox.textContent="Введите код."; errBox.classList.remove('hidden'); return; }
+    if(!STORAGE_AVAILABLE){
+      errBox.innerHTML = "Хранилище недоступно в этом окне. Откройте игру именно как артефакт Claude (панель предпросмотра), а не как отдельно скачанный файл.";
+      errBox.classList.remove('hidden'); return;
+    }
     const g = await getGame(code);
-    if(!g){ errBox.textContent="Чертог с таким кодом не найден."; errBox.classList.remove('hidden'); return; }
+    if(!g){
+      errBox.textContent = STORAGE_AVAILABLE
+        ? "Чертог с таким кодом не найден. Проверьте код у того, кто создал игру — код должен совпадать точно, и создатель должен оставаться в том же артефакте."
+        : "Хранилище недоступно.";
+      errBox.classList.remove('hidden'); return;
+    }
     if(g.phase!=='lobby'){ errBox.textContent="Испытание уже началось. Вход закрыт."; errBox.classList.remove('hidden'); return; }
     if(g.players.length>=6){ errBox.textContent="Все шесть комнат заняты."; errBox.classList.remove('hidden'); return; }
     const slot = g.players.length+1;
